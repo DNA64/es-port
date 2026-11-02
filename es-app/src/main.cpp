@@ -23,8 +23,12 @@
 #include <SDL_main.h>
 #include <SDL_timer.h>
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <iostream>
+#include <map>
+#include <sstream>
+#include <vector>
 #include <time.h>
 #ifdef WIN32
 #include <Windows.h>
@@ -293,6 +297,66 @@ void onExit()
 	Log::close();
 }
 
+namespace
+{
+	struct ScriptedPress
+	{
+		int atMs;
+		Uint8 button;
+		Uint8 state;
+	};
+
+	std::vector<ScriptedPress> parseScript(const char* text)
+	{
+		static const std::map<std::string, Uint8> buttons = {
+			{ "a", 0 }, { "b", 1 }, { "x", 2 }, { "y", 3 }, { "select", 8 }, { "start", 9 },
+			{ "left", 11 }, { "right", 12 }, { "up", 13 }, { "down", 14 } };
+		constexpr int tapMs = 100;
+
+		std::vector<ScriptedPress> script;
+		if(text == nullptr)
+			return script;
+
+		std::istringstream stream(text);
+		std::string item;
+		while(std::getline(stream, item, ','))
+		{
+			const std::string::size_type colon = item.find(':');
+			if(colon == std::string::npos)
+				continue;
+
+			const int at = std::atoi(item.substr(0, colon).c_str());
+			std::string name = item.substr(colon + 1);
+			const char mode = (!name.empty() && (name[0] == '+' || name[0] == '-')) ? name[0] : 't';
+			if(mode != 't')
+				name.erase(0, 1);
+
+			const auto button = buttons.find(name);
+			if(button == buttons.end())
+				continue;
+
+			if(mode != '-')
+				script.push_back({ at, button->second, SDL_PRESSED });
+			if(mode != '+')
+				script.push_back({ mode == 't' ? at + tapMs : at, button->second, SDL_RELEASED });
+		}
+
+		std::stable_sort(script.begin(), script.end(),
+			[](const ScriptedPress& left, const ScriptedPress& right) { return left.atMs < right.atMs; });
+		return script;
+	}
+
+	void pushPress(const ScriptedPress& press)
+	{
+		SDL_Event event{};
+		event.type = press.state == SDL_PRESSED ? SDL_JOYBUTTONDOWN : SDL_JOYBUTTONUP;
+		event.jbutton.which = 0;
+		event.jbutton.button = press.button;
+		event.jbutton.state = press.state;
+		SDL_PushEvent(&event);
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale("C"));
@@ -434,6 +498,10 @@ int main(int argc, char* argv[])
 	int benchReport = SDL_GetTicks();
 	int benchStep = SDL_GetTicks();
 
+	const std::vector<ScriptedPress> script = parseScript(std::getenv("ES_INJECT"));
+	std::size_t scriptNext = 0;
+	const int scriptStart = SDL_GetTicks();
+
 	while(running)
 	{
 		SDL_Event event;
@@ -482,6 +550,9 @@ int main(int argc, char* argv[])
 		window.update(deltaTime);
 		window.render();
 		Renderer::swapBuffers();
+
+		while(scriptNext < script.size() && curTime - scriptStart >= script[scriptNext].atMs)
+			pushPress(script[scriptNext++]);
 
 		if(bench)
 		{

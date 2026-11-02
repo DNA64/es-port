@@ -5,18 +5,16 @@
 #   classicmini/build.sh
 #   ES_TOOLCHAIN_IMAGE=classicmini-es-toolchain:local classicmini/build.sh
 #
-# The image comes from Dockerfile.es-armhf in DefKorns/classicmini-cross-toolchain.
+# The image is built from Dockerfile.es-armhf in DefKorns/classicmini-cross-toolchain and pinned here to a release;
+# ES_TOOLCHAIN_IMAGE selects another tag (es-armhf is master's latest) or a local build.
 # Result: classicmini/out/emulationstation (stripped ARM binary) and libfreetype.so.6
 set -e
 export MSYS_NO_PATHCONV=1
 
 REPO=$(cd "$(dirname "$0")/.." && { pwd -W 2>/dev/null || pwd; })
-image=${ES_TOOLCHAIN_IMAGE:-classicmini-es-toolchain:local}
+image=${ES_TOOLCHAIN_IMAGE:-ghcr.io/defkorns/classicmini-es-toolchain:v0.1.0}
 
-if ! docker image inspect "$image" >/dev/null 2>&1; then
-  echo "missing image $image: build it from Dockerfile.es-armhf in classicmini-cross-toolchain, or set ES_TOOLCHAIN_IMAGE" >&2
-  exit 1
-fi
+docker image inspect "$image" >/dev/null 2>&1 || docker pull -q "$image" >&2
 
 # a root container would leave root-owned files behind on Linux/WSL
 user_opts=

@@ -102,8 +102,10 @@ void InputManager::addJoystickByDeviceIndex(int id)
 	mInputConfigs[joyId] = new InputConfig(joyId, SDL_JoystickName(joy), guid);
 
 	// add Vendor and Product IDs
+#if SDL_VERSION_ATLEAST(2, 0, 6) /* SDL 2.0.4 on the console has no vendor/product ids */
 	mInputConfigs[joyId]->setVendorId(SDL_JoystickGetVendor(joy));
 	mInputConfigs[joyId]->setProductId(SDL_JoystickGetProduct(joy));
+#endif
 
 	if(!loadInputConfig(mInputConfigs[joyId]))
 	{

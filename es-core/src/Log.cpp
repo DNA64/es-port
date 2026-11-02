@@ -40,7 +40,7 @@ void Log::open()
 std::ostringstream& Log::get(LogLevel level)
 {
 	time_t t = time(nullptr);
-	os << std::put_time(localtime(&t), "%b %d %T ") << "lvl" << level << ": \t";
+	os << [&]{ char b[32]; strftime(b, sizeof(b), "%b %d %T ", localtime(&t)); return std::string(b); }() /* libstdc++ 4.9: no std::put_time */ << "lvl" << level << ": \t";
 	messageLevel = level;
 
 	return os;

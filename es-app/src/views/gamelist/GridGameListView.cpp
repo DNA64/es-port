@@ -31,6 +31,21 @@ namespace
 	{
 		return Utils::FileSystem::getStem(game->getPath());
 	}
+
+	std::string shortName(const std::string& name)
+	{
+		constexpr int MaxChars = 20;
+		int chars = 0;
+		for(std::size_t index = 0; index < name.size(); ++index)
+		{
+			if((static_cast<unsigned char>(name[index]) & 0xC0) == 0x80)
+				continue;
+			if(chars == MaxChars)
+				return name.substr(0, index) + "...";
+			++chars;
+		}
+		return name;
+	}
 }
 
 GridGameListView::GridGameListView(Window* window, FileData* root) :
@@ -48,7 +63,6 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
 	mName(window),
 	mSuspendPoints(SuspendPoints::fromEnvironment()),
-	mBalloon(window),
 	mPad(environmentPad())
 {
 	const float padding = 0.01f;
@@ -139,9 +153,9 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	initMDLabels();
 	initMDValues();
-	mBalloon.setDefaultZIndex(60);
-	mBalloon.setZIndex(60);
-	addChild(&mBalloon);
+	mGrid.setMarkFunction([this](FileData* file) {
+		return mFloating.valid && file->getType() == GAME && gameCode(file) == mFloating.code;
+	});
 	refreshFloating();
 	updateInfoPanel();
 }
@@ -353,8 +367,9 @@ void GridGameListView::initMDValues()
 
 void GridGameListView::updateInfoPanel()
 {
-	refreshBalloonSelection();
 	FileData* file = (mGrid.size() == 0 || mGrid.isScrolling()) ? NULL : mGrid.getSelected();
+	if(!mGrid.isScrolling())
+		updateHelpPrompts();
 
 	bool fadingOut;
 	if(file == NULL)
@@ -533,7 +548,11 @@ std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 	prompts.push_back(HelpPrompt("up", "menu"));
 	prompts.push_back(HelpPrompt("down", "suspend point list"));
 	prompts.push_back(HelpPrompt("a", "select"));
-	prompts.push_back(HelpPrompt("b", canJump ? "last game" : "back"));
+	FileData* target = canJump ? findGame(mFloating.code) : nullptr;
+	if(target != nullptr)
+		prompts.push_back(HelpPrompt("b", "go to " + shortName(target->getName())));
+	else if(!mCursorStack.empty())
+		prompts.push_back(HelpPrompt("b", "back"));
 	prompts.push_back(HelpPrompt("y", "sort"));
 	return prompts;
 }
@@ -554,15 +573,9 @@ void GridGameListView::onShow()
 void GridGameListView::refreshFloating()
 {
 	mFloating = mSuspendPoints.floating();
-	mBalloon.setPoint(mFloating);
-	refreshBalloonSelection();
-}
-
-void GridGameListView::refreshBalloonSelection()
-{
-	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
-	mBalloon.setSelected(cursor != nullptr && mFloating.valid && cursor->getType() == GAME
-		&& gameCode(cursor) == mFloating.code);
+	if(mGrid.size() > 0)
+		mGrid.refreshMarks();
+	updateHelpPrompts();
 }
 
 FileData* GridGameListView::findGame(const std::string& code) const

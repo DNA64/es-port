@@ -1,5 +1,7 @@
 #pragma once
 #include <algorithm>
+#include <functional>
+#include <utility>
 #ifndef ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 #define ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 
@@ -53,6 +55,8 @@ public:
 	ImageGridComponent(Window* window);
 
 	void add(const std::string& name, const std::string& imagePath, const T& obj);
+	void setMarkFunction(std::function<bool(const T&)> markFunction) { mMarkFunction = std::move(markFunction); }
+	void refreshMarks() { updateTiles(false, false); }
 
 	bool input(InputConfig* config, Input input) override;
 	void update(int deltaTime) override;
@@ -99,6 +103,7 @@ private:
 	std::vector< std::shared_ptr<GridTileComponent> > mTiles;
 
 	int mStartPosition;
+	std::function<bool(const T&)> mMarkFunction;
 
 	float mCamera;
 	float mCameraDirection;
@@ -663,6 +668,7 @@ void ImageGridComponent<T>::updateTileAtPos(int tilePos, int imgPos, bool allowA
 	else
 	{
 		tile->setVisible(true);
+		tile->setMarked(mMarkFunction && mMarkFunction(mEntries.at(imgPos).object));
 
 		std::string imagePath = mEntries.at(imgPos).data.texturePath;
 

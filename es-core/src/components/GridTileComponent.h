@@ -40,6 +40,7 @@ public:
 
 	void forceSize(Vector2f size, float selectedZoom);
 	void setShiftX(float shift) { mShiftX = shift; }
+	void setMarked(bool marked) { mMarked = marked; }
 
 	Vector3f getBackgroundPosition();
 
@@ -54,6 +55,8 @@ private:
 
 	std::shared_ptr<ImageComponent> mImage;
 	NinePatchComponent mBackground;
+	ImageComponent mBadge;
+	bool mMarked = false;
 
 	GridTileProperties mDefaultProperties;
 	GridTileProperties mSelectedProperties;

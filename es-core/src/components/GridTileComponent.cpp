@@ -4,8 +4,11 @@
 #include "resources/TextureResource.h"
 #include "ThemeData.h"
 
-GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBackground(window, ":/frame.png")
+GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBackground(window, ":/frame.png"), mBadge(window)
 {
+	mBadge.setImage(":/suspend_marker.png");
+	mBadge.setOrigin(0.5f, 0.5f);
+	mBadge.setResize(30.0f, 36.0f);
 	mDefaultProperties.mSize = getDefaultTileSize();
 	mDefaultProperties.mPadding = Vector2f(16.0f, 16.0f);
 	mDefaultProperties.mImageColor = 0xAAAAAABB;
@@ -53,6 +56,13 @@ void GridTileComponent::render(const Transform4x4f& parentTrans)
 		Renderer::drawRect(-size.x() / 2.0f, -size.y() / 2.0f, size.x(), size.y(), backing, backing);
 		mImage->render(trans);
 		mBackground.render(trans);
+
+		if (mMarked)
+		{
+			Transform4x4f badgeTrans = trans;
+			badgeTrans.translate(Vector3f(-mCurrentProperties.mSize.x() / 2.0f + 19.0f, -mCurrentProperties.mSize.y() / 2.0f + 14.0f, 0.0f));
+			mBadge.render(badgeTrans);
+		}
 	}
 }
 

@@ -8,7 +8,6 @@
 #include "components/ScrollableContainer.h"
 #include "components/ImageGridComponent.h"
 #include "components/MarqueeTextComponent.h"
-#include "components/SuspendBalloon.h"
 #include "components/VideoComponent.h"
 #include "guis/GuiSuspendPoints.h"
 #include "views/gamelist/ISimpleGameListView.h"
@@ -56,7 +55,6 @@ private:
 	void initMDValues();
 
 	void refreshFloating();
-	void refreshBalloonSelection();
 	bool openSuspendPoints();
 	void jumpTo(FileData* game);
 	void cycleSort();
@@ -85,7 +83,6 @@ private:
 
 	SuspendPoints mSuspendPoints;
 	SuspendPoint mFloating;
-	SuspendBalloon mBalloon;
 	GuiSuspendPoints::Pad mPad;
 	int mPendingResume = 0;
 };

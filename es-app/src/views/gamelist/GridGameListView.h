@@ -4,6 +4,7 @@
 
 #include "components/DateTimeComponent.h"
 #include "components/MenuIconBar.h"
+#include "components/DiskSpaceIndicator.h"
 #include "components/RatingComponent.h"
 #include "components/PagedTextComponent.h"
 #include "components/ScrollableContainer.h"
@@ -86,6 +87,7 @@ private:
 
 	SuspendPoints mSuspendPoints;
 	MenuIconBar mIconBar;
+	DiskSpaceIndicator mDiskSpace;
 	bool mHeaderFocus = false;
 	SuspendPoint mFloating;
 	GuiSuspendPoints::Pad mPad;

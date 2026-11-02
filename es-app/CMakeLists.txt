@@ -19,6 +19,7 @@ set(ES_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/AsyncReqComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuIconBar.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/DiskSpaceIndicator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScraperSearchComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/TextListComponent.h
 
@@ -82,6 +83,7 @@ set(ES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/AsyncReqComponent.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuIconBar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/DiskSpaceIndicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScraperSearchComponent.cpp
 
     # Guis

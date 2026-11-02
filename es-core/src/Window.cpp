@@ -228,7 +228,7 @@ void Window::render()
 	{
 		Renderer::setMatrix(Transform4x4f::Identity());
 		const std::shared_ptr<Font> font = Font::get(FONT_SIZE_MINI);
-		const std::unique_ptr<TextCache> cache(font->buildTextCache(mFrameDataText, Vector2f(0.f, 8.f), 0xFF00FFFF, Renderer::getScreenWidth() - 12.f, ALIGN_RIGHT, 1.1f));
+		const std::unique_ptr<TextCache> cache(font->buildTextCache(mFrameDataText, Vector2f(0.f, Renderer::getScreenHeight() * 0.15f), 0xFF00FFFF, Renderer::getScreenWidth() - 12.f, ALIGN_RIGHT, 1.1f));
 		font->renderTextCache(cache.get());
 	}
 

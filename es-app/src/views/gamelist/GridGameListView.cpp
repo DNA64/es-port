@@ -47,7 +47,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window), mIconBar(window),
+	mName(window), mIconBar(window), mDiskSpace(window),
 	mSuspendPoints(SuspendPoints::fromEnvironment()),
 	mPad(environmentPad())
 {
@@ -139,6 +139,9 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mIconBar.setDefaultZIndex(70);
 	mIconBar.setZIndex(70);
 	addChild(&mIconBar);
+	mDiskSpace.setDefaultZIndex(70);
+	mDiskSpace.setZIndex(70);
+	addChild(&mDiskSpace);
 
 	initMDLabels();
 	initMDValues();

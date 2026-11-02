@@ -65,12 +65,12 @@
 			<folderImage>:/folder.svg</folderImage>
 		</imagegrid>
 		<gridtile name="default">
-			<backgroundImage>./tile.svg</backgroundImage>
+			<backgroundImage>./tile.png</backgroundImage>
 			<backgroundCornerSize>20 20</backgroundCornerSize>
 			<padding>8 8</padding>
 		</gridtile>
 		<gridtile name="selected">
-			<backgroundImage>./tile_selected.svg</backgroundImage>
+			<backgroundImage>./tile_selected.png</backgroundImage>
 			<backgroundCornerSize>20 20</backgroundCornerSize>
 			<padding>8 8</padding>
 		</gridtile>

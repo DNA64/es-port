@@ -29,6 +29,9 @@ if [ -d "$path" ]; then cd "$path" || exit 1; fi
 
 if [ -n "$code" ]; then
   out=$volatile/$code/suspendpoint0
+  for stale in "$volatile"/*/suspendpoint0; do
+    [ "$stale" = "$out" ] || rm -rf "$stale"
+  done
   rm -rf "$out"
   mkdir -p "$profile/$code" "$out/rollback"
   cmd="$cmd --save-data-backing-file $profile/$code/cartridge.sram --title-code $code --video-mode keep-aspect-ratio"

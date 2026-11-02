@@ -42,7 +42,7 @@ else
   touch "$library_stamp"
 fi
 while true; do
-  rm -f /tmp/es_next /tmp/es_resume /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
+  rm -f /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
   es_started=$(date +%s)
   HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
   es_status=$?
@@ -57,26 +57,16 @@ while true; do
   fi
   rm -f "$es_dir/boot_failures"
   [ -f /tmp/es-restart ] && continue
-  if [ ! -f /tmp/es_next ]; then
-    if [ -f /tmp/es-sysrestart ] || [ -f /tmp/es-shutdown ] || { [ "$es_status" -eq 0 ] && [ ! -f /tmp/es-quit ]; }; then
-      restore_ui=0
-    fi
-    if [ -f /tmp/es-sysrestart ]; then
-      touch /tmp/es-restarting
-      drawSplash restart
-      reboot
-    elif [ -f /tmp/es-shutdown ]; then
-      drawSplash shutdown
-      poweroff
-    fi
-    break
+  if [ -f /tmp/es-sysrestart ] || [ -f /tmp/es-shutdown ] || { [ "$es_status" -eq 0 ] && [ ! -f /tmp/es-quit ]; }; then
+    restore_ui=0
   fi
-  sh "$es_dir/es-game.sh" "$(cat /tmp/es_next)" "$(cat /tmp/es_resume 2>/dev/null)"
-  if [ -n "$(pidof clover-mcp)" ]; then
-    for _ in $(seq 1 25); do
-      [ -n "$(pidof ReedPlayer-Clover)" ] && break
-      usleep 200000
-    done
-    uistop
+  if [ -f /tmp/es-sysrestart ]; then
+    touch /tmp/es-restarting
+    drawSplash restart
+    reboot
+  elif [ -f /tmp/es-shutdown ]; then
+    drawSplash shutdown
+    poweroff
   fi
+  break
 done

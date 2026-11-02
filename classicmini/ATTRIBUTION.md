@@ -15,7 +15,9 @@ Both are licensed under the [SIL Open Font License 1.1](https://openfontlicense.
 to its font.
 
 - Noto Sans, by The Noto Project Authors (<https://github.com/notofonts/latin-greek-cyrillic>):
-  `device/theme/games/assets/fonts/NotoSans-Regular.ttf` and `NotoSans-SemiBold.ttf`.
+  `device/theme/games/assets/fonts/NotoSans-Regular.ttf` and `NotoSans-SemiBold.ttf`, and
+  `device/resources/fallback_latin.ttf`, the Regular weight reduced to Latin Extended-A/B and Latin Extended
+  Additional, used as the fallback for accented letters such as macrons.
 - Noto Sans JP, by Adobe and The Noto Project Authors (<https://github.com/notofonts/noto-cjk>):
   `device/resources/fallback_ja.ttf`, the fallback for Japanese glyphs. It is the variable font instantiated at
   weight 400 and reduced to kana, punctuation and the JIS X 0208 kanji.

@@ -81,24 +81,35 @@ case "$1" in
     if [ -n "$public_ip" ]; then echo "Public IP: $public_ip"; else echo "Public IP: offline"; fi
     ;;
   reconnect)
+    hasAddress() {
+      ip -4 addr show wlan0 2>/dev/null | grep -q 'inet '
+    }
     if esHasInternet; then
       echo "Already connected to the internet."
     else
-      /etc/init.d/S92networking restart >/dev/null 2>&1
-      sleep 5
-      if esHasInternet; then echo "Connected."; else echo "Connection failed. Check the Wi-Fi adapter."; fi
+      if ! hasAddress || ! wpa_cli status 2>/dev/null | grep -q '^wpa_state=COMPLETED'; then
+        wpa_cli reconnect >/dev/null 2>&1
+        for _ in $(seq 1 10); do
+          hasAddress && break
+          sleep 1
+        done
+        hasAddress || /etc/init.d/S92networking restart >/dev/null 2>&1
+        sleep 3
+      fi
+      if esHasInternet; then echo "Connected."; elif hasAddress; then echo "Connected, but there is no internet."; else echo "Connection failed. Check the Wi-Fi adapter."; fi
     fi
     ;;
-  scan)
-    wpa_cli scan >/dev/null 2>&1
-    sleep 3
-    networks=$(wpa_cli scan_results 2>/dev/null | awk -F'\t' 'NR > 2 && $5 != "" { print $5 }' | sort -u | head -n 12)
-    if [ -n "$networks" ]; then echo "$networks"; else echo "No networks found."; fi
-    ;;
   networks)
-    wpa_cli scan >/dev/null 2>&1
-    sleep 3
-    wpa_cli scan_results 2>/dev/null | awk -F'	' 'NR > 2 && $5 != "" && !seen[$5]++ { print $5 "	" ($4 ~ /WPA|WEP/ ? "1" : "0") }' | head -n 20
+    listNetworks() {
+      wpa_cli scan_results 2>/dev/null | awk -F'	' 'NR > 2 && $5 != "" && !seen[$5]++ { print $5 "	" ($4 ~ /WPA|WEP/ ? "1" : "0") }' | head -n 20
+    }
+    found=$(listNetworks)
+    if [ "$(echo "$found" | grep -c .)" -lt 2 ]; then
+      wpa_cli scan >/dev/null 2>&1
+      sleep 3
+      found=$(listNetworks)
+    fi
+    echo "$found"
     ;;
   wificonnect)
     network_id=$(wpa_cli list_networks | awk -F'	' -v ssid="$ES_SSID" '$2 == ssid { print $1; exit }')

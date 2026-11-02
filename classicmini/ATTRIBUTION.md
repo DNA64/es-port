@@ -9,5 +9,16 @@
 Changes: the wordmark is recoloured to `#c8c8d9` with dark lettering in the banner, and the coloured buttons are
 widened horizontally. The adapted file is available under the same licence.
 
+## Fonts
+
+Both are licensed under the [SIL Open Font License 1.1](https://openfontlicense.org); each licence text sits next
+to its font.
+
+- Noto Sans, by The Noto Project Authors (<https://github.com/notofonts/latin-greek-cyrillic>):
+  `device/theme/games/assets/fonts/NotoSans-Regular.ttf` and `NotoSans-SemiBold.ttf`.
+- Noto Sans JP, by Adobe and The Noto Project Authors (<https://github.com/notofonts/noto-cjk>):
+  `device/resources/fallback_ja.ttf`, the fallback for Japanese glyphs. It is the variable font instantiated at
+  weight 400 and reduced to kana, punctuation and the JIS X 0208 kanji.
+
 "Super Nintendo Entertainment System" and the logo are trademarks of Nintendo. This project is not affiliated with
 or endorsed by Nintendo.

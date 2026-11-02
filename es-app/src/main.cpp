@@ -30,6 +30,10 @@
 #include <sstream>
 #include <vector>
 #include <time.h>
+#include <csignal>
+#include <fcntl.h>
+#include <ucontext.h>
+#include <unistd.h>
 #ifdef WIN32
 #include <Windows.h>
 #endif
@@ -357,8 +361,47 @@ namespace
 	}
 }
 
+namespace
+{
+	void logCrash(int signal, siginfo_t* info, void* context)
+	{
+		const ucontext_t* uc = static_cast<const ucontext_t*>(context);
+		const int fd = open("/var/lib/hakchi/es/crash.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if(fd >= 0)
+		{
+			char line[160];
+			int length = snprintf(line, sizeof line, "signal %d fault %p pc %08lx lr %08lx sp %08lx\n", signal, info->si_addr,
+				uc->uc_mcontext.arm_pc, uc->uc_mcontext.arm_lr, uc->uc_mcontext.arm_sp);
+			static_cast<void>(write(fd, line, static_cast<size_t>(length)));
+
+			const unsigned long* stack = reinterpret_cast<const unsigned long*>(uc->uc_mcontext.arm_sp);
+			for(int word = 0; word < 256; ++word)
+			{
+				if(stack[word] >= 0x8000 && stack[word] < 0x1000000)
+				{
+					length = snprintf(line, sizeof line, "stack %08lx\n", stack[word]);
+					static_cast<void>(write(fd, line, static_cast<size_t>(length)));
+				}
+			}
+			close(fd);
+		}
+		_exit(128 + signal);
+	}
+
+	void installCrashLogger()
+	{
+		struct sigaction action;
+		action.sa_sigaction = logCrash;
+		sigemptyset(&action.sa_mask);
+		action.sa_flags = SA_SIGINFO;
+		for(const int signal : { SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT })
+			sigaction(signal, &action, nullptr);
+	}
+}
+
 int main(int argc, char* argv[])
 {
+	installCrashLogger();
 	std::locale::global(std::locale("C"));
 
 	if(!parseArgs(argc, argv))

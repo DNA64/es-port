@@ -14,6 +14,7 @@
 #include "guis/GuiSuspendPoints.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "SuspendPoints.h"
+#include <memory>
 
 class GridGameListView : public ISimpleGameListView
 {
@@ -89,6 +90,7 @@ private:
 	MenuIconBar mIconBar;
 	DiskSpaceIndicator mDiskSpace;
 	bool mHeaderFocus = false;
+	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
 	SuspendPoint mFloating;
 	GuiSuspendPoints::Pad mPad;
 	int mPendingResume = 0;

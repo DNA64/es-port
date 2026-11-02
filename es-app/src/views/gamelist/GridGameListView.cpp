@@ -663,7 +663,10 @@ void GridGameListView::setHeaderFocus(bool focus)
 void GridGameListView::openHeaderMenu()
 {
 	mIconBar.setFrameVisible(false);
-	mWindow->pushGui(new GuiMenu(mWindow, mIconBar.selected(), [this](int category) {
+	const std::weak_ptr<bool> alive = mAlive;
+	mWindow->pushGui(new GuiMenu(mWindow, mIconBar.selected(), [this, alive](int category) {
+		if(alive.expired())
+			return;
 		mIconBar.setSelected(category);
 		setHeaderFocus(true);
 	}));

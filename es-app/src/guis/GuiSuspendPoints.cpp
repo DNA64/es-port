@@ -54,6 +54,7 @@ GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::strin
 	  mOnResume(std::move(onResume)), mOnChanged(std::move(onChanged)),
 	  mPanel(window, ":/suspend_card.png"), mCell(window, ":/suspend_card.png"),
 	  mCellSelected(window, ":/suspend_card_sel.png"),
+	  mFrame(window, ":/suspend_frame.png"), mFrameSelected(window, ":/suspend_frame_sel.png"),
 	  mHeading(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor),
 	  mNotice(window, "", Font::get(FONT_SIZE_SMALL), MutedColor, ALIGN_RIGHT),
 	  mLock(window)
@@ -62,6 +63,8 @@ GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::strin
 	mPanel.setCornerSize(CardCorner, CardCorner);
 	mCell.setCornerSize(CardCorner, CardCorner);
 	mCellSelected.setCornerSize(CardCorner, CardCorner);
+	mFrame.setCornerSize(CardCorner, CardCorner);
+	mFrameSelected.setCornerSize(CardCorner, CardCorner);
 	for(int slot = 0; slot < SuspendPoints::MaxSlots; ++slot)
 	{
 		mShots.emplace_back(new ImageComponent(window));
@@ -86,6 +89,8 @@ void GuiSuspendPoints::layout()
 	mPanel.setSize(width * PanelWidth + 2 * Bleed, height * PanelHeight + 2 * Bleed);
 	mCell.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
 	mCellSelected.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
+	mFrame.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
+	mFrameSelected.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
 
 	for(std::size_t index = 0; index < mShots.size(); ++index)
 	{
@@ -193,7 +198,7 @@ bool GuiSuspendPoints::input(InputConfig* config, Input input)
 		mSelected = std::max(1, mSelected - 1);
 	else if(config->isMappedLike("right", input))
 		mSelected = std::min(SuspendPoints::MaxSlots, mSelected + 1);
-	else if(config->isMappedTo("start", input))
+	else if(config->isMappedTo("start", input) || (mPad == Pad::Snes && config->isMappedTo("a", input)))
 	{
 		if(selectedPoint().valid)
 		{
@@ -278,6 +283,7 @@ void GuiSuspendPoints::render(const Transform4x4f& parentTrans)
 
 		if(mSlots[index].valid)
 			mShots[index]->render(trans);
+		(selected ? mFrameSelected : mFrame).render(cellTrans);
 		mLabels[index]->render(trans);
 
 		if(mSlots[index].locked)
@@ -300,7 +306,7 @@ std::vector<HelpPrompt> GuiSuspendPoints::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
 	prompts.push_back(HelpPrompt("left/right", "slot"));
-	prompts.push_back(HelpPrompt("start", "resume"));
+	prompts.push_back(HelpPrompt(mPad == Pad::Snes ? "a" : "start", "resume"));
 	if(mFloating.valid)
 		prompts.push_back(HelpPrompt(mPad == Pad::Snes ? "y" : "a", "save (hold to overwrite)"));
 	prompts.push_back(HelpPrompt("down", "lock"));

@@ -60,6 +60,8 @@ private:
 	NinePatchComponent mPanel;
 	NinePatchComponent mCell;
 	NinePatchComponent mCellSelected;
+	NinePatchComponent mFrame;
+	NinePatchComponent mFrameSelected;
 	TextComponent mHeading;
 	TextComponent mNotice;
 	ImageComponent mLock;

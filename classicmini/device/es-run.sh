@@ -27,8 +27,19 @@ uistop
 sh "$es_dir/es-library.sh" /tmp/es-library
 while true; do
   rm -f /tmp/es_next /tmp/es_resume /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
+  es_started=$(date +%s)
   HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
   es_status=$?
+  if [ "$es_status" -ne 0 ] && [ $(($(date +%s) - es_started)) -lt 15 ]; then
+    es_failures=$(($(cat "$es_dir/boot_failures" 2>/dev/null || echo 0) + 1))
+    echo "$es_failures" > "$es_dir/boot_failures"
+    if [ "$es_failures" -ge 2 ]; then
+      echo stock > "$es_dir/boot_default"
+      break
+    fi
+    continue
+  fi
+  rm -f "$es_dir/boot_failures"
   [ -f /tmp/es-restart ] && continue
   if [ ! -f /tmp/es_next ]; then
     if [ -f /tmp/es-sysrestart ] || [ -f /tmp/es-shutdown ] || { [ "$es_status" -eq 0 ] && [ ! -f /tmp/es-quit ]; }; then

@@ -4,6 +4,7 @@
 
 #include "components/DateTimeComponent.h"
 #include "components/RatingComponent.h"
+#include "components/PagedTextComponent.h"
 #include "components/ScrollableContainer.h"
 #include "components/ImageGridComponent.h"
 #include "components/MarqueeTextComponent.h"
@@ -80,8 +81,7 @@ private:
 	std::vector<TextComponent*> getMDLabels();
 	std::vector<GuiComponent*> getMDValues();
 
-	ScrollableContainer mDescContainer;
-	TextComponent mDescription;
+	PagedTextComponent mDescription;
 
 	SuspendPoints mSuspendPoints;
 	SuspendPoint mFloating;

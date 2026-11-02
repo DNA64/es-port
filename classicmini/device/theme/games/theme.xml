@@ -87,7 +87,7 @@
 		<image name="info_panel" extra="true">
 			<path>./assets/panel_snes.svg</path>
 			<pos>0.042 0.696</pos>
-			<size>0.916 0.175</size>
+			<size>0.9164 0.175</size>
 			<zIndex>1</zIndex>
 		</image>
 

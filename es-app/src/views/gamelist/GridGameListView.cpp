@@ -39,7 +39,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mImage(window),
 	mVideo(nullptr),
 	mVideoPlaying(false),
-	mDescContainer(window, DESCRIPTION_SCROLL_DELAY), mDescription(window),
+	mDescription(window),
 
 	mLblRating(window), mLblReleaseDate(window), mLblDeveloper(window), mLblPublisher(window),
 	mLblGenre(window), mLblPlayers(window), mLblLastPlayed(window), mLblPlayCount(window),
@@ -104,15 +104,11 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mName.setHorizontalAlignment(ALIGN_CENTER);
 	addChild(&mName);
 
-	mDescContainer.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
-	mDescContainer.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescContainer.getPosition().y());
-	mDescContainer.setAutoScroll(true);
-	mDescContainer.setDefaultZIndex(40);
-	addChild(&mDescContainer);
-
+	mDescription.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
+	mDescription.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescription.getPosition().y());
+	mDescription.setDefaultZIndex(40);
 	mDescription.setFont(Font::get(FONT_SIZE_SMALL));
-	mDescription.setSize(mDescContainer.getSize().x(), 0);
-	mDescContainer.addChild(&mDescription);
+	addChild(&mDescription);
 
 	// Image
 	// Default to off the screen
@@ -280,9 +276,7 @@ void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 		values[i]->applyTheme(theme, getName(), valElements[i], ALL ^ ThemeFlags::TEXT);
 	}
 
-	mDescContainer.applyTheme(theme, getName(), "md_description", POSITION | ThemeFlags::SIZE | Z_INDEX | VISIBLE);
-	mDescription.setSize(mDescContainer.getSize().x(), 0);
-	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (POSITION | ThemeFlags::SIZE | ThemeFlags::ORIGIN | TEXT | ROTATION));
+	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
 
 	// Repopulate list in case new theme is displaying a different image.  Preserve selection.
 	FileData* file = mGrid.getSelected();
@@ -353,8 +347,8 @@ void GridGameListView::initMDValues()
 			bottom = testBot;
 	}
 
-	mDescContainer.setPosition(mDescContainer.getPosition().x(), bottom + mSize.y() * 0.01f);
-	mDescContainer.setSize(mDescContainer.getSize().x(), mSize.y() - mDescContainer.getPosition().y());
+	mDescription.setPosition(mDescription.getPosition().x(), bottom + mSize.y() * 0.01f);
+	mDescription.setSize(mDescription.getSize().x(), mSize.y() - mDescription.getPosition().y());
 }
 
 void GridGameListView::updateInfoPanel()
@@ -383,7 +377,6 @@ void GridGameListView::updateInfoPanel()
 		mImage.setImageAsync(file->getImagePath());
 
 		mDescription.setText(file->metadata.get("desc"));
-		mDescContainer.reset();
 
 		mRating.setValue(file->metadata.get("rating"));
 		mReleaseDate.setValue(file->metadata.get("releasedate"));
@@ -623,5 +616,5 @@ bool GridGameListView::openSuspendPoints()
 }
 
 void GridGameListView::onFocusLost() {
-	mDescContainer.reset();
+	mDescription.restart();
 }

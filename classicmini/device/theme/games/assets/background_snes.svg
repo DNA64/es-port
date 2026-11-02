@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d1b3b"/><stop offset="1" stop-color="#2a2552"/>
+    </linearGradient>
+  </defs>
+  <rect width="1672" height="941" fill="url(#bg)"/>
+  <!-- rainbow stripes under the header, left -->
+  <polygon points="0,140 125,140 0,305" fill="#c8323c"/>
+  <polygon points="125,140 190,140 0,380 0,305" fill="#d9a82a"/>
+  <polygon points="190,140 245,140 0,455 0,380" fill="#3f9a4a"/>
+  <polygon points="245,140 300,140 0,525 0,455" fill="#2f63b8"/>
+  <!-- controller silhouette, upper right -->
+  <circle cx="1400" cy="175" r="190" fill="#3b3573" opacity="0.5"/>
+  <rect x="1300" y="140" width="190" height="75" rx="22" fill="#2b2658"/>
+  <rect x="1357" y="85" width="75" height="190" rx="22" fill="#2b2658"/>
+  <ellipse cx="1560" cy="175" rx="38" ry="20" transform="rotate(-35 1560 175)" fill="#2b2658"/>
+  <ellipse cx="1625" cy="150" rx="38" ry="20" transform="rotate(-35 1625 150)" fill="#2b2658"/>
+  <!-- header -->
+  <rect width="1672" height="132" fill="#17152f"/>
+  <rect y="132" width="1672" height="10" fill="#5b4bb7"/>
+  <rect x="563" y="42" width="3" height="58" fill="#3d3a6e"/>
+  <!-- footer -->
+  <rect y="868" width="1672" height="73" fill="#17152f"/>
+  <rect y="858" width="1672" height="10" fill="#5b4bb7"/>
+</svg>

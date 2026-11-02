@@ -1,0 +1,164 @@
+<theme>
+	<formatVersion>4</formatVersion>
+
+	<!-- Background and info panel come from RetroVision (RetroPie theme, 1280x720); the game carousel is the image grid. -->
+
+	<view name="system">
+		<image name="background" extra="true">
+			<path>./assets/background_snes.svg</path>
+			<pos>0 0</pos>
+			<size>1 1</size>
+		</image>
+		<carousel name="systemcarousel">
+			<type>horizontal</type>
+			<size>1 0.2</size>
+			<pos>0 0.4</pos>
+			<color>00000000</color>
+			<maxLogoCount>3</maxLogoCount>
+		</carousel>
+		<text name="systemInfo">
+			<pos>0 0.7</pos>
+			<size>1 0.1</size>
+			<color>FFFFFF</color>
+			<alignment>center</alignment>
+			<fontSize>0.04</fontSize>
+		</text>
+	</view>
+
+	<view name="grid">
+		<image name="background">
+			<path>./assets/background_snes.svg</path>
+			<pos>0 0</pos>
+			<size>1 1</size>
+			<tile>false</tile>
+		</image>
+
+		<image name="logo">
+			<path>./logo.svg</path>
+			<pos>0.03 0.02</pos>
+			<size>0.06 0.1</size>
+		</image>
+		<text name="title" extra="true">
+			<pos>0.105 0.02</pos>
+			<size>0.6 0.1</size>
+			<text>SNES CLASSIC</text>
+			<color>F4F1FF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.07</fontSize>
+			<alignment>left</alignment>
+			<zIndex>5</zIndex>
+		</text>
+
+		<imagegrid name="gamegrid">
+			<pos>0 0.24</pos>
+			<size>1 0.42</size>
+			<margin>0.012 0</margin>
+			<padding>0.012 0.02 0.012 0.02</padding>
+			<autoLayout>5 1</autoLayout>
+			<autoLayoutSelectedZoom>1.18</autoLayoutSelectedZoom>
+			<imageSource>image</imageSource>
+			<scrollDirection>horizontal</scrollDirection>
+			<centerSelection>true</centerSelection>
+			<scrollLoop>true</scrollLoop>
+			<animate>true</animate>
+			<gameImage>:/cartridge.svg</gameImage>
+			<folderImage>:/folder.svg</folderImage>
+		</imagegrid>
+		<gridtile name="default">
+			<backgroundImage>./tile.svg</backgroundImage>
+			<backgroundCornerSize>20 20</backgroundCornerSize>
+			<padding>8 8</padding>
+		</gridtile>
+		<gridtile name="selected">
+			<backgroundImage>./tile_selected.svg</backgroundImage>
+			<backgroundCornerSize>20 20</backgroundCornerSize>
+			<padding>8 8</padding>
+		</gridtile>
+
+		<image name="info_panel" extra="true">
+			<path>./assets/panel_snes.svg</path>
+			<pos>0.042 0.696</pos>
+			<size>0.916 0.175</size>
+			<zIndex>1</zIndex>
+		</image>
+
+		<!-- the default metadata widgets are laid out over the panel; hide the ones this layout does not use -->
+		<text name="md_lbl_rating"><visible>false</visible></text>
+		<text name="md_lbl_developer"><visible>false</visible></text>
+		<text name="md_lbl_publisher"><visible>false</visible></text>
+		<text name="md_lbl_genre"><visible>false</visible></text>
+		<text name="md_lbl_lastplayed"><visible>false</visible></text>
+		<text name="md_lbl_playcount"><visible>false</visible></text>
+		<text name="md_developer"><visible>false</visible></text>
+		<text name="md_publisher"><visible>false</visible></text>
+		<text name="md_genre"><visible>false</visible></text>
+		<text name="md_lastplayed"><visible>false</visible></text>
+		<text name="md_playcount"><visible>false</visible></text>
+		<rating name="md_rating"><visible>false</visible></rating>
+
+		<image name="md_image">
+			<pos>0.12 0.783</pos>
+			<origin>0.5 0.5</origin>
+			<maxSize>0.085 0.14</maxSize>
+			<zIndex>10</zIndex>
+		</image>
+
+		<text name="md_name">
+			<pos>0.215 0.715</pos>
+			<size>0.365 0.08</size>
+			<color>FFFFFF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.06</fontSize>
+			<alignment>left</alignment>
+			<zIndex>10</zIndex>
+		</text>
+		<text name="md_lbl_releasedate">
+			<pos>0.215 0.812</pos>
+			<text>YEAR</text>
+			<color>B9A8FF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.03</fontSize>
+			<zIndex>10</zIndex>
+		</text>
+		<datetime name="md_releasedate">
+			<pos>0.27 0.812</pos>
+			<color>FFFFFF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.03</fontSize>
+			<format>%Y</format>
+			<zIndex>10</zIndex>
+		</datetime>
+		<text name="md_lbl_players">
+			<pos>0.35 0.812</pos>
+			<text>PLAYERS</text>
+			<color>B9A8FF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.03</fontSize>
+			<zIndex>10</zIndex>
+		</text>
+		<text name="md_players">
+			<pos>0.45 0.812</pos>
+			<color>FFFFFF</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.03</fontSize>
+			<zIndex>10</zIndex>
+		</text>
+		<text name="md_description">
+			<pos>0.61 0.725</pos>
+			<size>0.31 0.14</size>
+			<color>C5C4DC</color>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.028</fontSize>
+			<zIndex>10</zIndex>
+		</text>
+
+		<helpsystem name="help">
+			<pos>0.5 0.955</pos>
+			<origin>0.5 0.5</origin>
+			<textColor>D9D7F2</textColor>
+			<iconColor>9E83FF</iconColor>
+			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
+			<fontSize>0.03</fontSize>
+		</helpsystem>
+	</view>
+</theme>

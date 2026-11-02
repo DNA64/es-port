@@ -5,6 +5,7 @@
 #include "AsyncHandle.h"
 #include "HttpReq.h"
 #include "MetaData.h"
+#include "PlatformId.h"
 #include <functional>
 #include <memory>
 #include <queue>
@@ -161,6 +162,11 @@ std::unique_ptr<ImageDownloadHandle> downloadImageAsync(const std::string& url, 
 
 // Resolves all metadata assets that need to be downloaded.
 std::unique_ptr<MDResolveHandle> resolveMetaDataAssets(const ScraperSearchResult& result, const ScraperSearchParams& search);
+
+bool isScrapedKeyEnabled(const std::string& key);
+void applyScrapeResult(MetaDataList& target, const MetaDataList& result);
+void saveScrapeToDesktop(const FileData* game, const MetaDataList& result);
+std::vector<PlatformIds::PlatformId> getScrapePlatforms(const ScraperSearchParams& params);
 
 //You can pass 0 for maxWidth or maxHeight to automatically keep the aspect ratio.
 //Will overwrite the image at [path] with the new resized one.

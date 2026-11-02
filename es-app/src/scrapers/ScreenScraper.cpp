@@ -146,9 +146,9 @@ void screenscraper_generate_scraper_requests(const ScraperSearchParams& params,
 	ScreenScraperRequest::ScreenScraperConfig ssConfig;
 
 	// Check if the user has overridden the file name
-	path = ssConfig.getGameSearchUrl(params.nameOverride.empty() ? params.game->getFileName() : params.nameOverride);
+	path = ssConfig.getGameSearchUrl(params.nameOverride.empty() ? params.game->getCleanName() : params.nameOverride);
 
-	auto& platforms = params.system->getPlatformIds();
+	const auto platforms = getScrapePlatforms(params);
 	std::vector<unsigned short> p_ids;
 
 	// Get the IDs of each platform from the ScreenScraper list
@@ -173,9 +173,8 @@ void screenscraper_generate_scraper_requests(const ScraperSearchParams& params,
 
 	for (auto platform = p_ids.cbegin(); platform != p_ids.cend(); platform++)
 	{
-		path += "&systemeid=";
-		path += HttpReq::urlEncode(std::to_string(*platform));
-		requests.push(std::unique_ptr<ScraperRequest>(new ScreenScraperRequest(requests, results, path)));
+		requests.push(std::unique_ptr<ScraperRequest>(new ScreenScraperRequest(requests, results,
+			path + "&systemeid=" + HttpReq::urlEncode(std::to_string(*platform)))));
 	}
 
 }

@@ -229,13 +229,15 @@ void GuiMetaDataEd::fetch()
 void GuiMetaDataEd::fetchDone(const ScraperSearchResult& result)
 {
 	assert(mMetaDataDecl.size() >= mEditors.size());
+	saveScrapeToDesktop(mScraperParams.game, result.mdl);
 	int edIdx = 0;
 	for(auto &mdd : mMetaDataDecl)
 	{
 		if(mdd.isStatistic)
 			continue;
 
-		mEditors.at(edIdx)->setValue(result.mdl.get(mdd.key));
+		if(isScrapedKeyEnabled(mdd.key) && result.mdl.get(mdd.key) != mdd.defaultValue)
+			mEditors.at(edIdx)->setValue(result.mdl.get(mdd.key));
 		edIdx++;
 	}
 }

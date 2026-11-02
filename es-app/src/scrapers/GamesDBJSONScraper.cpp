@@ -147,7 +147,7 @@ void thegamesdb_generate_json_scraper_requests(const ScraperSearchParams& params
 	} else
 	{
 		std::string platformQueryParam;
-		auto& platforms = params.system->getPlatformIds();
+		const auto platforms = getScrapePlatforms(params);
 		if (!platforms.empty())
 		{
 			bool first = true;

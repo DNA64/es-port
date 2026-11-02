@@ -74,7 +74,12 @@ void Settings::setDefaults()
 	mBoolMap["EnableSounds"] = true;
 	mBoolMap["ShowHelpPrompts"] = true;
 	mBoolMap["DoublePressRemovesFromFavs"] = false;
-	mBoolMap["ScrapeRatings"] = true;
+	mBoolMap["ScrapeRatings"] = false;
+	mBoolMap["ScrapeName"] = false;
+	mBoolMap["ScrapeDescription"] = true;
+	mBoolMap["ScrapeImage"] = false;
+	mBoolMap["ScrapeDetails"] = true;
+	mBoolMap["ScrapeOverwrite"] = false;
 	mBoolMap["IgnoreGamelist"] = false;
 	mBoolMap["HideConsole"] = true;
 	mBoolMap["QuickSystemSelect"] = true;

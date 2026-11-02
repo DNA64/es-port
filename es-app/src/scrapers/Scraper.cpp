@@ -6,6 +6,8 @@
 #include "Log.h"
 #include "Settings.h"
 #include "SystemData.h"
+#include "platform.h"
+#include "utils/FileSystemUtil.h"
 #include <FreeImage.h>
 #include <fstream>
 
@@ -141,7 +143,10 @@ std::unique_ptr<MDResolveHandle> resolveMetaDataAssets(const ScraperSearchResult
 
 MDResolveHandle::MDResolveHandle(const ScraperSearchResult& result, const ScraperSearchParams& search) : mResult(result)
 {
-	if(!result.imageUrl.empty())
+	if(!Settings::getInstance()->getBool("ScrapeImage"))
+		mResult.imageUrl.clear();
+
+	if(!result.imageUrl.empty() && Settings::getInstance()->getBool("ScrapeImage"))
 	{
 
 		std::string ext;
@@ -320,4 +325,154 @@ std::string getSaveAsPath(const ScraperSearchParams& params, const std::string& 
 
 	path += name + extension;
 	return path;
+}
+
+bool isScrapedKeyEnabled(const std::string& key)
+{
+	static const std::map<std::string, const char*> settingByKey {
+		{ "name", "ScrapeName" },
+		{ "desc", "ScrapeDescription" },
+		{ "image", "ScrapeImage" },
+		{ "rating", "ScrapeRatings" },
+		{ "releasedate", "ScrapeDetails" },
+		{ "developer", "ScrapeDetails" },
+		{ "publisher", "ScrapeDetails" },
+		{ "genre", "ScrapeDetails" },
+		{ "players", "ScrapeDetails" }
+	};
+
+	const auto it = settingByKey.find(key);
+	return it != settingByKey.cend() && Settings::getInstance()->getBool(it->second);
+}
+
+void applyScrapeResult(MetaDataList& target, const MetaDataList& result)
+{
+	for(const auto& decl : result.getMDD())
+	{
+		const bool keep = !Settings::getInstance()->getBool("ScrapeOverwrite") && decl.key != "name" && target.get(decl.key) != decl.defaultValue;
+		if(isScrapedKeyEnabled(decl.key) && !keep && result.get(decl.key) != decl.defaultValue)
+			target.set(decl.key, result.get(decl.key));
+	}
+}
+
+namespace
+{
+
+std::string shellQuote(const std::string& value)
+{
+	std::string quoted = "'";
+	for(const char c : value)
+	{
+		if(c == '\'')
+			quoted += "'\''";
+		else
+			quoted += c;
+	}
+	return quoted + "'";
+}
+
+}
+
+void saveScrapeToDesktop(const FileData* game, const MetaDataList& result)
+{
+	const std::string path = game->getPath();
+	if(Utils::FileSystem::getExtension(path) != ".desktop")
+		return;
+
+	const struct { const char* key; const char* env; } fields[] = {
+		{ "name", "ES_NAME" },
+		{ "desc", "ES_DESC" },
+		{ "releasedate", "ES_RELEASED" },
+		{ "players", "ES_PLAYERS" },
+		{ "publisher", "ES_PUBLISHER" },
+		{ "genre", "ES_GENRE" }
+	};
+
+	std::string command;
+	for(const auto& field : fields)
+	{
+		std::string value = result.get(field.key);
+		if(!isScrapedKeyEnabled(field.key) || value.empty() || value == "unknown" || value == "not-a-date-time")
+			continue;
+
+		if(std::string(field.key) == "releasedate")
+		{
+			if(value.size() < 8)
+				continue;
+			value = value.substr(0, 4) + "-" + value.substr(4, 2) + "-" + value.substr(6, 2);
+		}
+
+		if(std::string(field.key) == "players")
+		{
+			const size_t last = value.find_last_of("0123456789");
+			if(last == std::string::npos)
+				continue;
+			const size_t before = value.find_last_not_of("0123456789", last);
+			const size_t first = before == std::string::npos ? 0 : before + 1;
+			value = value.substr(first, last - first + 1);
+		}
+
+		command += std::string(field.env) + "=" + shellQuote(value) + " ";
+	}
+
+	if(!command.empty() && Settings::getInstance()->getBool("ScrapeOverwrite"))
+		command += "ES_OVERWRITE=1 ";
+
+	if(!command.empty())
+		runSystemCommand(command + "sh /var/lib/hakchi/es/es-save-desktop.sh " + shellQuote(Utils::FileSystem::getStem(path)));
+}
+
+namespace
+{
+
+bool hasRomExtension(const std::string& exec, const std::string& extension)
+{
+	return exec.find(extension + ".") != std::string::npos || exec.find(extension + " ") != std::string::npos ||
+		(exec.size() >= extension.size() && exec.compare(exec.size() - extension.size(), extension.size(), extension) == 0);
+}
+
+std::vector<PlatformIds::PlatformId> platformsFromExec(const std::string& exec)
+{
+	using namespace PlatformIds;
+	if(exec.find("kachikachi") != std::string::npos || hasRomExtension(exec, ".nes"))
+		return { NINTENDO_ENTERTAINMENT_SYSTEM };
+	if(exec.find("shvc") != std::string::npos || exec.find("/bin/snes") != std::string::npos ||
+		hasRomExtension(exec, ".sfc") || hasRomExtension(exec, ".smc"))
+		return { SUPER_NINTENDO };
+	if(hasRomExtension(exec, ".32x") || exec.find("/bin/32x") != std::string::npos)
+		return { SEGA_32X };
+	if(hasRomExtension(exec, ".sms"))
+		return { SEGA_MASTER_SYSTEM };
+	if(hasRomExtension(exec, ".gba"))
+		return { GAME_BOY_ADVANCE };
+	if(hasRomExtension(exec, ".gbc"))
+		return { GAME_BOY_COLOR };
+	if(hasRomExtension(exec, ".gb"))
+		return { GAME_BOY };
+	if(hasRomExtension(exec, ".pce"))
+		return { TURBOGRAFX_16 };
+	if(exec.find("/bin/md") != std::string::npos || exec.find("genesis") != std::string::npos ||
+		hasRomExtension(exec, ".md") || hasRomExtension(exec, ".gen") || hasRomExtension(exec, ".bin"))
+		return { SEGA_GENESIS, SEGA_MEGA_DRIVE };
+	return {};
+}
+
+}
+
+std::vector<PlatformIds::PlatformId> getScrapePlatforms(const ScraperSearchParams& params)
+{
+	std::ifstream desktop(params.game->getPath());
+	std::string line;
+	while(std::getline(desktop, line))
+	{
+		if(line.compare(0, 5, "Exec=") == 0)
+		{
+			const std::vector<PlatformIds::PlatformId> detected = platformsFromExec(line.substr(5));
+			if(!detected.empty())
+				return detected;
+			break;
+		}
+	}
+
+	return params.system->getPlatformIds();
 }

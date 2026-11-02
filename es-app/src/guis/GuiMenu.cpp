@@ -67,6 +67,21 @@ void GuiMenu::openScraperSettings()
 	s->addWithLabel("SCRAPE RATINGS", scrape_ratings);
 	s->addSaveFunc([scrape_ratings] { Settings::getInstance()->setBool("ScrapeRatings", scrape_ratings->getState()); });
 
+	const struct { const char* label; const char* setting; } scrapeToggles[] = {
+		{ "SCRAPE NAME", "ScrapeName" },
+		{ "SCRAPE DESCRIPTION", "ScrapeDescription" },
+		{ "SCRAPE COVER IMAGE", "ScrapeImage" },
+		{ "SCRAPE DETAILS", "ScrapeDetails" },
+		{ "OVERWRITE EXISTING DATA", "ScrapeOverwrite" }
+	};
+	for(const auto& toggle : scrapeToggles)
+	{
+		auto sw = std::make_shared<SwitchComponent>(mWindow);
+		sw->setState(Settings::getInstance()->getBool(toggle.setting));
+		s->addWithLabel(toggle.label, sw);
+		s->addSaveFunc([sw, setting = std::string(toggle.setting)] { Settings::getInstance()->setBool(setting, sw->getState()); });
+	}
+
 	// scrape now
 	ComponentListRow row;
 	auto openScrapeNow = [this] { mWindow->pushGui(new GuiScraperStart(mWindow)); };

@@ -20,5 +20,11 @@ to its font.
   `device/resources/fallback_ja.ttf`, the fallback for Japanese glyphs. It is the variable font instantiated at
   weight 400 and reduced to kana, punctuation and the JIS X 0208 kanji.
 
+## CA certificates
+
+`device/resources/cacert.pem` is the Mozilla CA certificate bundle as extracted by the curl project
+(<https://curl.se/docs/caextract.html>), licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
+It is unmodified; the console has no certificate store, so the scrapers use it to verify HTTPS.
+
 "Super Nintendo Entertainment System" and the logo are trademarks of Nintendo. This project is not affiliated with
 or endorsed by Nintendo.

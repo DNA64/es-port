@@ -2,6 +2,7 @@
 
 #include "utils/FileSystemUtil.h"
 #include "Log.h"
+#include "resources/ResourceManager.h"
 #include <assert.h>
 
 CURLM* HttpReq::s_multi_handle = curl_multi_init();
@@ -66,6 +67,10 @@ HttpReq::HttpReq(const std::string& url)
 		onError(curl_easy_strerror(err));
 		return;
 	}
+
+	//use the CA bundle shipped with the resources, the console has none
+	if(ResourceManager::getInstance()->fileExists(":/cacert.pem"))
+		curl_easy_setopt(mHandle, CURLOPT_CAINFO, ResourceManager::getInstance()->getResourcePath(":/cacert.pem").c_str());
 
 	//set curl max redirects
 	err = curl_easy_setopt(mHandle, CURLOPT_MAXREDIRS, 2L);

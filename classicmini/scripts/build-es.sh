@@ -15,8 +15,8 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 set -e
-lib_dir=/usr/lib/arm-linux-gnueabihf
-inc_dir=/usr/include/arm-linux-gnueabihf
+sysroot_lib=/usr/lib/arm-linux-gnueabihf
+sysroot_include=/usr/include/arm-linux-gnueabihf
 build_dir=${build_dir:-/out/.build}
 cross=arm-linux-gnueabihf
 
@@ -48,21 +48,21 @@ cmake /src \
   -DFreeImage_LIBRARY_REL=/opt/freeimage/lib/libfreeimage.a \
   -DCURL_INCLUDE_DIR=/opt/curl-static/include \
   -DCURL_LIBRARY=/opt/curl-static/lib/libcurl.a \
-  -DFREETYPE_LIBRARY=$lib_dir/libfreetype.so \
-  -DFREETYPE_LIBRARY_RELEASE=$lib_dir/libfreetype.so \
-  -DFREETYPE_INCLUDE_DIR_ft2build=$inc_dir/freetype2 \
-  -DFREETYPE_INCLUDE_DIR_freetype2=$inc_dir/freetype2 \
-  -DSDL2_LIBRARY=$lib_dir/libSDL2.so \
+  -DFREETYPE_LIBRARY=$sysroot_lib/libfreetype.so \
+  -DFREETYPE_LIBRARY_RELEASE=$sysroot_lib/libfreetype.so \
+  -DFREETYPE_INCLUDE_DIR_ft2build=$sysroot_include/freetype2 \
+  -DFREETYPE_INCLUDE_DIR_freetype2=$sysroot_include/freetype2 \
+  -DSDL2_LIBRARY=$sysroot_lib/libSDL2.so \
   -DSDL2_INCLUDE_DIR=/usr/include/SDL2 \
-  -DALSA_LIBRARY=$lib_dir/libasound.so \
-  -DALSA_INCLUDE_DIR=$inc_dir \
+  -DALSA_LIBRARY=$sysroot_lib/libasound.so \
+  -DALSA_INCLUDE_DIR=$sysroot_include \
   -DRAPIDJSON_INCLUDE_DIRS=/opt/rapidjson/include \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,--allow-shlib-undefined" \
-  -DCMAKE_CXX_STANDARD_LIBRARIES="-L/opt/mbedtls/lib -L$lib_dir -lmbedtls -lmbedx509 -lmbedcrypto -lz -lpthread" \
+  -DCMAKE_CXX_STANDARD_LIBRARIES="-L/opt/mbedtls/lib -L$sysroot_lib -lmbedtls -lmbedx509 -lmbedcrypto -lz -lpthread" \
   >"$build_dir/cmake.log" 2>&1 || { tail -40 "$build_dir/cmake.log"; exit 1; }
 
 cmake --build . -j"$(nproc)" >"$build_dir/make.log" 2>&1 || { grep -B3 -E "error|undefined reference" "$build_dir/make.log" | tail -40; exit 1; }
 
 $cross-strip -o /out/emulationstation /src/emulationstation
-cp $lib_dir/libfreetype.so.6 /out/libfreetype.so.6
+cp $sysroot_lib/libfreetype.so.6 /out/libfreetype.so.6
 ls -la /out

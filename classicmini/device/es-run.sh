@@ -14,18 +14,18 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-here=/var/lib/hakchi/es
+es_dir=/var/lib/hakchi/es
 source /etc/preinit
 script_init
 
 trap uistart EXIT
 uistop
-sh "$here/es-library.sh" /tmp/es-library
+sh "$es_dir/es-library.sh" /tmp/es-library
 while true; do
   rm -f /tmp/es_next
-  HOME=$here/home LD_LIBRARY_PATH=$here "$here/emulationstation" "$@"
+  HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
   [ -f /tmp/es_next ] || break
-  sh "$here/es-game.sh" "$(cat /tmp/es_next)"
+  sh "$es_dir/es-game.sh" "$(cat /tmp/es_next)"
   if [ -n "$(pidof clover-mcp)" ]; then
     for _ in $(seq 1 25); do
       [ -n "$(pidof ReedPlayer-Clover)" ] && break

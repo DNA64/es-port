@@ -28,11 +28,11 @@ readField() { tr -d '\r' < "$1" | sed -n "s/^$2 *= *//p" | head -n 1; }
 readDescription() { tr -d '\r' < "$1" | sed -n '/^\[Description\]/,$ s/^Text *= *//p' | head -n 1; }
 
 buildMenu() {
-  local menu="$1" dir="$2" depth="$3" trail="$4 $1" d code desktop name cmd icon rel entry sub desc year players sp n
+  local menu="$1" dir="$2" depth="$3" trail="$4 $1" game_dir code desktop name cmd icon rel entry sub desc year players suspend_dir slot
   mkdir -p "$out/$dir"
-  for d in "$store/$menu"/CLV-*; do
-    code=${d##*/}
-    desktop=$d/$code.desktop
+  for game_dir in "$store/$menu"/CLV-*; do
+    code=${game_dir##*/}
+    desktop=$game_dir/$code.desktop
     [ -f "$desktop" ] || continue
 
     name=$(readField "$desktop" Name)
@@ -75,15 +75,15 @@ buildMenu() {
     } >> "$gamelist"
 
     [ "$entry" = game ] || continue
-    for sp in "$profiles/$code"/suspendpoint[1-9]; do
-      [ -d "$sp" ] || continue
-      n=${sp##*suspendpoint}
-      { cat "$desktop"; printf '\nESResume=%s\n' "$n"; } > "$out/${dir:+$dir/}$code.sp$n.desktop"
+    for suspend_dir in "$profiles/$code"/suspendpoint[1-9]; do
+      [ -d "$suspend_dir" ] || continue
+      slot=${suspend_dir##*suspendpoint}
+      { cat "$desktop"; printf '\nESResume=%s\n' "$slot"; } > "$out/${dir:+$dir/}$code.sp$slot.desktop"
       {
         echo "  <game>"
-        echo "    <path>$(echo "${rel%.desktop}.sp$n.desktop" | escXml)</path>"
-        echo "    <name>$(echo "$name (suspend point $n)" | escXml)</name>"
-        [ -f "$sp/state.png" ] && echo "    <image>$(echo "$sp/state.png" | escXml)</image>"
+        echo "    <path>$(echo "${rel%.desktop}.sp$slot.desktop" | escXml)</path>"
+        echo "    <name>$(echo "$name (suspend point $slot)" | escXml)</name>"
+        [ -f "$suspend_dir/state.png" ] && echo "    <image>$(echo "$suspend_dir/state.png" | escXml)</image>"
         echo "  </game>"
       } >> "$gamelist"
     done

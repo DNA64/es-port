@@ -14,11 +14,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-here=/var/lib/hakchi/es
+es_dir=/var/lib/hakchi/es
 case "$1" in
   start)
-    [ -f "$here/no_boot" ] && exit 0
-    start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$here/es-run.sh"
+    [ -f "$es_dir/no_boot" ] && exit 0
+    start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$es_dir/es-run.sh"
   ;;
   stop)
     start-stop-daemon -K -q -p /run/es-run.pid

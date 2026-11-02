@@ -14,6 +14,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+export ES_GAME=1
 shim=/tmp/es-shim
 profile=/var/lib/clover/profiles/0
 volatile=/var/cache/clover/volatile

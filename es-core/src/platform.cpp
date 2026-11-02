@@ -42,11 +42,14 @@ int runSystemCommand(const std::string& cmd_utf8)
 #endif
 }
 
+void touch(const std::string& filename);
+
 QuitMode quitMode = QuitMode::QUIT;
 
 int quitES(QuitMode mode)
 {
 	quitMode = mode;
+	touch("/tmp/es-quit");
 
 	SDL_Event *quit = new SDL_Event();
 	quit->type = SDL_QUIT;

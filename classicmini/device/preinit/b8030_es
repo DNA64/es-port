@@ -1,0 +1,38 @@
+#!/bin/sh
+#  Copyright (C) 2026 DefKorns (https://defkorns.github.io/LICENSE)
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+es_dir=/var/lib/hakchi/es
+
+if [ -f "$es_dir/es-run.sh" ] && [ ! -f "$es_dir/no_boot" ]; then
+  stockUistart() {
+    uistop
+    if [ -f "$squashfs/usr/game/m2engage" ]; then
+      sh "/etc/init.d/S99first_startup" start
+    else
+      sh "/etc/init.d/S81clover-mcp" start
+    fi
+  }
+
+  uistart() {
+    [ -n "$ES_GAME" ] && return 0
+    uistop
+    for _ in $(seq 1 10); do
+      kill -0 "$(cat /run/es-run.pid 2>/dev/null)" 2>/dev/null || break
+      usleep 300000
+    done
+    start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$es_dir/es-run.sh"
+  }
+fi

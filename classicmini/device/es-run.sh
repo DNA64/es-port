@@ -21,13 +21,21 @@ script_init
 export ES_PAD=snes
 [ "$sftype" = snes ] || ES_PAD=nes
 
-trap uistart EXIT
+restore_ui=1
+trap '[ "$restore_ui" = 1 ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
 uistop
 sh "$es_dir/es-library.sh" /tmp/es-library
 while true; do
-  rm -f /tmp/es_next /tmp/es_resume
+  rm -f /tmp/es_next /tmp/es_resume /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
   HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
-  [ -f /tmp/es_next ] || break
+  es_status=$?
+  [ -f /tmp/es-restart ] && continue
+  if [ ! -f /tmp/es_next ]; then
+    if [ -f /tmp/es-sysrestart ] || [ -f /tmp/es-shutdown ] || { [ "$es_status" -eq 0 ] && [ ! -f /tmp/es-quit ]; }; then
+      restore_ui=0
+    fi
+    break
+  fi
   sh "$es_dir/es-game.sh" "$(cat /tmp/es_next)" "$(cat /tmp/es_resume 2>/dev/null)"
   if [ -n "$(pidof clover-mcp)" ]; then
     for _ in $(seq 1 25); do

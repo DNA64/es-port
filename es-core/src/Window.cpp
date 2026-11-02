@@ -185,9 +185,10 @@ void Window::update(int deltaTime)
 			float textureTotalUsageMb = TextureResource::getTotalTextureSize() / 1000.0f / 1000.0f;
 			float fontVramUsageMb = Font::getTotalMemUsage() / 1000.0f / 1000.0f;
 
-			ss << "\nFont VRAM: " << fontVramUsageMb << " Tex VRAM: " << textureVramUsageMb <<
-				  " Tex Max: " << textureTotalUsageMb;
-			mFrameDataText = std::unique_ptr<TextCache>(mDefaultFonts.at(1)->buildTextCache(ss.str(), 50.f, 50.f, 0xFF00FFFF));
+			const float totalVramMb = fontVramUsageMb + textureVramUsageMb;
+			ss << "\nFont VRAM: " << fontVramUsageMb << " Tex VRAM: " << textureVramUsageMb;
+			ss << "\nTotal VRAM: " << totalVramMb << " / " << Settings::getInstance()->getInt("MaxVRAM") << " MB (tex max " << textureTotalUsageMb << ")";
+			mFrameDataText = std::unique_ptr<TextCache>(mDefaultFonts.at(1)->buildTextCache(ss.str(), Vector2f(0.f, 8.f), 0xFF00FFFF, Renderer::getScreenWidth() - 12.f, ALIGN_RIGHT));
 		}
 
 		mFrameTimeElapsed = 0;

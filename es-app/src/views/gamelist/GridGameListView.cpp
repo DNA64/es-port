@@ -10,6 +10,28 @@
 #include "components/VideoPlayerComponent.h"
 #endif
 #include "components/VideoVlcComponent.h"
+#include "guis/GuiInfoPopup.h"
+#include "guis/GuiMenu.h"
+#include "utils/FileSystemUtil.h"
+#include "FileSorts.h"
+#include "Window.h"
+#include <cstdlib>
+#include <stack>
+#include <string>
+
+namespace
+{
+	GuiSuspendPoints::Pad environmentPad()
+	{
+		const char* pad = std::getenv("ES_PAD");
+		return pad != nullptr && std::string(pad) == "nes" ? GuiSuspendPoints::Pad::Nes : GuiSuspendPoints::Pad::Snes;
+	}
+
+	std::string gameCode(const FileData* game)
+	{
+		return Utils::FileSystem::getStem(game->getPath());
+	}
+}
 
 GridGameListView::GridGameListView(Window* window, FileData* root) :
 	ISimpleGameListView(window, root),
@@ -24,7 +46,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window)
+	mName(window),
+	mSuspendPoints(SuspendPoints::fromEnvironment()),
+	mBalloon(window),
+	mPad(environmentPad())
 {
 	const float padding = 0.01f;
 
@@ -118,6 +143,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	initMDLabels();
 	initMDValues();
+	mBalloon.setDefaultZIndex(60);
+	mBalloon.setZIndex(60);
+	addChild(&mBalloon);
+	refreshFloating();
 	updateInfoPanel();
 }
 
@@ -152,6 +181,31 @@ std::string GridGameListView::getQuickSystemSelectLeftButton()
 
 bool GridGameListView::input(InputConfig* config, Input input)
 {
+	if(input.value != 0 && config->isMappedTo("b", input) && mFloating.valid)
+	{
+		FileData* target = findGame(mFloating.code);
+		if(target != nullptr && target != getCursor())
+		{
+			jumpTo(target);
+			return true;
+		}
+	}
+
+	if(input.value != 0 && config->isMappedTo("down", input) && openSuspendPoints())
+		return true;
+
+	if(input.value != 0 && config->isMappedLike("up", input))
+	{
+		mWindow->pushGui(new GuiMenu(mWindow));
+		return true;
+	}
+
+	if(input.value != 0 && config->isMappedTo("y", input))
+	{
+		cycleSort();
+		return true;
+	}
+
 	if(config->isMappedLike("left", input) || config->isMappedLike("right", input))
 		return GuiComponent::input(config, input);
 
@@ -305,6 +359,7 @@ void GridGameListView::initMDValues()
 
 void GridGameListView::updateInfoPanel()
 {
+	refreshBalloonSelection();
 	FileData* file = (mGrid.size() == 0 || mGrid.isScrolling()) ? NULL : mGrid.getSelected();
 
 	bool fadingOut;
@@ -384,6 +439,12 @@ void GridGameListView::addPlaceholder()
 
 void GridGameListView::launch(FileData* game)
 {
+	if(mPendingResume > 0)
+		setenv("ES_RESUME", std::to_string(mPendingResume).c_str(), 1);
+	else
+		unsetenv("ES_RESUME");
+	mPendingResume = 0;
+
 	float screenWidth = (float) Renderer::getScreenWidth();
 	float screenHeight = (float) Renderer::getScreenHeight();
 
@@ -472,22 +533,15 @@ std::vector<GuiComponent*> GridGameListView::getMDValues()
 
 std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 {
-	std::vector<HelpPrompt> prompts;
+	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
+	const bool canJump = mFloating.valid && (cursor == nullptr || gameCode(cursor) != mFloating.code);
 
-	if(Settings::getInstance()->getBool("QuickSystemSelect"))
-		prompts.push_back(HelpPrompt("lr", "system"));
-	prompts.push_back(HelpPrompt("up/down/left/right", "choose"));
-	prompts.push_back(HelpPrompt("a", "launch"));
-	prompts.push_back(HelpPrompt("b", "back"));
-	if(!UIModeController::getInstance()->isUIModeKid())
-		prompts.push_back(HelpPrompt("select", "options"));
-	if(mRoot->getSystem()->isGameSystem())
-		prompts.push_back(HelpPrompt("x", "random"));
-	if(mRoot->getSystem()->isGameSystem() && !UIModeController::getInstance()->isUIModeKid())
-	{
-		std::string prompt = CollectionSystemManager::get()->getEditingCollection();
-		prompts.push_back(HelpPrompt("y", prompt));
-	}
+	std::vector<HelpPrompt> prompts;
+	prompts.push_back(HelpPrompt("up", "menu"));
+	prompts.push_back(HelpPrompt("down", "suspend point list"));
+	prompts.push_back(HelpPrompt("a", "select"));
+	prompts.push_back(HelpPrompt("b", canJump ? "last game" : "back"));
+	prompts.push_back(HelpPrompt("y", "sort"));
 	return prompts;
 }
 
@@ -500,7 +554,72 @@ void GridGameListView::update(int deltaTime)
 void GridGameListView::onShow()
 {
 	GuiComponent::onShow();
+	refreshFloating();
 	updateInfoPanel();
+}
+
+void GridGameListView::refreshFloating()
+{
+	mFloating = mSuspendPoints.floating();
+	mBalloon.setPoint(mFloating);
+	refreshBalloonSelection();
+}
+
+void GridGameListView::refreshBalloonSelection()
+{
+	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
+	mBalloon.setSelected(cursor != nullptr && mFloating.valid && cursor->getType() == GAME
+		&& gameCode(cursor) == mFloating.code);
+}
+
+FileData* GridGameListView::findGame(const std::string& code) const
+{
+	for(FileData* game : mRoot->getFilesRecursive(GAME))
+		if(gameCode(game) == code)
+			return game;
+	return nullptr;
+}
+
+void GridGameListView::jumpTo(FileData* game)
+{
+	std::vector<FileData*> folders;
+	for(FileData* parent = game->getParent(); parent != nullptr && parent != mRoot; parent = parent->getParent())
+		folders.push_back(parent);
+
+	mCursorStack = std::stack<FileData*>();
+	for(auto folder = folders.rbegin(); folder != folders.rend(); ++folder)
+		mCursorStack.push(*folder);
+
+	populateList(game->getParent()->getChildrenListToDisplay());
+	setCursor(game);
+}
+
+void GridGameListView::cycleSort()
+{
+	const std::vector<FileData::SortType>& types = FileSorts::SortTypes;
+	std::size_t next = 0;
+	for(std::size_t index = 0; index < types.size(); ++index)
+		if(types[index].description == mRoot->getSortDescription())
+			next = (index + 1) % types.size();
+
+	mRoot->sort(types[next]);
+	onFileChanged(mRoot, FILE_SORTED);
+	mWindow->setInfoPopup(new GuiInfoPopup(mWindow, "Sorted by " + types[next].description, 2000));
+}
+
+bool GridGameListView::openSuspendPoints()
+{
+	FileData* game = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
+	if(game == nullptr || game->getType() != GAME)
+		return false;
+
+	mWindow->pushGui(new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
+		[this, game](int slot) {
+			mPendingResume = slot;
+			launch(game);
+		},
+		[this] { refreshFloating(); }));
+	return true;
 }
 
 void GridGameListView::onFocusLost() {

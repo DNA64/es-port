@@ -22,7 +22,7 @@ desktop=$1
 cmd=$(tr -d '\r' < "$desktop" | sed -n 's/^Exec=//p' | head -n 1)
 path=$(tr -d '\r' < "$desktop" | sed -n 's/^Path=//p' | head -n 1)
 code=$(tr -d '\r' < "$desktop" | sed -n 's/^Code=//p' | head -n 1)
-resume=$(tr -d '\r' < "$desktop" | sed -n 's/^ESResume=//p' | head -n 1)
+resume=$2
 [ -n "$cmd" ] || exit 1
 if [ -d "$path" ]; then cd "$path" || exit 1; fi
 
@@ -34,8 +34,8 @@ if [ -n "$code" ]; then
   cmd="$cmd --save-time-path $out/state.time --save-screenshot-on-quit $out/state.png"
   cmd="$cmd --rollback-mode record --rollback-output-dir $out/rollback/"
   if [ -n "$resume" ]; then
-    sp=$profile/$code/suspendpoint$resume
-    cmd="$cmd --load-time-path $sp//state.time --rollback-input-dir $sp/rollback/"
+    suspend_dir=$profile/$code/suspendpoint$resume
+    cmd="$cmd --load-time-path $suspend_dir//state.time --rollback-input-dir $suspend_dir/rollback/"
   fi
 fi
 

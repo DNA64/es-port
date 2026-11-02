@@ -6,8 +6,11 @@
 #include "components/RatingComponent.h"
 #include "components/ScrollableContainer.h"
 #include "components/ImageGridComponent.h"
+#include "components/SuspendBalloon.h"
 #include "components/VideoComponent.h"
+#include "guis/GuiSuspendPoints.h"
 #include "views/gamelist/ISimpleGameListView.h"
+#include "SuspendPoints.h"
 
 class GridGameListView : public ISimpleGameListView
 {
@@ -50,6 +53,13 @@ private:
 	void initMDLabels();
 	void initMDValues();
 
+	void refreshFloating();
+	void refreshBalloonSelection();
+	bool openSuspendPoints();
+	void jumpTo(FileData* game);
+	void cycleSort();
+	FileData* findGame(const std::string& code) const;
+
 	TextComponent mLblRating, mLblReleaseDate, mLblDeveloper, mLblPublisher, mLblGenre, mLblPlayers, mLblLastPlayed, mLblPlayCount;
 
 	ImageComponent mMarquee;
@@ -71,6 +81,12 @@ private:
 
 	ScrollableContainer mDescContainer;
 	TextComponent mDescription;
+
+	SuspendPoints mSuspendPoints;
+	SuspendPoint mFloating;
+	SuspendBalloon mBalloon;
+	GuiSuspendPoints::Pad mPad;
+	int mPendingResume = 0;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H

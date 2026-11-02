@@ -15,4 +15,5 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 echo "$1" > /tmp/es_next
+echo "${ES_RESUME:-}" > /tmp/es_resume
 killall emulationstation

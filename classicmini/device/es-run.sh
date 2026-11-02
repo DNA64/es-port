@@ -18,14 +18,17 @@ es_dir=/var/lib/hakchi/es
 source /etc/preinit
 script_init
 
+export ES_PAD=snes
+[ "$sftype" = snes ] || ES_PAD=nes
+
 trap uistart EXIT
 uistop
 sh "$es_dir/es-library.sh" /tmp/es-library
 while true; do
-  rm -f /tmp/es_next
+  rm -f /tmp/es_next /tmp/es_resume
   HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
   [ -f /tmp/es_next ] || break
-  sh "$es_dir/es-game.sh" "$(cat /tmp/es_next)"
+  sh "$es_dir/es-game.sh" "$(cat /tmp/es_next)" "$(cat /tmp/es_resume 2>/dev/null)"
   if [ -n "$(pidof clover-mcp)" ]; then
     for _ in $(seq 1 25); do
       [ -n "$(pidof ReedPlayer-Clover)" ] && break

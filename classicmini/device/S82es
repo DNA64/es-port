@@ -1,0 +1,12 @@
+#!/bin/sh
+# Opens EmulationStation instead of the stock UI at boot. Create /var/lib/hakchi/es/no_boot to get the stock UI back.
+here=/var/lib/hakchi/es
+case "$1" in
+  start)
+    [ -f "$here/no_boot" ] && exit 0
+    start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$here/es-run.sh"
+  ;;
+  stop)
+    start-stop-daemon -K -q -p /run/es-run.pid
+  ;;
+esac

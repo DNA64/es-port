@@ -33,6 +33,13 @@ case "$1" in
     fi
   ;;
   stop)
+    [ -z "$(pidof clover-mcp)" ] || exit 0
+    touch /tmp/es-stopping
     start-stop-daemon -K -q -p /run/es-run.pid
+    killall emulationstation 2>/dev/null
+    usleep 300000
+    splash=shutdown
+    [ -f /tmp/es-restarting ] && splash=restart
+    decodepng "$es_dir/resources/$splash.png" > /dev/fb0
   ;;
 esac

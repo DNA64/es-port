@@ -21,8 +21,12 @@ script_init
 export ES_PAD=snes
 [ "$sftype" = snes ] || ES_PAD=nes
 
+drawSplash(){
+  decodepng "$es_dir/resources/$1.png" > /dev/fb0
+}
+
 restore_ui=1
-trap '[ "$restore_ui" = 1 ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
+trap '[ "$restore_ui" = 1 ] && [ ! -f /tmp/es-stopping ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
 uistop
 library_stamp=$es_dir/library.stamp
 games_dir=$(findGameStorage)
@@ -56,6 +60,14 @@ while true; do
   if [ ! -f /tmp/es_next ]; then
     if [ -f /tmp/es-sysrestart ] || [ -f /tmp/es-shutdown ] || { [ "$es_status" -eq 0 ] && [ ! -f /tmp/es-quit ]; }; then
       restore_ui=0
+    fi
+    if [ -f /tmp/es-sysrestart ]; then
+      touch /tmp/es-restarting
+      drawSplash restart
+      reboot
+    elif [ -f /tmp/es-shutdown ]; then
+      drawSplash shutdown
+      poweroff
     fi
     break
   fi

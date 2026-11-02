@@ -18,32 +18,84 @@
 #include "VolumeControl.h"
 #include <SDL_events.h>
 #include <algorithm>
+#include <utility>
 #include "platform.h"
 #include "FileSorts.h"
 #include "views/gamelist/IGameListView.h"
 #include "guis/GuiInfoPopup.h"
 
-GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MENU"), mVersion(window)
+namespace
 {
-	bool isFullUI = UIModeController::getInstance()->isUIModeFull();
+	const char* const CategoryTitles[] = { "DISPLAY", "SYSTEM", "NETWORK", "LIBRARY", "HELP" };
+}
 
-	if (isFullUI) {
-		addEntry("SCRAPER", 0x777777FF, true, [this] { openScraperSettings(); });
-		addEntry("SOUND SETTINGS", 0x777777FF, true, [this] { openSoundSettings(); });
-		addEntry("UI SETTINGS", 0x777777FF, true, [this] { openUISettings(); });
-		addEntry("GAME COLLECTION SETTINGS", 0x777777FF, true, [this] { openCollectionSystemSettings(); });
-		addEntry("OTHER SETTINGS", 0x777777FF, true, [this] { openOtherSettings(); });
-		addEntry("CONFIGURE INPUT", 0x777777FF, true, [this] { openConfigInput(); });
-	} else {
-		addEntry("SOUND SETTINGS", 0x777777FF, true, [this] { openSoundSettings(); });
-	}
-
-	addEntry("QUIT", 0x777777FF, true, [this] {openQuitMenu(); });
-
+GuiMenu::GuiMenu(Window* window, int category, std::function<void(int)> onClose) : GuiComponent(window),
+	mMenu(window, CategoryTitles[Display]), mVersion(window), mBar(window), mOnClose(std::move(onClose)),
+	mFullUI(UIModeController::getInstance()->isUIModeFull())
+{
 	addChild(&mMenu);
 	addVersionInfo();
+	showCategory(mFullUI ? category : System);
+}
+
+GuiMenu::~GuiMenu()
+{
+	if (mOnClose)
+		mOnClose(mCategory);
+}
+
+void GuiMenu::showCategory(int category)
+{
+	mCategory = category;
+	mBar.setSelected(category);
+	mMenu.clear();
+	mMenu.setTitle(CategoryTitles[category], Font::get(FONT_SIZE_LARGE));
+
+	switch (category)
+	{
+	case Display:
+		addEntry("UI SETTINGS", 0x777777FF, true, [this] { openUISettings(); });
+		addEntry("SCREENSAVER SETTINGS", 0x777777FF, true, [this] { openScreensaverOptions(); });
+		break;
+	case System:
+		addEntry("SOUND SETTINGS", 0x777777FF, true, [this] { openSoundSettings(); });
+		if (mFullUI)
+		{
+			addEntry("CONFIGURE INPUT", 0x777777FF, true, [this] { openConfigInput(); });
+			addEntry("OTHER SETTINGS", 0x777777FF, true, [this] { openOtherSettings(); });
+		}
+		addEntry("QUIT", 0x777777FF, true, [this] { openQuitMenu(); });
+		break;
+	case Network:
+		addEntry("SCRAPER", 0x777777FF, true, [this] { openScraperSettings(); });
+		break;
+	case Library:
+		addEntry("GAME COLLECTION SETTINGS", 0x777777FF, true, [this] { openCollectionSystemSettings(); });
+		break;
+	default:
+		addEntry("ABOUT", 0x777777FF, true, [this] { openAbout(); });
+		break;
+	}
+
 	setSize(mMenu.getSize());
 	setPosition((Renderer::getScreenWidth() - mSize.x()) / 2, Renderer::getScreenHeight() * 0.15f);
+}
+
+void GuiMenu::render(const Transform4x4f& parentTrans)
+{
+	GuiComponent::render(parentTrans);
+	if (mFullUI)
+	{
+		mBar.setFrameVisible(true);
+		mBar.render(Transform4x4f::Identity());
+	}
+}
+
+void GuiMenu::openAbout()
+{
+	const std::string message = "EMULATIONSTATION V" + Utils::String::toUpper(PROGRAM_VERSION_STRING) +
+		"\n\nUP: MENU   DOWN: SUSPEND POINT LIST\nA: SELECT   B: GO TO SAVED GAME   Y: SORT";
+	mWindow->pushGui(new GuiMsgBox(mWindow, message, "OK", [] { return; }));
 }
 
 void GuiMenu::openScraperSettings()
@@ -668,6 +720,20 @@ bool GuiMenu::input(InputConfig* config, Input input)
 	if(GuiComponent::input(config, input))
 		return true;
 
+	if(mFullUI && input.value != 0)
+	{
+		if(config->isMappedLike("left", input))
+		{
+			showCategory((mCategory + CategoryCount - 1) % CategoryCount);
+			return true;
+		}
+		if(config->isMappedLike("right", input))
+		{
+			showCategory((mCategory + 1) % CategoryCount);
+			return true;
+		}
+	}
+
 	if((config->isMappedTo("b", input) || config->isMappedTo("start", input)) && input.value != 0)
 	{
 		delete this;
@@ -687,6 +753,8 @@ HelpStyle GuiMenu::getHelpStyle()
 std::vector<HelpPrompt> GuiMenu::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
+	if(mFullUI)
+		prompts.push_back(HelpPrompt("left/right", "category"));
 	prompts.push_back(HelpPrompt("up/down", "choose"));
 	prompts.push_back(HelpPrompt("a", "select"));
 	prompts.push_back(HelpPrompt("start", "close"));

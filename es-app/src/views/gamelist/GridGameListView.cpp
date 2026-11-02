@@ -16,6 +16,7 @@
 #include "FileSorts.h"
 #include "Window.h"
 #include <cstdlib>
+#include <algorithm>
 #include <stack>
 #include <string>
 
@@ -31,7 +32,6 @@ namespace
 	{
 		return Utils::FileSystem::getStem(game->getPath());
 	}
-
 }
 
 GridGameListView::GridGameListView(Window* window, FileData* root) :
@@ -47,7 +47,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window),
+	mName(window), mIconBar(window),
 	mSuspendPoints(SuspendPoints::fromEnvironment()),
 	mPad(environmentPad())
 {
@@ -136,6 +136,9 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mMarquee.setDefaultZIndex(35);
 	mMarquee.setVisible(false);
 	addChild(&mMarquee);
+	mIconBar.setDefaultZIndex(70);
+	mIconBar.setZIndex(70);
+	addChild(&mIconBar);
 
 	initMDLabels();
 	initMDValues();
@@ -177,6 +180,23 @@ std::string GridGameListView::getQuickSystemSelectLeftButton()
 
 bool GridGameListView::input(InputConfig* config, Input input)
 {
+	if(mHeaderFocus)
+	{
+		if(input.value != 0)
+		{
+			const int last = MenuIconBar::Count - 1;
+			if(config->isMappedLike("left", input))
+				mIconBar.setSelected(std::max(0, mIconBar.selected() - 1));
+			else if(config->isMappedLike("right", input))
+				mIconBar.setSelected(std::min(last, mIconBar.selected() + 1));
+			else if(config->isMappedTo("a", input))
+				openHeaderMenu();
+			else if(config->isMappedTo("b", input) || config->isMappedLike("down", input))
+				setHeaderFocus(false);
+		}
+		return true;
+	}
+
 	if(input.value != 0 && config->isMappedTo("b", input) && mFloating.valid)
 	{
 		FileData* target = findGame(mFloating.code);
@@ -192,7 +212,10 @@ bool GridGameListView::input(InputConfig* config, Input input)
 
 	if(input.value != 0 && config->isMappedLike("up", input))
 	{
-		mWindow->pushGui(new GuiMenu(mWindow));
+		if(UIModeController::getInstance()->isUIModeFull())
+			setHeaderFocus(true);
+		else
+			mWindow->pushGui(new GuiMenu(mWindow));
 		return true;
 	}
 
@@ -527,6 +550,15 @@ std::vector<GuiComponent*> GridGameListView::getMDValues()
 
 std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 {
+	if(mHeaderFocus)
+	{
+		std::vector<HelpPrompt> headerPrompts;
+		headerPrompts.push_back(HelpPrompt("left/right", "category"));
+		headerPrompts.push_back(HelpPrompt("a", "open"));
+		headerPrompts.push_back(HelpPrompt("b", "back"));
+		return headerPrompts;
+	}
+
 	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
 	const bool canJump = mFloating.valid && (cursor == nullptr || gameCode(cursor) != mFloating.code);
 
@@ -616,4 +648,20 @@ bool GridGameListView::openSuspendPoints()
 
 void GridGameListView::onFocusLost() {
 	mDescription.restart();
+}
+
+void GridGameListView::setHeaderFocus(bool focus)
+{
+	mHeaderFocus = focus;
+	mIconBar.setFrameVisible(focus);
+	updateHelpPrompts();
+}
+
+void GridGameListView::openHeaderMenu()
+{
+	mIconBar.setFrameVisible(false);
+	mWindow->pushGui(new GuiMenu(mWindow, mIconBar.selected(), [this](int category) {
+		mIconBar.setSelected(category);
+		setHeaderFocus(true);
+	}));
 }

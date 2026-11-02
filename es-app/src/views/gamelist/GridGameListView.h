@@ -3,6 +3,7 @@
 #define ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H
 
 #include "components/DateTimeComponent.h"
+#include "components/MenuIconBar.h"
 #include "components/RatingComponent.h"
 #include "components/PagedTextComponent.h"
 #include "components/ScrollableContainer.h"
@@ -55,6 +56,8 @@ private:
 	void initMDValues();
 
 	void refreshFloating();
+	void setHeaderFocus(bool focus);
+	void openHeaderMenu();
 	bool openSuspendPoints();
 	void jumpTo(FileData* game);
 	void cycleSort();
@@ -82,6 +85,8 @@ private:
 	PagedTextComponent mDescription;
 
 	SuspendPoints mSuspendPoints;
+	MenuIconBar mIconBar;
+	bool mHeaderFocus = false;
 	SuspendPoint mFloating;
 	GuiSuspendPoints::Pad mPad;
 	int mPendingResume = 0;

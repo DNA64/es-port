@@ -1,13 +1,29 @@
-# ES-RetroPie cross-build for the SNES/NES Classic
+# ES-RetroPie for the NES/SNES Classic
 
-Build check only: it compiles for the console's CPU and libraries. It was **not run on a console**.
+Branch `classicmini`, based on `stable` (`a31c36a`, v2.12.0 merge); `upstream` is `RetroPie/EmulationStation`.
+It compiles for the console's CPU and libraries. It has **not been run on a console**.
 
-- Base: `RetroPie/EmulationStation`, branch `stable` (`a31c36a`, v2.12.0 merge); remote `upstream`. `external/pugixml` is a
-  submodule, fetch it (`git submodule update --init --depth 1`).
-- The changes are committed in this branch (`classicmini`, based on `stable`): libvlc removed (video component replaced by a stub that shows the snapshot), `std::put_time`
-  replaced (libstdc++ 4.9 has none), `SDL_JoystickGetVendor/Product` guarded (SDL 2.0.4 has none).
-- `scripts/`: run in the `classicmini-cross-toolchain:jessie-armhf` image with the work folder mounted at `/w`
-  (`/w/es-src` (this repository), `/w/deps/dl` with the FreeImage 3.18.0 zip, curl 7.88.1, a `rapidjson` clone and CMake 3.27 under
-  `/w/deps/cmake`; `/w/fw/usr/lib/libMali.so` is the console's driver, used only to link). Order: `deps.sh` (libcurl),
-  `fi.sh` (FreeImage), `es.sh` (configure), then `cmake --build`. The image's own CMake (3.0.2) is too old for ES and
-  pugixml, so a newer one is used. On Git Bash set `MSYS_NO_PATHCONV=1` before `docker run`.
+## Changes against `stable`
+
+- libvlc removed: the video component is a stub that shows the snapshot image.
+- `std::put_time` replaced by `strftime` (libstdc++ 4.9 has none).
+- `SDL_JoystickGetVendor/Product` guarded (SDL 2.0.4 on the console has none).
+
+## Build
+
+```sh
+classicmini/build.sh
+```
+
+Only docker is needed on the host. The build runs in `classicmini-es-toolchain`, built from `Dockerfile.es-armhf` in
+[classicmini-cross-toolchain](https://github.com/DefKorns/classicmini-cross-toolchain) on top of the shared toolchain
+image (GCC 4.9.4 / glibc 2.21 for Cortex-A7, the console's SDL2 2.0.4, FreeType, ALSA, static libcurl on mbedTLS). The
+ES image adds CMake 3.27, static FreeImage, RapidJSON and link stubs for `libGLESv2`; nothing is taken from a console.
+`ES_TOOLCHAIN_IMAGE` selects another tag (default `classicmini-es-toolchain:local`).
+
+`scripts/build-es.sh` runs inside the container with the repository mounted: it fetches the `pugixml` submodule,
+configures with `-DGLES=ON`, builds and strips. The build tree stays in `classicmini/out/.build` so rebuilds are
+incremental. ES's CMake writes the `emulationstation` binary into the repository root; it is ignored by git.
+
+Result in `classicmini/out/`: `emulationstation` (stripped ARM hard-float ELF, about 7.9 MB) and `libfreetype.so.6`, which
+ships with the program. At run time it needs the console's `libSDL2.so`, `libasound.so.2` and `libGLESv2.so`.

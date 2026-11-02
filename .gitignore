@@ -43,3 +43,7 @@ CPackSourceConfig.cmake
 
 # VSCode
 .vscode/
+
+# Classic Mini cross-build
+/classicmini/.work/
+/classicmini/out/

@@ -4,6 +4,8 @@
 
 #include "components/ImageComponent.h"
 #include "GuiComponent.h"
+#include <functional>
+#include <utility>
 
 // A very simple "on/off" switch.
 // Should hopefully be switched to use images instead of text in the future.
@@ -20,6 +22,7 @@ public:
 	void setState(bool state);
 	std::string getValue() const override;
 	void setValue(const std::string& statestring) override;
+	void setChangedCallback(std::function<void(bool)> callback) { mOnChange = std::move(callback); }
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 
@@ -28,6 +31,7 @@ private:
 
 	ImageComponent mImage;
 	bool mState;
+	std::function<void(bool)> mOnChange;
 };
 
 #endif // ES_CORE_COMPONENTS_SWITCH_COMPONENT_H

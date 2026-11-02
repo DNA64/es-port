@@ -20,6 +20,8 @@ bool SwitchComponent::input(InputConfig* config, Input input)
 	{
 		mState = !mState;
 		onStateChanged();
+		if(mOnChange)
+			mOnChange(mState);
 		return true;
 	}
 

@@ -23,6 +23,10 @@
 #include "FileSorts.h"
 #include "views/gamelist/IGameListView.h"
 #include "guis/GuiInfoPopup.h"
+#include "ConsoleTools.h"
+#include "guis/GuiNetworkList.h"
+#include "guis/GuiToolRunner.h"
+#include <cstdlib>
 
 namespace
 {
@@ -56,23 +60,31 @@ void GuiMenu::showCategory(int category)
 	case Display:
 		addEntry("UI SETTINGS", 0x777777FF, true, [this] { openUISettings(); });
 		addEntry("SCREENSAVER SETTINGS", 0x777777FF, true, [this] { openScreensaverOptions(); });
+		if (isFamicomPad())
+			addToggle("EPILEPSY PROTECTION", "epilepsy state", "epilepsy toggle");
 		break;
 	case System:
 		addEntry("SOUND SETTINGS", 0x777777FF, true, [this] { openSoundSettings(); });
 		if (mFullUI)
 		{
-			addEntry("CONFIGURE INPUT", 0x777777FF, true, [this] { openConfigInput(); });
+			addEntry("CONTROLLER", 0x777777FF, true, [this] { openController(); });
+			addEntry("CLEAR CACHE", 0x777777FF, false, [this] { showToolResult("cache"); });
 			addEntry("OTHER SETTINGS", 0x777777FF, true, [this] { openOtherSettings(); });
 		}
 		addEntry("QUIT", 0x777777FF, true, [this] { openQuitMenu(); });
 		break;
 	case Network:
 		addEntry("SCRAPER", 0x777777FF, true, [this] { openScraperSettings(); });
+		addEntry("DISPLAY IP ADDRESS", 0x777777FF, false, [this] { showToolResult("ip"); });
+		addEntry("RECONNECT", 0x777777FF, false, [this] { showToolResult("reconnect"); });
+		addEntry("CONNECT TO NETWORK", 0x777777FF, true, [this] { openNetworkList(); });
 		break;
 	case Library:
 		addEntry("GAME COLLECTION SETTINGS", 0x777777FF, true, [this] { openCollectionSystemSettings(); });
 		break;
 	default:
+		addEntry("SYSTEM INFORMATION", 0x777777FF, false, [this] { showToolResult("sysinfo"); });
+		addEntry("SAVE KERNEL LOG TO USB", 0x777777FF, false, [this] { showToolResult("savelog"); });
 		addEntry("ABOUT", 0x777777FF, true, [this] { openAbout(); });
 		break;
 	}
@@ -89,6 +101,78 @@ void GuiMenu::render(const Transform4x4f& parentTrans)
 		mBar.setFrameVisible(true);
 		mBar.render(Transform4x4f::Identity());
 	}
+}
+
+void GuiMenu::showToolResult(const std::string& arguments)
+{
+	mWindow->pushGui(new GuiToolRunner(mWindow, [arguments] { return ConsoleTools::run(arguments); }));
+}
+
+void GuiMenu::addToggle(const char* name, const std::string& stateArguments, const std::string& toggleArguments)
+{
+	auto toggle = std::make_shared<SwitchComponent>(mWindow, ConsoleTools::isOn(stateArguments));
+	toggle->setChangedCallback([toggleArguments](bool) { ConsoleTools::run(toggleArguments); });
+
+	ComponentListRow row;
+	row.addElement(std::make_shared<TextComponent>(mWindow, name, Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(toggle, false);
+	mMenu.addRow(row);
+}
+
+bool GuiMenu::isFamicomPad()
+{
+	const char* pad = std::getenv("ES_PAD");
+	return pad != nullptr && std::string(pad) == "nes";
+}
+
+void GuiMenu::openController()
+{
+	auto s = new GuiSettings(mWindow, "CONTROLLER");
+
+	const auto addToggleRow = [this, s](const char* label, const std::string& stateArguments, const std::string& toggleArguments) {
+		auto toggle = std::make_shared<SwitchComponent>(mWindow, ConsoleTools::isOn(stateArguments));
+		toggle->setChangedCallback([toggleArguments](bool) { ConsoleTools::run(toggleArguments); });
+		s->addWithLabel(label, toggle);
+	};
+
+	ComponentListRow configureRow;
+	configureRow.addElement(std::make_shared<TextComponent>(mWindow, "CONFIGURE INPUT", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	configureRow.addElement(makeArrow(mWindow), false);
+	configureRow.makeAcceptInputHandler([this] { openConfigInput(); });
+	s->addRow(configureRow);
+
+	addToggleRow("AUTOFIRE", "clovercon state autofire", "clovercon toggle autofire");
+
+	auto speed = std::make_shared< OptionListComponent<std::string> >(mWindow, "AUTOFIRE SPEED", false);
+	const struct { const char* label; const char* interval; } speeds[] = { { "FAST", "4" }, { "NORMAL", "8" }, { "SLOW", "16" } };
+	std::string current = "8";
+	for (const auto& entry : speeds)
+	{
+		const bool selected = ConsoleTools::isOn(std::string("clovercon is autofire_interval ") + entry.interval);
+		if (selected)
+			current = entry.interval;
+		speed->add(entry.label, entry.interval, selected);
+	}
+	s->addWithLabel("AUTOFIRE SPEED", speed);
+	s->addSaveFunc([speed, current] {
+		if (speed->getSelected() != current)
+			ConsoleTools::run("clovercon set autofire_interval " + speed->getSelected());
+	});
+
+	addToggleRow("X/Y AS TURBO A/B", "clovercon state autofire_xy", "clovercon toggle autofire_xy");
+	addToggleRow("HOME COMBO", "clovercon home state", "clovercon home toggle");
+	if (ConsoleTools::isOn("clovercon available fc_start"))
+		addToggleRow("START ON 2ND CONTROLLER", "clovercon state fc_start", "clovercon toggle fc_start");
+
+	mWindow->pushGui(s);
+}
+
+void GuiMenu::openNetworkList()
+{
+	Window* window = mWindow;
+	window->pushGui(new GuiToolRunner(window, [] { return ConsoleTools::run("networks"); }, [window](const std::string& output) {
+		window->pushGui(new GuiNetworkList(window, GuiNetworkList::parse(output)));
+	}));
 }
 
 void GuiMenu::openAbout()

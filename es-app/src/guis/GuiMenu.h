@@ -9,6 +9,7 @@
 #include "FileData.h"
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 class GuiMenu : public GuiComponent
@@ -29,6 +30,11 @@ private:
 	void showCategory(int category);
 	void addEntry(const char* name, unsigned int color, bool add_arrow, const std::function<void()>& func);
 	void addVersionInfo();
+	void addToggle(const char* name, const std::string& stateArguments, const std::string& toggleArguments);
+	void showToolResult(const std::string& arguments);
+	void openController();
+	void openNetworkList();
+	static bool isFamicomPad();
 	void openAbout();
 	void openCollectionSystemSettings();
 	void openConfigInput();

@@ -12,6 +12,7 @@
 #include "guis/GuiGameScraper.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopup.h"
+#include "guis/GuiVirtualKeyboard.h"
 #include "resources/Font.h"
 #include "utils/StringUtil.h"
 #include "views/ViewController.h"
@@ -136,7 +137,10 @@ GuiMetaDataEd::GuiMetaDataEd(Window* window, MetaDataList* md, const std::vector
 				const std::string title = iter->displayPrompt;
 				auto updateVal = [ed](const std::string& newVal) { ed->setValue(newVal); }; // ok callback (apply new value to ed)
 				row.makeAcceptInputHandler([this, title, ed, updateVal, multiLine] {
-					mWindow->pushGui(new GuiTextEditPopup(mWindow, title, ed->getValue(), updateVal, multiLine));
+					if(multiLine)
+						mWindow->pushGui(new GuiTextEditPopup(mWindow, title, ed->getValue(), updateVal, multiLine));
+					else
+						mWindow->pushGui(new GuiVirtualKeyboard(mWindow, title, ed->getValue(), false, updateVal));
 				});
 				break;
 			}

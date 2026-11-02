@@ -7,7 +7,7 @@
 #include "components/ScrollableContainer.h"
 #include "components/TextComponent.h"
 #include "guis/GuiMsgBox.h"
-#include "guis/GuiTextEditPopup.h"
+#include "guis/GuiVirtualKeyboard.h"
 #include "resources/Font.h"
 #include "utils/StringUtil.h"
 #include "FileData.h"
@@ -453,10 +453,9 @@ void ScraperSearchComponent::openInputScreen(ScraperSearchParams& params)
 	};
 
 	stop();
-	mWindow->pushGui(new GuiTextEditPopup(mWindow, "SEARCH FOR",
-		// initial value is last search if there was one, otherwise the clean path name
+	mWindow->pushGui(new GuiVirtualKeyboard(mWindow, "SEARCH FOR",
 		params.nameOverride.empty() ? params.game->getCleanName() : params.nameOverride,
-		searchForFunc, false, "SEARCH"));
+		false, searchForFunc));
 }
 
 std::vector<HelpPrompt> ScraperSearchComponent::getHelpPrompts()

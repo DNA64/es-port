@@ -7,7 +7,7 @@
 #include "guis/GuiInfoPopup.h"
 #include "guis/GuiRandomCollectionOptions.h"
 #include "guis/GuiSettings.h"
-#include "guis/GuiTextEditPopup.h"
+#include "guis/GuiVirtualKeyboard.h"
 #include "utils/StringUtil.h"
 #include "views/ViewController.h"
 #include "CollectionSystemManager.h"
@@ -76,7 +76,7 @@ void GuiCollectionSystemsOptions::initializeMenu()
 			createCollection(name);
 		};
 		row.makeAcceptInputHandler([this, createCustomCollection] {
-			mWindow->pushGui(new GuiTextEditPopup(mWindow, "New Collection Name", "", createCustomCollection, false));
+			mWindow->pushGui(new GuiVirtualKeyboard(mWindow, "NEW COLLECTION NAME", "", false, createCustomCollection));
 		});
 		mMenu.addRow(row);
 	}

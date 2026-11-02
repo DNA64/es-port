@@ -108,14 +108,6 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 				setCursor(mCursorStack.top());
 				mCursorStack.pop();
 				Sound::getFromTheme(getTheme(), getName(), "back")->play();
-			}else{
-				onFocusLost();
-				SystemData* systemToView = getCursor()->getSystem();
-				if (systemToView->isCollection())
-				{
-					systemToView = CollectionSystemManager::get()->getSystemToView(systemToView);
-				}
-				ViewController::get()->goToSystemView(systemToView);
 			}
 
 			return true;

@@ -22,6 +22,7 @@ public:
 	// Settings for the scraper
 	static const struct ScreenScraperConfig {
 		std::string getGameSearchUrl(const std::string gameName) const;
+		std::string getTextSearchUrl(const std::string text) const;
 
 		// Access to the API
 		const std::string API_DEV_U = { 91, 32, 7, 17 };

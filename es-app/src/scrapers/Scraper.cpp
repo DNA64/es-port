@@ -9,6 +9,7 @@
 #include "platform.h"
 #include "utils/FileSystemUtil.h"
 #include <FreeImage.h>
+#include <algorithm>
 #include <fstream>
 
 const std::map<std::string, generate_scraper_requests_func> scraper_request_funcs {
@@ -107,10 +108,28 @@ ScraperRequest::ScraperRequest(std::vector<ScraperSearchResult>& resultsWrite) :
 
 
 // ScraperHttpRequest
+namespace
+{
+	std::string maskedUrl(std::string url)
+	{
+		for(const char* key : { "devid=", "devpassword=", "apikey=" })
+		{
+			const std::size_t start = url.find(key);
+			if(start == std::string::npos)
+				continue;
+			const std::size_t valueStart = start + std::string(key).size();
+			const std::size_t end = url.find('&', valueStart);
+			url.replace(valueStart, end == std::string::npos ? std::string::npos : end - valueStart, "***");
+		}
+		return url;
+	}
+}
+
 ScraperHttpRequest::ScraperHttpRequest(std::vector<ScraperSearchResult>& resultsWrite, const std::string& url)
 	: ScraperRequest(resultsWrite)
 {
 	setStatus(ASYNC_IN_PROGRESS);
+	LOG(LogInfo) << "scraper request: " << maskedUrl(url);
 	mReq = std::unique_ptr<HttpReq>(new HttpReq(url));
 }
 
@@ -120,6 +139,10 @@ void ScraperHttpRequest::update()
 	if(status == HttpReq::REQ_SUCCESS)
 	{
 		setStatus(ASYNC_DONE); // if process() has an error, status will be changed to ASYNC_ERROR
+		const std::string& content = mReq->getContent();
+		std::string head = content.substr(0, 100);
+		std::replace(head.begin(), head.end(), '\n', ' ');
+		LOG(LogInfo) << "scraper response: " << content.size() << " bytes: " << head;
 		process(mReq, mResults);
 		return;
 	}

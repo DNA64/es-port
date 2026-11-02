@@ -146,7 +146,7 @@ void screenscraper_generate_scraper_requests(const ScraperSearchParams& params,
 	ScreenScraperRequest::ScreenScraperConfig ssConfig;
 
 	// Check if the user has overridden the file name
-	path = ssConfig.getGameSearchUrl(params.nameOverride.empty() ? params.game->getCleanName() : params.nameOverride);
+	path = params.nameOverride.empty() ? ssConfig.getGameSearchUrl(params.game->getCleanName()) : ssConfig.getTextSearchUrl(params.nameOverride);
 
 	const auto platforms = getScrapePlatforms(params);
 	std::vector<unsigned short> p_ids;
@@ -188,8 +188,19 @@ void ScreenScraperRequest::process(const std::unique_ptr<HttpReq>& req, std::vec
 
 	if (!parseResult)
 	{
+		const std::string& content = req->getContent();
+		if (content.find("non trouv") != std::string::npos)
+		{
+			LOG(LogInfo) << "ScreenScraperRequest - no game found";
+			return;
+		}
+
+		std::string reason = content.substr(0, content.find('\n'));
+		if (reason.size() > 120)
+			reason.resize(120);
+
 		std::stringstream ss;
-		ss << "ScreenScraperRequest - Error parsing XML." << std::endl << parseResult.description() << "";
+		ss << "ScreenScraperRequest - " << (reason.empty() ? std::string(parseResult.description()) : reason);
 
 		std::string err = ss.str();
 		setError(err);
@@ -206,9 +217,13 @@ void ScreenScraperRequest::process(const std::unique_ptr<HttpReq>& req, std::vec
 void ScreenScraperRequest::processGame(const pugi::xml_document& xmldoc, std::vector<ScraperSearchResult>& out_results)
 {
 	pugi::xml_node data = xmldoc.child("Data");
-	pugi::xml_node game = data.child("jeu");
+	std::vector<pugi::xml_node> games;
+	for (pugi::xml_node listed : data.child("jeux").children("jeu"))
+		games.push_back(listed);
+	if (games.empty() && data.child("jeu"))
+		games.push_back(data.child("jeu"));
 
-	if (game)
+	for (const pugi::xml_node& game : games)
 	{
 		ScraperSearchResult result;
 		ScreenScraperRequest::ScreenScraperConfig ssConfig;
@@ -355,6 +370,16 @@ void ScreenScraperRequest::processList(const pugi::xml_document& xmldoc, std::ve
 	}
 
 
+}
+
+std::string ScreenScraperRequest::ScreenScraperConfig::getTextSearchUrl(const std::string text) const
+{
+	return API_URL_BASE
+		+ "/jeuRecherche.php?devid=" + Utils::String::scramble(API_DEV_U, API_DEV_KEY)
+		+ "&devpassword=" + Utils::String::scramble(API_DEV_P, API_DEV_KEY)
+		+ "&softname=" + HttpReq::urlEncode(API_SOFT_NAME)
+		+ "&output=xml"
+		+ "&recherche=" + HttpReq::urlEncode(text);
 }
 
 std::string ScreenScraperRequest::ScreenScraperConfig::getGameSearchUrl(const std::string gameName) const

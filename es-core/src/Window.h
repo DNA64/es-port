@@ -99,6 +99,9 @@ private:
 	int mAverageDeltaTime;
 
 	std::string mFrameDataText;
+	std::shared_ptr<Font> mFrameDataFont;
+	std::unique_ptr<TextCache> mFrameDataCache;
+	size_t mFrameDataFontMemory = 0;
 
 	bool mNormalizeNextUpdate;
 

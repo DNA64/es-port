@@ -34,28 +34,19 @@
 		</image>
 
 		<image name="logo">
-			<path>./logo.svg</path>
-			<pos>0.03 0.02</pos>
-			<size>0.06 0.1</size>
+			<path>./assets/logo_snes.png</path>
+			<origin>0 0</origin>
+			<pos>0.0311 0.0404</pos>
+			<size>0.2745 0.0871</size>
 		</image>
-		<text name="title" extra="true">
-			<pos>0.105 0.02</pos>
-			<size>0.6 0.1</size>
-			<text>SNES CLASSIC</text>
-			<color>F4F1FF</color>
-			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
-			<fontSize>0.07</fontSize>
-			<alignment>left</alignment>
-			<zIndex>5</zIndex>
-		</text>
 
 		<imagegrid name="gamegrid">
-			<pos>0 0.24</pos>
-			<size>1 0.42</size>
-			<margin>0.012 0</margin>
-			<padding>0.012 0.02 0.012 0.02</padding>
+			<pos>0 0.2985</pos>
+			<size>1 0.301</size>
+			<margin>0.0203 0</margin>
+			<padding>0.054 0.02 0.054 0.02</padding>
 			<autoLayout>5 1</autoLayout>
-			<autoLayoutSelectedZoom>1.18</autoLayoutSelectedZoom>
+			<autoLayoutSelectedZoom>1.55</autoLayoutSelectedZoom>
 			<imageSource>image</imageSource>
 			<scrollDirection>horizontal</scrollDirection>
 			<centerSelection>true</centerSelection>
@@ -67,13 +58,31 @@
 		<gridtile name="default">
 			<backgroundImage>./tile.png</backgroundImage>
 			<backgroundCornerSize>20 20</backgroundCornerSize>
+			<backgroundColor>FFFFFFFF</backgroundColor>
+			<imageColor>FFFFFFFF</imageColor>
 			<padding>8 8</padding>
 		</gridtile>
 		<gridtile name="selected">
 			<backgroundImage>./tile_selected.png</backgroundImage>
-			<backgroundCornerSize>20 20</backgroundCornerSize>
-			<padding>8 8</padding>
+			<backgroundCornerSize>100 100</backgroundCornerSize>
+			<backgroundBleed>20 20</backgroundBleed>
+			<backgroundColor>FFFFFFFF</backgroundColor>
+			<imageColor>FFFFFFFF</imageColor>
+			<padding>13.5 13.5</padding>
 		</gridtile>
+
+		<image name="arrow_left" extra="true">
+			<path>./assets/arrow_left.svg</path>
+			<pos>0 0.3976</pos>
+			<size>0.0266 0.1021</size>
+			<zIndex>30</zIndex>
+		</image>
+		<image name="arrow_right" extra="true">
+			<path>./assets/arrow_right.svg</path>
+			<pos>0.9734 0.3976</pos>
+			<size>0.0266 0.1021</size>
+			<zIndex>30</zIndex>
+		</image>
 
 		<image name="info_panel" extra="true">
 			<path>./assets/panel_snes.svg</path>
@@ -155,8 +164,8 @@
 		<helpsystem name="help">
 			<pos>0.5 0.955</pos>
 			<origin>0.5 0.5</origin>
-			<textColor>D9D7F2</textColor>
-			<iconColor>9E83FF</iconColor>
+			<textColor>C8C8D9</textColor>
+			<iconColor>C8C8D9</iconColor>
 			<fontPath>:/opensans_hebrew_condensed_regular.ttf</fontPath>
 			<fontSize>0.03</fontSize>
 		</helpsystem>

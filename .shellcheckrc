@@ -1,0 +1,6 @@
+# source (vs POSIX .) is the convention on the console's ash
+disable=SC3046
+# preinit and the hakchi functions only exist on the console
+disable=SC1091,SC2154
+# local and source work on the console's ash
+disable=SC3043,SC3051

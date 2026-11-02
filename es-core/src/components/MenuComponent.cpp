@@ -131,3 +131,46 @@ std::shared_ptr<ImageComponent> makeArrow(Window* window)
 	bracket->setResize(0, Math::round(Font::get(FONT_SIZE_MEDIUM)->getLetterHeight()));
 	return bracket;
 }
+
+bool MenuComponent::input(InputConfig* config, Input input)
+{
+	if(input.value != 0 && mList->size() > 1)
+	{
+		const bool up = config->isMappedLike("up", input);
+		const bool down = config->isMappedLike("down", input);
+		const auto selected = mGrid.getSelectedComponent();
+		const bool onList = selected == mList;
+		const bool onButtons = mButtonGrid && selected == mButtonGrid;
+
+		if(up && onList && mList->getCursorId() == 0)
+		{
+			if(mButtonGrid)
+				setCursorToButtons();
+			else
+				mList->moveCursor(mList->size());
+			return true;
+		}
+
+		if(up && onButtons)
+		{
+			setCursorToList();
+			mList->moveCursor(mList->size());
+			return true;
+		}
+
+		if(down && onButtons)
+		{
+			setCursorToList();
+			mList->moveCursor(-mList->size());
+			return true;
+		}
+
+		if(down && onList && !mButtonGrid && mList->getCursorId() == mList->size() - 1)
+		{
+			mList->moveCursor(-mList->size());
+			return true;
+		}
+	}
+
+	return GuiComponent::input(config, input);
+}

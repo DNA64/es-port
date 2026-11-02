@@ -22,13 +22,18 @@ namespace
 	constexpr unsigned int PanelColor = 0x1F1D45FF;
 	constexpr unsigned int FieldColor = 0x14122EFF;
 	constexpr unsigned int KeyColor = 0x2B2960FF;
+	constexpr unsigned int ActiveKeyColor = 0x4A43A8FF;
 	constexpr unsigned int SelectedColor = 0x7B6FF5FF;
 	constexpr unsigned int TextColor = 0xF4F1FFFF;
 	constexpr unsigned int SelectedTextColor = 0x14122EFF;
 
 	const std::array<const char*, 4> LowerRows = { "1234567890", "qwertyuiop", "asdfghjkl-", "zxcvbnm._@" };
 	const std::array<const char*, 4> UpperRows = { "!#$%^&*()+", "QWERTYUIOP", "ASDFGHJKL_", "ZXCVBNM,;:" };
-	const std::array<const char*, 5> SpecialLabels = { "SHIFT", "SPACE", "DEL", "CANCEL", "OK" };
+
+	struct SpecialLayout { int start; int width; };
+	constexpr std::array<SpecialLayout, 6> SpecialLayouts = { {
+		{ 0, 2 }, { 2, 1 }, { 3, 1 }, { 4, 2 }, { 6, 2 }, { 8, 2 }
+	} };
 
 	constexpr float PanelLeft = 0.10f;
 	constexpr float PanelTop = 0.10f;
@@ -38,32 +43,60 @@ namespace
 
 GuiVirtualKeyboard::GuiVirtualKeyboard(Window* window, const std::string& title, const std::string& initial, bool secret,
 	std::function<void(const std::string&)> onAccept)
-	: GuiComponent(window), mText(initial), mSecret(secret), mOnAccept(std::move(onAccept)),
+	: GuiComponent(window), mText(initial), mCursor(initial.size()), mSecret(secret), mOnAccept(std::move(onAccept)),
 	  mTitleText(window, title, Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_LEFT),
 	  mFieldText(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_LEFT)
 {
 	setSize(static_cast<float>(Renderer::getScreenWidth()), static_cast<float>(Renderer::getScreenHeight()));
-	for(int index = 0; index < (Rows - 1) * Columns + SpecialKeys; ++index)
+	for(int index = 0; index < LetterRows * Columns + SpecialCount; ++index)
 		mKeyTexts.emplace_back(new TextComponent(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_CENTER));
 	refreshLabels();
 }
 
 int GuiVirtualKeyboard::keysInRow(int row) const
 {
-	return row == Rows - 1 ? SpecialKeys : Columns;
+	return row == LetterRows ? static_cast<int>(SpecialCount) : Columns;
+}
+
+int GuiVirtualKeyboard::specialStart(int key) const
+{
+	return SpecialLayouts[static_cast<std::size_t>(key)].start;
+}
+
+int GuiVirtualKeyboard::specialWidth(int key) const
+{
+	return SpecialLayouts[static_cast<std::size_t>(key)].width;
+}
+
+int GuiVirtualKeyboard::specialAt(int column) const
+{
+	for(int key = 0; key < SpecialCount; ++key)
+		if(column >= specialStart(key) && column < specialStart(key) + specialWidth(key))
+			return key;
+	return SpecialCount - 1;
+}
+
+char GuiVirtualKeyboard::keyCharacter(int row, int column) const
+{
+	const bool upper = mShift == Shift::Once || (mShift == Shift::Caps && row > 0);
+	const auto& rows = upper ? UpperRows : LowerRows;
+	return rows[static_cast<std::size_t>(row)][column];
 }
 
 void GuiVirtualKeyboard::refreshLabels()
 {
-	const auto& rows = mShifted ? UpperRows : LowerRows;
-	for(int row = 0; row < Rows - 1; ++row)
+	for(int row = 0; row < LetterRows; ++row)
 		for(int column = 0; column < Columns; ++column)
-			mKeyTexts[static_cast<std::size_t>(row * Columns + column)]->setText(std::string(1, rows[static_cast<std::size_t>(row)][column]));
-	for(int key = 0; key < SpecialKeys; ++key)
-		mKeyTexts[static_cast<std::size_t>((Rows - 1) * Columns + key)]->setText(SpecialLabels[static_cast<std::size_t>(key)]);
+			mKeyTexts[static_cast<std::size_t>(row * Columns + column)]->setText(std::string(1, keyCharacter(row, column)));
 
-	const std::string shown = mSecret && !mShowSecret ? std::string(mText.size(), '*') : mText;
-	mFieldText.setText(shown + "_");
+	const std::array<std::string, SpecialCount> labels = {
+		mShift == Shift::Off ? "SHIFT" : (mShift == Shift::Once ? "SHIFT ON" : "CAPS ON"), "<", ">", "SPACE", "DEL", "OK" };
+	for(int key = 0; key < SpecialCount; ++key)
+		mKeyTexts[static_cast<std::size_t>(LetterRows * Columns + key)]->setText(labels[static_cast<std::size_t>(key)]);
+
+	std::string shown = mSecret && !mShowSecret ? std::string(mText.size(), '*') : mText;
+	shown.insert(mCursor, "|");
+	mFieldText.setText(shown);
 	updateHelpPrompts();
 }
 
@@ -71,18 +104,39 @@ void GuiVirtualKeyboard::moveSelection(int rowDelta, int columnDelta)
 {
 	if(rowDelta != 0)
 	{
-		const int fromRow = mRow;
+		const int x = mRow == LetterRows ? specialStart(mColumn) : mColumn;
 		mRow = (mRow + rowDelta + Rows) % Rows;
-		if(fromRow == Rows - 1)
-			mColumn = std::min(Columns - 1, mColumn * 2);
-		else if(mRow == Rows - 1)
-			mColumn /= 2;
+		mColumn = mRow == LetterRows ? specialAt(x) : x;
 	}
 	if(columnDelta != 0)
 	{
 		const int count = keysInRow(mRow);
 		mColumn = (mColumn + columnDelta + count) % count;
 	}
+}
+
+void GuiVirtualKeyboard::insert(char character)
+{
+	if(mText.size() >= (mSecret ? MaxSecretLength : MaxTextLength))
+		return;
+	mText.insert(mCursor, 1, character);
+	++mCursor;
+}
+
+void GuiVirtualKeyboard::erase()
+{
+	if(mCursor == 0)
+		return;
+	mText.erase(mCursor - 1, 1);
+	--mCursor;
+}
+
+void GuiVirtualKeyboard::moveCursor(int delta)
+{
+	if(delta < 0 && mCursor > 0)
+		--mCursor;
+	else if(delta > 0 && mCursor < mText.size())
+		++mCursor;
 }
 
 void GuiVirtualKeyboard::finish(bool accepted)
@@ -96,33 +150,32 @@ void GuiVirtualKeyboard::finish(bool accepted)
 
 void GuiVirtualKeyboard::pressKey()
 {
-	if(mRow < Rows - 1)
+	if(mRow < LetterRows)
 	{
-		if(mText.size() < (mSecret ? MaxSecretLength : MaxTextLength))
-		{
-			const auto& rows = mShifted ? UpperRows : LowerRows;
-			mText += rows[static_cast<std::size_t>(mRow)][mColumn];
-		}
+		insert(keyCharacter(mRow, mColumn));
+		if(mShift == Shift::Once)
+			mShift = Shift::Off;
 		refreshLabels();
 		return;
 	}
 
 	switch(mColumn)
 	{
-	case Shift:
-		mShifted = !mShifted;
+	case ShiftKey:
+		mShift = mShift == Shift::Off ? Shift::Once : (mShift == Shift::Once ? Shift::Caps : Shift::Off);
+		break;
+	case CursorLeft:
+		moveCursor(-1);
+		break;
+	case CursorRight:
+		moveCursor(1);
 		break;
 	case Space:
-		if(mText.size() < (mSecret ? MaxSecretLength : MaxTextLength))
-			mText += ' ';
+		insert(' ');
 		break;
 	case Delete:
-		if(!mText.empty())
-			mText.pop_back();
+		erase();
 		break;
-	case Cancel:
-		finish(false);
-		return;
 	default:
 		finish(true);
 		return;
@@ -145,19 +198,19 @@ bool GuiVirtualKeyboard::input(InputConfig* config, Input input)
 		moveSelection(0, 1);
 	else if(config->isMappedTo("a", input))
 		pressKey();
-	else if(config->isMappedTo("b", input))
-	{
-		if(mText.empty())
-		{
-			finish(false);
-			return true;
-		}
-		mText.pop_back();
-		refreshLabels();
-	}
 	else if(config->isMappedTo("y", input))
 	{
-		mShifted = !mShifted;
+		erase();
+		refreshLabels();
+	}
+	else if(config->isMappedTo("leftshoulder", input))
+	{
+		moveCursor(-1);
+		refreshLabels();
+	}
+	else if(config->isMappedTo("rightshoulder", input))
+	{
+		moveCursor(1);
 		refreshLabels();
 	}
 	else if(config->isMappedTo("select", input) && mSecret)
@@ -165,6 +218,8 @@ bool GuiVirtualKeyboard::input(InputConfig* config, Input input)
 		mShowSecret = !mShowSecret;
 		refreshLabels();
 	}
+	else if(config->isMappedTo("b", input))
+		finish(false);
 	else if(config->isMappedTo("start", input))
 		finish(true);
 
@@ -208,15 +263,16 @@ void GuiVirtualKeyboard::render(const Transform4x4f& parentTrans)
 
 	for(int row = 0; row < Rows; ++row)
 	{
-		const int count = keysInRow(row);
-		const float keyW = row == Rows - 1 ? cellW * 2 + gap : cellW;
-		for(int column = 0; column < count; ++column)
+		for(int column = 0; column < keysInRow(row); ++column)
 		{
-			const float x = panelX + margin + column * (keyW + gap);
+			const int start = row == LetterRows ? specialStart(column) : column;
+			const int span = row == LetterRows ? specialWidth(column) : 1;
+			const float x = panelX + margin + start * (cellW + gap);
 			const float y = gridY + row * (cellH + gap);
+			const float keyW = cellW * span + gap * (span - 1);
 			const bool selected = row == mRow && column == mColumn;
-			const unsigned int color = selected ? SelectedColor : KeyColor;
-			fill(x, y, keyW, cellH, color);
+			const bool active = row == LetterRows && column == ShiftKey && mShift != Shift::Off;
+			fill(x, y, keyW, cellH, selected ? SelectedColor : (active ? ActiveKeyColor : KeyColor));
 
 			TextComponent& label = *mKeyTexts[static_cast<std::size_t>(row * Columns + column)];
 			label.setPosition(x, y + (cellH - lineHeight) / 2);
@@ -232,10 +288,12 @@ std::vector<HelpPrompt> GuiVirtualKeyboard::getHelpPrompts()
 	std::vector<HelpPrompt> prompts;
 	prompts.push_back(HelpPrompt("up/down", "choose"));
 	prompts.push_back(HelpPrompt("a", "type"));
-	prompts.push_back(HelpPrompt("b", "delete"));
-	prompts.push_back(HelpPrompt("y", "shift"));
+	prompts.push_back(HelpPrompt("y", "delete"));
+	prompts.push_back(HelpPrompt("l", "cursor"));
+	prompts.push_back(HelpPrompt("r", "cursor"));
 	if(mSecret)
 		prompts.push_back(HelpPrompt("select", mShowSecret ? "hide" : "show"));
 	prompts.push_back(HelpPrompt("start", "ok"));
+	prompts.push_back(HelpPrompt("b", "cancel"));
 	return prompts;
 }

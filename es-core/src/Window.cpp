@@ -369,6 +369,7 @@ void Window::setHelpPrompts(const std::vector<HelpPrompt>& prompts, const HelpSt
 	std::sort(addPrompts.begin(), addPrompts.end(), [](const HelpPrompt& a, const HelpPrompt& b) -> bool {
 
 		static const char* map[] = {
+			"up", "down",
 			"up/down/left/right",
 			"up/down",
 			"left/right",
@@ -389,7 +390,7 @@ void Window::setHelpPrompts(const std::vector<HelpPrompt>& prompts, const HelpSt
 			i++;
 		}
 
-		return aVal > bVal;
+		return aVal < bVal;
 	});
 
 	mHelp->setPrompts(addPrompts);

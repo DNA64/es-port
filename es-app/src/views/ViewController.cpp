@@ -612,8 +612,6 @@ std::vector<HelpPrompt> ViewController::getHelpPrompts()
 		return prompts;
 
 	prompts = mCurrentView->getHelpPrompts();
-	if(!(UIModeController::getInstance()->isUIModeKid() && Settings::getInstance()->getBool("DisableKidStartMenu")))
-		prompts.push_back(HelpPrompt("start", "menu"));
 
 	return prompts;
 }

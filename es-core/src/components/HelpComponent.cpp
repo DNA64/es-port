@@ -15,7 +15,9 @@
 #define ENTRY_SPACING 16 // space between [text] and next [icon] (px)
 
 static const std::map<std::string, const char*> ICON_PATH_MAP {
+	{ "up", ":/help/menu_plus.svg" },
 	{ "up/down", ":/help/dpad_updown.svg" },
+	{ "down", ":/help/plus.svg" },
 	{ "left/right", ":/help/dpad_leftright.svg" },
 	{ "up/down/left/right", ":/help/dpad_all.svg" },
 	{ "a", ":/help/button_a.svg" },
@@ -28,6 +30,21 @@ static const std::map<std::string, const char*> ICON_PATH_MAP {
 	{ "start", ":/help/button_start.svg" },
 	{ "select", ":/help/button_select.svg" }
 };
+
+namespace
+{
+	std::string capitalizeWords(std::string text)
+	{
+		bool wordStart = true;
+		for(char& letter : text)
+		{
+			if(wordStart && letter >= 'a' && letter <= 'z')
+				letter = static_cast<char>(letter - 'a' + 'A');
+			wordStart = letter == ' ';
+		}
+		return text;
+	}
+}
 
 HelpComponent::HelpComponent(Window* window) : GuiComponent(window)
 {
@@ -77,7 +94,7 @@ void HelpComponent::updateGrid()
 		icon->setResize(0, height);
 		icons.push_back(icon);
 
-		auto lbl = std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(it->second), font, mStyle.textColor);
+		auto lbl = std::make_shared<TextComponent>(mWindow, capitalizeWords(it->second), font, mStyle.textColor);
 		labels.push_back(lbl);
 
 		width += icon->getSize().x() + lbl->getSize().x() + ICON_TEXT_SPACING + ENTRY_SPACING;

@@ -6,6 +6,7 @@
 #include "components/RatingComponent.h"
 #include "components/ScrollableContainer.h"
 #include "components/ImageGridComponent.h"
+#include "components/MarqueeTextComponent.h"
 #include "components/SuspendBalloon.h"
 #include "components/VideoComponent.h"
 #include "guis/GuiSuspendPoints.h"
@@ -74,7 +75,7 @@ private:
 	TextComponent mPlayers;
 	DateTimeComponent mLastPlayed;
 	TextComponent mPlayCount;
-	TextComponent mName;
+	MarqueeTextComponent mName;
 
 	std::vector<TextComponent*> getMDLabels();
 	std::vector<GuiComponent*> getMDValues();

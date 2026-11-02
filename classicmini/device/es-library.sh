@@ -24,10 +24,30 @@ max_depth=8
 
 escXml() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
 readField() { tr -d '\r' < "$1" | sed -n "s/^$2 *= *//p" | head -n 1; }
-readDescription() { tr -d '\r' < "$1" | sed -n '/^\[Description\]/,$ s/^Text *= *//p' | head -n 1; }
+joinInfo() {
+  local joined="" part
+  for part in "$@"; do
+    [ -n "$part" ] || continue
+    joined=${joined:+$joined • }$part
+  done
+  echo "$joined"
+}
+
+playersLabel() {
+  case $1 in
+    "") ;;
+    1) echo "1 Player" ;;
+    *) echo "$1 Players" ;;
+  esac
+}
+
+readDescription() {
+  tr -d '\r' < "$1" | awk '/^\[Description\]/ { in_desc = 1; next } /^\[/ { in_desc = 0 }
+    in_desc { sub(/^Text *= */, ""); if ($0 != "") { text = text sep $0; sep = " " } } END { print text }'
+}
 
 buildMenu() {
-  local menu="$1" dir="$2" depth="$3" trail="$4 $1" game_dir code desktop name cmd icon rel entry sub desc year players
+  local menu="$1" dir="$2" depth="$3" trail="$4 $1" game_dir code desktop name cmd icon rel entry sub desc year players released genre small
   mkdir -p "$out/$dir"
   for game_dir in "$store/$menu"/CLV-*; do
     code=${game_dir##*/}
@@ -65,10 +85,17 @@ buildMenu() {
       desc=$(readDescription "$desktop")
       [ -n "$desc" ] && echo "    <desc>$(echo "$desc" | escXml)</desc>"
       if [ "$entry" = game ]; then
-        year=$(readField "$desktop" ReleaseDate | tr -d '-')
+        released=$(readField "$desktop" ReleaseDate)
+        year=$(echo "$released" | tr -d '-')
         players=$(readField "$desktop" Players)
+        genre=$(readField "$desktop" Genre)
+        [ -n "$genre" ] || genre=$(readField "$desktop" sortRawGenre)
+        small=$game_dir/${code}_small.png
         [ ${#year} -eq 8 ] && echo "    <releasedate>${year}T000000</releasedate>"
         [ -n "$players" ] && echo "    <players>$players</players>"
+        echo "    <genre>$(joinInfo "$genre" "${released%%-*}" "$(playersLabel "$players")" | escXml)</genre>"
+        [ -f "$small" ] || small=$icon
+        [ -n "$small" ] && echo "    <marquee>$(echo "$small" | escXml)</marquee>"
       fi
       echo "  </$entry>"
     } >> "$gamelist"

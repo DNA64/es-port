@@ -1,4 +1,19 @@
 #!/bin/sh
+#  Copyright (C) 2026 DefKorns (https://defkorns.github.io/LICENSE)
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 # Stops the stock UI, builds the library from the synced games and runs EmulationStation. A game picked in ES is run
 # here, with ES closed, and ES is opened again when it ends. The stock UI comes back when ES is left, however it ends.
 #

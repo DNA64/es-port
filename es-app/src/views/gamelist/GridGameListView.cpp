@@ -32,20 +32,6 @@ namespace
 		return Utils::FileSystem::getStem(game->getPath());
 	}
 
-	std::string shortName(const std::string& name)
-	{
-		constexpr int MaxChars = 20;
-		int chars = 0;
-		for(std::size_t index = 0; index < name.size(); ++index)
-		{
-			if((static_cast<unsigned char>(name[index]) & 0xC0) == 0x80)
-				continue;
-			if(chars == MaxChars)
-				return name.substr(0, index) + "...";
-			++chars;
-		}
-		return name;
-	}
 }
 
 GridGameListView::GridGameListView(Window* window, FileData* root) :
@@ -548,9 +534,9 @@ std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 	prompts.push_back(HelpPrompt("up", "menu"));
 	prompts.push_back(HelpPrompt("down", "suspend point list"));
 	prompts.push_back(HelpPrompt("a", "select"));
-	FileData* target = canJump ? findGame(mFloating.code) : nullptr;
-	if(target != nullptr)
-		prompts.push_back(HelpPrompt("b", "go to " + shortName(target->getName())));
+	const bool hasTarget = canJump && findGame(mFloating.code) != nullptr;
+	if(hasTarget)
+		prompts.push_back(HelpPrompt("b", "go to last saved game"));
 	else if(!mCursorStack.empty())
 		prompts.push_back(HelpPrompt("b", "back"));
 	prompts.push_back(HelpPrompt("y", "sort"));

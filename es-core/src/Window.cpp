@@ -175,20 +175,16 @@ void Window::update(int deltaTime)
 		if(Settings::getInstance()->getBool("DrawFramerate"))
 		{
 			std::stringstream ss;
+			const float fps = 1000.0f * (float)mFrameCountElapsed / (float)mFrameTimeElapsed;
+			const float frameMs = (float)mFrameTimeElapsed / (float)mFrameCountElapsed;
+			const float textureVramUsageMb = TextureResource::getTotalMemUsage() / 1000.0f / 1000.0f;
+			const float textureTotalUsageMb = TextureResource::getTotalTextureSize() / 1000.0f / 1000.0f;
+			const float fontVramUsageMb = Font::getTotalMemUsage() / 1000.0f / 1000.0f;
 
-			// fps
-			ss << std::fixed << std::setprecision(1) << (1000.0f * (float)mFrameCountElapsed / (float)mFrameTimeElapsed) << "fps, ";
-			ss << std::fixed << std::setprecision(2) << ((float)mFrameTimeElapsed / (float)mFrameCountElapsed) << "ms";
-
-			// vram
-			float textureVramUsageMb = TextureResource::getTotalMemUsage() / 1000.0f / 1000.0f;
-			float textureTotalUsageMb = TextureResource::getTotalTextureSize() / 1000.0f / 1000.0f;
-			float fontVramUsageMb = Font::getTotalMemUsage() / 1000.0f / 1000.0f;
-
-			const float totalVramMb = fontVramUsageMb + textureVramUsageMb;
+			ss << std::fixed << std::setprecision(1) << fps << "fps, " << std::setprecision(2) << frameMs << "ms";
 			ss << "\nFont VRAM: " << fontVramUsageMb << " Tex VRAM: " << textureVramUsageMb;
-			ss << "\nTotal VRAM: " << totalVramMb << " / " << Settings::getInstance()->getInt("MaxVRAM") << " MB (tex max " << textureTotalUsageMb << ")";
-			mFrameDataText = std::unique_ptr<TextCache>(mDefaultFonts.at(1)->buildTextCache(ss.str(), Vector2f(0.f, 8.f), 0xFF00FFFF, Renderer::getScreenWidth() - 12.f, ALIGN_RIGHT));
+			ss << "\nTotal VRAM: " << fontVramUsageMb + textureVramUsageMb << " / " << Settings::getInstance()->getInt("MaxVRAM") << " MB (tex max " << textureTotalUsageMb << ")";
+			mFrameDataText = ss.str();
 		}
 
 		mFrameTimeElapsed = 0;
@@ -228,10 +224,12 @@ void Window::render()
 	if(!mRenderedHelpPrompts)
 		mHelp->render(transform);
 
-	if(Settings::getInstance()->getBool("DrawFramerate") && mFrameDataText)
+	if(Settings::getInstance()->getBool("DrawFramerate") && !mFrameDataText.empty())
 	{
 		Renderer::setMatrix(Transform4x4f::Identity());
-		mDefaultFonts.at(1)->renderTextCache(mFrameDataText.get());
+		const std::shared_ptr<Font> font = Font::get(FONT_SIZE_MINI);
+		const std::unique_ptr<TextCache> cache(font->buildTextCache(mFrameDataText, Vector2f(0.f, 8.f), 0xFF00FFFF, Renderer::getScreenWidth() - 12.f, ALIGN_RIGHT, 1.1f));
+		font->renderTextCache(cache.get());
 	}
 
 	unsigned int screensaverTime = (unsigned int)Settings::getInstance()->getInt("ScreenSaverTime");

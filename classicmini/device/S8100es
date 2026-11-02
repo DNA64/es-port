@@ -15,15 +15,22 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 es_dir=/var/lib/hakchi/es
+autotest=/var/lib/clover/autotest
 case "$1" in
   start)
+    rm -f "$autotest"
     [ -f "$es_dir/no_boot" ] && exit 0
     [ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && exit 0
-    for _ in $(seq 1 15); do
+    for _ in $(seq 1 5); do
       "$es_dir/padstate" select && exit 0
       usleep 200000
     done
-    start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$es_dir/es-run.sh"
+    touch "$autotest"
+    if start-stop-daemon -S -b -q -m -p /run/es-run.pid -x /bin/sh -- "$es_dir/es-run.sh"; then
+      ( sleep 10; rm -f "$autotest" ) &
+    else
+      rm -f "$autotest"
+    fi
   ;;
   stop)
     start-stop-daemon -K -q -p /run/es-run.pid

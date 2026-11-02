@@ -24,7 +24,19 @@ export ES_PAD=snes
 restore_ui=1
 trap '[ "$restore_ui" = 1 ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
 uistop
-sh "$es_dir/es-library.sh" /tmp/es-library
+library_stamp=$es_dir/library.stamp
+games_dir=$(findGameStorage)
+games_count=$(find "$games_dir" -name '*.desktop' | wc -l)
+if [ -d "$es_dir/library" ] && [ "$(cat "$library_stamp.count" 2>/dev/null)" = "$games_count" ]   && [ -z "$(find "$games_dir" \( -name '*.desktop' -o -name '*.png' \) -newer "$library_stamp" 2>/dev/null | head -n 1)" ]; then
+  rm -rf /tmp/es-library
+  cp -a "$es_dir/library" /tmp/es-library
+else
+  sh "$es_dir/es-library.sh" /tmp/es-library
+  rm -rf "$es_dir/library"
+  cp -a /tmp/es-library "$es_dir/library"
+  echo "$games_count" > "$library_stamp.count"
+  touch "$library_stamp"
+fi
 while true; do
   rm -f /tmp/es_next /tmp/es_resume /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
   es_started=$(date +%s)

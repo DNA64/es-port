@@ -22,6 +22,8 @@
 #include <SDL_events.h>
 #include <SDL_main.h>
 #include <SDL_timer.h>
+#include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <time.h>
 #ifdef WIN32
@@ -426,6 +428,12 @@ int main(int argc, char* argv[])
 
 	bool running = true;
 
+	const bool bench = std::getenv("ES_BENCH") != nullptr;
+	int benchFrames = 0;
+	int benchWorst = 0;
+	int benchReport = SDL_GetTicks();
+	int benchStep = SDL_GetTicks();
+
 	while(running)
 	{
 		SDL_Event event;
@@ -474,6 +482,34 @@ int main(int argc, char* argv[])
 		window.update(deltaTime);
 		window.render();
 		Renderer::swapBuffers();
+
+		if(bench)
+		{
+			++benchFrames;
+			benchWorst = std::max(benchWorst, deltaTime);
+
+			if(curTime - benchStep >= 600)
+			{
+				benchStep = curTime;
+				for(const Uint8 state : { SDL_PRESSED, SDL_RELEASED })
+				{
+					SDL_Event press{};
+					press.type = state == SDL_PRESSED ? SDL_JOYBUTTONDOWN : SDL_JOYBUTTONUP;
+					press.jbutton.which = 0;
+					press.jbutton.button = 12;
+					press.jbutton.state = state;
+					SDL_PushEvent(&press);
+				}
+			}
+
+			if(curTime - benchReport >= 2000)
+			{
+				std::cerr << "bench: " << benchFrames * 1000 / (curTime - benchReport) << " fps, worst frame " << benchWorst << " ms\n";
+				benchFrames = 0;
+				benchWorst = 0;
+				benchReport = curTime;
+			}
+		}
 
 		Log::flush();
 	}

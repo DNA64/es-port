@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #ifndef ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 #define ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 
@@ -73,6 +74,7 @@ private:
 	void updateTiles(bool allowAnimation = true, bool updateSelectedState = true);
 	void updateTileAtPos(int tilePos, int imgPos, bool allowAnimation, bool updateSelectedState);
 	void calcGridDimension();
+	void applyNeighborShift(float cameraOffsetX);
 	bool isScrollLoop();
 
 	bool isVertical() { return mScrollDirection == SCROLL_VERTICALLY; };
@@ -199,6 +201,22 @@ void ImageGridComponent<T>::update(int deltaTime)
 }
 
 template<typename T>
+void ImageGridComponent<T>::applyNeighborShift(float cameraOffsetX)
+{
+	constexpr float adjacentGap = 10.0f;
+
+	const float grow = (mAutoLayoutZoom - 1.0f) * mTileSize.x() / 2.0f;
+	const float shift = isVertical() || mAutoLayout.x() == 0 ? 0.0f : std::max(0.0f, grow - std::max(0.0f, mMargin.x() - adjacentGap));
+	const float slot = mTileSize.x() + mMargin.x();
+
+	for (const std::shared_ptr<GridTileComponent>& tile : mTiles)
+	{
+		const float distance = (tile->getPosition().x() + cameraOffsetX - mSize.x() / 2.0f) / slot;
+		tile->setShiftX(shift * std::max(-1.0f, std::min(1.0f, distance)));
+	}
+}
+
+template<typename T>
 void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 {
 	Transform4x4f trans = getTransform() * parentTrans;
@@ -208,6 +226,7 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 	float offsetY = isVertical() ? mCamera * mCameraDirection * (mTileSize.y() + mMargin.y()) : 0.0f;
 
 	tileTrans.translate(Vector3f(offsetX, offsetY, 0.0));
+	applyNeighborShift(offsetX);
 
 	if(mEntriesDirty)
 	{

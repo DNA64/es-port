@@ -13,6 +13,7 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 	mDefaultProperties.mBackgroundCornerSize = Vector2f(16 ,16);
 	mDefaultProperties.mBackgroundCenterColor = 0xAAAAEEFF;
 	mDefaultProperties.mBackgroundEdgeColor = 0xAAAAEEFF;
+	mDefaultProperties.mBackgroundBleed = Vector2f::Zero();
 
 	mSelectedProperties.mSize = getSelectedTileSize();
 	mSelectedProperties.mPadding = mDefaultProperties.mPadding;
@@ -21,6 +22,7 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 	mSelectedProperties.mBackgroundCornerSize = mDefaultProperties.mBackgroundCornerSize;
 	mSelectedProperties.mBackgroundCenterColor = 0xFFFFFFFF;
 	mSelectedProperties.mBackgroundEdgeColor = 0xFFFFFFFF;
+	mSelectedProperties.mBackgroundBleed = Vector2f::Zero();
 
 	mImage = std::make_shared<ImageComponent>(mWindow);
 	mImage->setOrigin(0.5f, 0.5f);
@@ -38,10 +40,20 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 
 void GridTileComponent::render(const Transform4x4f& parentTrans)
 {
-	Transform4x4f trans = getTransform() * parentTrans;
+	Transform4x4f shifted = parentTrans;
+	shifted.translate(Vector3f(mShiftX, 0.0f, 0.0f));
+	Transform4x4f trans = getTransform() * shifted;
 
 	if (mVisible)
-		renderChildren(trans);
+	{
+		constexpr unsigned int backing = 0x0E0E1EFF;
+		const Vector2f size = mCurrentProperties.mSize - mCurrentProperties.mPadding * 2;
+
+		Renderer::setMatrix(trans);
+		Renderer::drawRect(-size.x() / 2.0f, -size.y() / 2.0f, size.x(), size.y(), backing, backing);
+		mImage->render(trans);
+		mBackground.render(trans);
+	}
 }
 
 // Update all the tile properties to the new status (selected or default)
@@ -81,6 +93,14 @@ void applyThemeToProperties(const ThemeData::ThemeElement* elem, GridTilePropert
 
 	if (elem->has("backgroundImage"))
 		properties->mBackgroundImage = elem->get<std::string>("backgroundImage");
+
+	if (elem->has("backgroundBleed"))
+	{
+		properties->mBackgroundBleed = elem->get<Vector2f>("backgroundBleed") * screen;
+
+		if(properties->mBackgroundBleed.x() > screen.x())
+			properties->mBackgroundBleed /= screen;
+	}
 
 	if (elem->has("backgroundCornerSize"))
 	{
@@ -254,7 +274,7 @@ void GridTileComponent::resize()
 
 	mImage->setMaxSize(mCurrentProperties.mSize - mCurrentProperties.mPadding * 2);
 	mBackground.setCornerSize(mCurrentProperties.mBackgroundCornerSize);
-	mBackground.fitTo(mCurrentProperties.mSize - mBackground.getCornerSize() * 2);
+	mBackground.fitTo(mCurrentProperties.mSize + mCurrentProperties.mBackgroundBleed * 2 - mBackground.getCornerSize() * 2);
 }
 
 unsigned int mixColors(unsigned int first, unsigned int second, float percent)
@@ -297,6 +317,8 @@ void GridTileComponent::calcCurrentProperties()
 		{
 			mCurrentProperties.mImageColor = mixColors(mDefaultProperties.mImageColor, mSelectedProperties.mImageColor, mSelectedZoomPercent);
 		}
+
+		mCurrentProperties.mBackgroundBleed = mDefaultProperties.mBackgroundBleed * zoomPercentInverse + mSelectedProperties.mBackgroundBleed * mSelectedZoomPercent;
 
 		if (mDefaultProperties.mBackgroundCornerSize != mSelectedProperties.mBackgroundCornerSize)
 		{

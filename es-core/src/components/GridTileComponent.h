@@ -12,6 +12,7 @@ struct GridTileProperties
 	unsigned int mImageColor;
 	std::string mBackgroundImage;
 	Vector2f mBackgroundCornerSize;
+	Vector2f mBackgroundBleed;
 	unsigned int mBackgroundCenterColor;
 	unsigned int mBackgroundEdgeColor;
 };
@@ -38,6 +39,7 @@ public:
 	void setVisible(bool visible);
 
 	void forceSize(Vector2f size, float selectedZoom);
+	void setShiftX(float shift) { mShiftX = shift; }
 
 	Vector3f getBackgroundPosition();
 
@@ -57,6 +59,7 @@ private:
 	GridTileProperties mSelectedProperties;
 	GridTileProperties mCurrentProperties;
 
+	float mShiftX = 0.0f;
 	float mSelectedZoomPercent;
 	bool mSelected;
 	bool mVisible;

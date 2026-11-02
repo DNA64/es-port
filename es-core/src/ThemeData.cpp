@@ -51,6 +51,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "imageColor", COLOR },
 		{ "backgroundImage", PATH },
 		{ "backgroundCornerSize", RESOLUTION_PAIR },
+		{ "backgroundBleed", RESOLUTION_PAIR },
 		{ "backgroundColor", COLOR },
 		{ "backgroundCenterColor", COLOR },
 		{ "backgroundEdgeColor", COLOR } } },

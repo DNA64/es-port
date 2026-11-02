@@ -32,20 +32,16 @@ public:
 	void render(const Transform4x4f& parentTrans) override;
 
 private:
-	enum class Phase { Holding, Sliding };
-
 	void layout();
-	int pageCount() const;
+	bool scrolls() const;
+	float cycleHeight() const;
 
 	TextComponent mText;
 	Vector2f mBox;
 	float mLineHeight = 0.0f;
 	int mVisibleLines = 1;
-	int mPage = 0;
-	Phase mPhase = Phase::Holding;
-	int mPhaseMs = 0;
+	int mHoldMs = 0;
 	float mOffset = 0.0f;
-	float mSlideFrom = 0.0f;
 };
 
 #endif // ES_CORE_COMPONENTS_PAGED_TEXT_COMPONENT_H

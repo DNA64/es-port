@@ -389,6 +389,21 @@ namespace
 		_exit(128 + signal);
 	}
 
+	void exitOnTerminate(int signal)
+	{
+		_exit(128 + signal);
+	}
+
+	void installTerminateHandler()
+	{
+		struct sigaction action;
+		action.sa_handler = exitOnTerminate;
+		sigemptyset(&action.sa_mask);
+		action.sa_flags = 0;
+		for(const int signal : { SIGTERM, SIGHUP })
+			sigaction(signal, &action, nullptr);
+	}
+
 	void installCrashLogger()
 	{
 		struct sigaction action;
@@ -477,6 +492,7 @@ int main(int argc, char* argv[])
 		}
 
 		AudioManager::getInstance();
+		installTerminateHandler();
 
 		if (splashScreen)
 		{

@@ -20,6 +20,7 @@ namespace MenuColors
 	constexpr unsigned int Separator = 0x353535FF;
 	constexpr unsigned int Selector = 0x444444FF;
 	constexpr unsigned int SelectorEdge = 0x8A8A8AFF;
+	constexpr unsigned int ButtonFocused = 0x707070FF;
 	constexpr unsigned int Disabled = 0x6A2A2AFF;
 }
 

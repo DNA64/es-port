@@ -79,7 +79,7 @@ void ButtonComponent::updateImage()
 		return;
 	}
 
-	const unsigned int tint = mFocused ? MenuColors::Selector : MenuColors::Dim;
+	const unsigned int tint = mFocused ? MenuColors::ButtonFocused : MenuColors::Dim;
 	mBox.setCenterColor(tint);
 	mBox.setEdgeColor(tint);
 	mBox.setImagePath(mFocused ? ":/button_filled.png" : ":/button.png");

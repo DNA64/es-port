@@ -25,6 +25,9 @@ BusyComponent::BusyComponent(Window* window) : GuiComponent(window),
 	mGrid.setEntry(mAnimation, Vector2i(1, 1), false, true);
 	mGrid.setEntry(mText, Vector2i(3, 1), false, true);
 
+	mBackground.setCenterColor(MenuColors::Panel);
+	mBackground.setEdgeColor(MenuColors::Panel);
+
 	addChild(&mBackground);
 	addChild(&mGrid);
 }

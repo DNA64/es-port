@@ -63,6 +63,8 @@ GuiInputConfig::GuiInputConfig(Window* window, InputConfig* target, bool reconfi
 	mConfiguringAll = reconfigureAll;
 	mConfiguringRow = mConfiguringAll;
 
+	mBackground.setCenterColor(MenuColors::Panel);
+	mBackground.setEdgeColor(MenuColors::Panel);
 	addChild(&mBackground);
 	addChild(&mGrid);
 

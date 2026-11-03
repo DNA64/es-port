@@ -18,6 +18,8 @@ GuiDetectDevice::GuiDetectDevice(Window* window, bool firstRun, const std::funct
 	mHoldTime = 0;
 	mDoneCallback = doneCallback;
 
+	mBackground.setCenterColor(MenuColors::Panel);
+	mBackground.setEdgeColor(MenuColors::Panel);
 	addChild(&mBackground);
 	addChild(&mGrid);
 

@@ -8,6 +8,8 @@
   */
 #include "guis/GuiSuspendPoints.h"
 
+#include "MenuColors.h"
+
 #include "guis/GuiMsgBox.h"
 #include "UiSound.h"
 #include "InputConfig.h"

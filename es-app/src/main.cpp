@@ -16,6 +16,7 @@
 #include "platform.h"
 #include "PowerSaver.h"
 #include "ScraperCmdLine.h"
+#include "MenuColors.h"
 #include "Settings.h"
 #include "SystemData.h"
 #include "SystemScreenSaver.h"
@@ -472,6 +473,8 @@ int main(int argc, char* argv[])
 
 	//always close the log on exit
 	atexit(&onExit);
+
+	MenuColors::apply(MenuColors::schemeFromName(Settings::getInstance()->getString("ColorScheme")));
 
 	Window window;
 	SystemScreenSaver screensaver(&window);

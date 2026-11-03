@@ -17,8 +17,8 @@
 
 namespace
 {
-	constexpr unsigned int BarBackground = 0x121212FF;
-	constexpr unsigned int BarFill = 0x8A8A8AFF;
+	unsigned int barBackground() { return MenuColors::Field; }
+	unsigned int barFill() { return MenuColors::Dim; }
 	constexpr unsigned int BarFull = 0xB8504DFF;
 	constexpr int BarWarningPercent = 90;
 
@@ -125,8 +125,8 @@ void GuiSystemInfo::render(const Transform4x4f& parentTrans)
 	for(const Bar& bar : mBars)
 	{
 		Renderer::setMatrix(trans);
-		Renderer::drawRect(mBarX, bar.y, mBarWidth, mBarHeight, BarBackground, BarBackground);
-		const unsigned int color = bar.percent >= BarWarningPercent ? BarFull : BarFill;
+		Renderer::drawRect(mBarX, bar.y, mBarWidth, mBarHeight, barBackground(), barBackground());
+		const unsigned int color = bar.percent >= BarWarningPercent ? BarFull : barFill();
 		Renderer::setMatrix(trans);
 		Renderer::drawRect(mBarX, bar.y, mBarWidth * static_cast<float>(bar.percent) / 100.0f, mBarHeight, color, color);
 	}

@@ -10,18 +10,30 @@
 #ifndef ES_CORE_MENU_COLORS_H
 #define ES_CORE_MENU_COLORS_H
 
+#include <string>
+
 namespace MenuColors
 {
-	constexpr unsigned int Panel = 0x1E1E1EFF;
-	constexpr unsigned int Field = 0x121212FF;
-	constexpr unsigned int Text = 0xF0F0F0FF;
-	constexpr unsigned int Title = 0xBDBDBDFF;
-	constexpr unsigned int Dim = 0x9A9A9AFF;
-	constexpr unsigned int Separator = 0x353535FF;
-	constexpr unsigned int Selector = 0x444444FF;
-	constexpr unsigned int SelectorEdge = 0x8A8A8AFF;
-	constexpr unsigned int ButtonFocused = 0x707070FF;
-	constexpr unsigned int Disabled = 0x6A2A2AFF;
+	enum class Scheme { Dark, Light };
+
+	extern unsigned int Panel;
+	extern unsigned int Field;
+	extern unsigned int Text;
+	extern unsigned int Title;
+	extern unsigned int Dim;
+	extern unsigned int Separator;
+	extern unsigned int Selector;
+	extern unsigned int SelectorEdge;
+	extern unsigned int ButtonFocused;
+	extern unsigned int Disabled;
+	extern unsigned int Icon;
+	extern unsigned int Key;
+	extern unsigned int KeyHighlight;
+	extern unsigned int KeyHighlightText;
+
+	bool isLight();
+	Scheme schemeFromName(const std::string& name);
+	void apply(Scheme scheme);
 }
 
 #endif // ES_CORE_MENU_COLORS_H

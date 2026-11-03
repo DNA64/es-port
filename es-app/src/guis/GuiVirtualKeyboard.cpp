@@ -21,13 +21,13 @@ namespace
 {
 	constexpr std::size_t MaxSecretLength = 63;
 	constexpr std::size_t MaxTextLength = 120;
-	constexpr unsigned int PanelColor = MenuColors::Panel;
-	constexpr unsigned int FieldColor = MenuColors::Field;
-	constexpr unsigned int KeyColor = 0x2E2E2EFF;
-	constexpr unsigned int ActiveKeyColor = MenuColors::Selector;
-	constexpr unsigned int SelectedColor = 0xE0E0E0FF;
-	constexpr unsigned int TextColor = MenuColors::Text;
-	constexpr unsigned int SelectedTextColor = 0x121212FF;
+	unsigned int PanelColor() { return MenuColors::Panel; }
+	unsigned int FieldColor() { return MenuColors::Field; }
+	unsigned int KeyColor() { return MenuColors::Key; }
+	unsigned int ActiveKeyColor() { return MenuColors::Selector; }
+	unsigned int SelectedColor() { return MenuColors::KeyHighlight; }
+	unsigned int TextColor() { return MenuColors::Text; }
+	unsigned int SelectedTextColor() { return MenuColors::KeyHighlightText; }
 
 	const std::array<const char*, 4> LowerRows = { "1234567890", "qwertyuiop", "asdfghjkl-", "zxcvbnm._@" };
 	const std::array<const char*, 4> UpperRows = { "!#$%^&*()+", "QWERTYUIOP", "ASDFGHJKL_", "ZXCVBNM,;:" };
@@ -46,12 +46,12 @@ namespace
 GuiVirtualKeyboard::GuiVirtualKeyboard(Window* window, const std::string& title, const std::string& initial, bool secret,
 	std::function<void(const std::string&)> onAccept)
 	: GuiComponent(window), mText(initial), mCursor(initial.size()), mSecret(secret), mOnAccept(std::move(onAccept)),
-	  mTitleText(window, title, Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_LEFT),
-	  mFieldText(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_LEFT)
+	  mTitleText(window, title, Font::get(FONT_SIZE_MEDIUM), TextColor(), ALIGN_LEFT),
+	  mFieldText(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor(), ALIGN_LEFT)
 {
 	setSize(static_cast<float>(Renderer::getScreenWidth()), static_cast<float>(Renderer::getScreenHeight()));
 	for(int index = 0; index < LetterRows * Columns + SpecialCount; ++index)
-		mKeyTexts.emplace_back(new TextComponent(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor, ALIGN_CENTER));
+		mKeyTexts.emplace_back(new TextComponent(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor(), ALIGN_CENTER));
 	refreshLabels();
 }
 
@@ -243,7 +243,7 @@ void GuiVirtualKeyboard::render(const Transform4x4f& parentTrans)
 	const float panelY = height * PanelTop;
 	const float panelW = width * PanelWidth;
 	const float panelH = height * PanelHeight;
-	fill(panelX, panelY, panelW, panelH, PanelColor);
+	fill(panelX, panelY, panelW, panelH, PanelColor());
 
 	const float margin = panelW * 0.04f;
 	const float lineHeight = Font::get(FONT_SIZE_MEDIUM)->getHeight();
@@ -253,7 +253,7 @@ void GuiVirtualKeyboard::render(const Transform4x4f& parentTrans)
 
 	const float fieldY = panelY + margin * 0.6f + lineHeight * 1.4f;
 	const float fieldH = lineHeight * 1.5f;
-	fill(panelX + margin, fieldY, panelW - 2 * margin, fieldH, FieldColor);
+	fill(panelX + margin, fieldY, panelW - 2 * margin, fieldH, FieldColor());
 	mFieldText.setPosition(panelX + margin * 1.4f, fieldY + (fieldH - lineHeight) / 2);
 	mFieldText.setSize(panelW - 3 * margin, lineHeight);
 	mFieldText.render(trans);
@@ -275,12 +275,12 @@ void GuiVirtualKeyboard::render(const Transform4x4f& parentTrans)
 			const float keyW = cellW * span + gap * (span - 1);
 			const bool selected = row == mRow && column == mColumn;
 			const bool active = row == LetterRows && column == ShiftKey && mShift != Shift::Off;
-			fill(x, y, keyW, cellH, selected ? SelectedColor : (active ? ActiveKeyColor : KeyColor));
+			fill(x, y, keyW, cellH, selected ? SelectedColor() : (active ? ActiveKeyColor() : KeyColor()));
 
 			TextComponent& label = *mKeyTexts[static_cast<std::size_t>(row * Columns + column)];
 			label.setPosition(x, y + (cellH - lineHeight) / 2);
 			label.setSize(keyW, lineHeight);
-			label.setColor(selected ? SelectedTextColor : TextColor);
+			label.setColor(selected ? SelectedTextColor() : TextColor());
 			label.render(trans);
 		}
 	}

@@ -152,7 +152,10 @@ void GuiCollectionSystemsOptions::createCollection(std::string inName)
 		return;
 	}
 	customOptionList->add(name, name, true);
-	std::string outAuto = Utils::String::vectorToDelimitedString(autoOptionList->getSelectedObjects(), ",");
+	std::vector<std::string> autoSelected = autoOptionList->getSelectedObjects();
+	if(showFavoritesSwitch->getState())
+		autoSelected.push_back("favorites");
+	std::string outAuto = Utils::String::vectorToDelimitedString(autoSelected, ",");
 	std::string outCustom = Utils::String::vectorToDelimitedString(customOptionList->getSelectedObjects(), ",");
 	updateSettings(outAuto, outCustom);
 	ViewController::get()->goToSystemView(newSys);
@@ -184,11 +187,18 @@ void GuiCollectionSystemsOptions::addSystemsToMenu()
 
 	std::map<std::string, CollectionSystemData> autoSystems = CollectionSystemManager::get()->getAutoCollectionSystems();
 
+	const auto favorites = autoSystems.find("favorites");
+	showFavoritesSwitch = std::make_shared<SwitchComponent>(mWindow);
+	showFavoritesSwitch->setState(favorites != autoSystems.cend() && favorites->second.isEnabled);
+	mMenu.addWithLabel("SHOW FAVORITES", showFavoritesSwitch);
+
 	autoOptionList = std::make_shared< OptionListComponent<std::string> >(mWindow, "SELECT COLLECTIONS", true);
 
 	// add Auto Systems
 	for(std::map<std::string, CollectionSystemData>::const_iterator it = autoSystems.cbegin() ; it != autoSystems.cend() ; it++ )
 	{
+		if(it->second.decl.name == "favorites")
+			continue;
 		autoOptionList->add(it->second.decl.longName, it->second.decl.name, it->second.isEnabled);
 	}
 	mMenu.addWithLabel("AUTOMATIC GAME COLLECTIONS", autoOptionList);
@@ -207,7 +217,10 @@ void GuiCollectionSystemsOptions::addSystemsToMenu()
 
 void GuiCollectionSystemsOptions::applySettings()
 {
-	std::string outAuto = Utils::String::vectorToDelimitedString(autoOptionList->getSelectedObjects(), ",");
+	std::vector<std::string> autoSelected = autoOptionList->getSelectedObjects();
+	if(showFavoritesSwitch->getState())
+		autoSelected.push_back("favorites");
+	std::string outAuto = Utils::String::vectorToDelimitedString(autoSelected, ",");
 	std::string prevAuto = Settings::getInstance()->getString("CollectionSystemsAuto");
 	std::string outCustom = Utils::String::vectorToDelimitedString(customOptionList->getSelectedObjects(), ",");
 	std::string prevCustom = Settings::getInstance()->getString("CollectionSystemsCustom");
@@ -258,6 +271,8 @@ void GuiCollectionSystemsOptions::applySettings()
 
 void GuiCollectionSystemsOptions::updateSettings(std::string newAutoSettings, std::string newCustomSettings)
 {
+	mWindow->renderLoadingScreen("Loading...");
+
 	Settings::getInstance()->setString("CollectionSystemsAuto", newAutoSettings);
 	Settings::getInstance()->setString("CollectionSystemsCustom", newCustomSettings);
 	Settings::getInstance()->setBool("SortAllSystems", sortAllSystemsSwitch->getState());

@@ -27,6 +27,7 @@ private:
 	void createCollection(std::string inName);
 	void exitEditMode();
 	void openRandomCollectionSettings();
+	std::shared_ptr<SwitchComponent> showFavoritesSwitch;
 	std::shared_ptr< OptionListComponent<std::string> > autoOptionList;
 	std::shared_ptr< OptionListComponent<std::string> > customOptionList;
 	std::shared_ptr< OptionListComponent<std::string> > defaultScreenSaverCollection;

@@ -24,6 +24,15 @@ GuiGamelistOptions::GuiGamelistOptions(Window* window, SystemData* system) : Gui
 	mFromPlaceholder = file->isPlaceHolder();
 	ComponentListRow row;
 
+	if(!mFromPlaceholder && file->getType() == GAME && getGamelist()->supportsSuspendPoints())
+	{
+		row.elements.clear();
+		row.addElement(std::make_shared<TextComponent>(mWindow, "SUSPEND POINTS", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
+		row.addElement(makeArrow(mWindow), false);
+		row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::openSuspendPoints, this));
+		mMenu.addRow(row);
+	}
+
 	if (!mFromPlaceholder) {
 		row.elements.clear();
 
@@ -182,6 +191,13 @@ GuiGamelistOptions::~GuiGamelistOptions()
 			getGamelist()->onFileChanged(root, FILE_SORTED);
 		}
 	}
+}
+
+void GuiGamelistOptions::openSuspendPoints()
+{
+	IGameListView* gamelist = getGamelist();
+	delete this;
+	gamelist->openSuspendPoints();
 }
 
 bool GuiGamelistOptions::launchSystemScreenSaver()

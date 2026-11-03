@@ -61,6 +61,7 @@ public:
 
 	inline void setCursorChangedCallback(const std::function<void(CursorState state)>& func) { mCursorChangedCallback = func; }
 	inline void setFavoriteIndicatorCallback(const std::function<bool(const T&)>& func) { mFavoriteIndicatorCallback = func; }
+	inline void setMarkerCallback(const std::function<bool(const T&)>& func) { mMarkerCallback = func; }
 
 	inline void setFont(const std::shared_ptr<Font>& font)
 	{
@@ -111,6 +112,7 @@ private:
 	unsigned int mSelectedColor;
 	std::string mScrollSound;
 	std::function<bool(const T&)> mFavoriteIndicatorCallback;
+	std::function<bool(const T&)> mMarkerCallback;
 	static const unsigned int COLOR_ID_COUNT = 2;
 	unsigned int mColors[COLOR_ID_COUNT];
 	int mViewportHeight;
@@ -118,12 +120,13 @@ private:
 
 	ImageComponent mSelectorImage;
 	ImageComponent mFavoriteIcon;
+	ImageComponent mMarkerIcon;
 	bool mFavoriteIconVisible;
 };
 
 template <typename T>
 TextListComponent<T>::TextListComponent(Window* window) :
-	IList<TextListData, T>(window), mSelectorImage(window), mFavoriteIcon(window)
+	IList<TextListData, T>(window), mSelectorImage(window), mFavoriteIcon(window), mMarkerIcon(window)
 {
 	mMarqueeOffset = 0;
 	mMarqueeOffset2 = 0;
@@ -145,6 +148,7 @@ TextListComponent<T>::TextListComponent(Window* window) :
 	mColors[1] = 0x00FF00FF;
 
 	mFavoriteIcon.setImage(":/heart_filled.svg");
+	mMarkerIcon.setImage(":/suspend_marker.png");
 	mFavoriteIconVisible = true;
 }
 
@@ -212,10 +216,13 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		entry.data.textCache->setColor(color);
 
 		const bool showFavorite = mFavoriteIconVisible && mFavoriteIcon.hasImage() && (mFavoriteIndicatorCallback ? mFavoriteIndicatorCallback(entry.object) : false);
+		const bool showMarker = mMarkerIcon.hasImage() && (mMarkerCallback ? mMarkerCallback(entry.object) : false);
 		const float iconSize = entrySize * 0.60f;
-		const float iconGap = showFavorite ? (iconSize * 0.35f) : 0.0f;
+		const float iconSlot = iconSize + iconSize * 0.35f;
+		const float markerWidth = showMarker ? iconSlot : 0.0f;
+		const float leadingWidth = markerWidth + (showFavorite ? iconSlot : 0.0f);
 		const float textWidth = entry.data.textCache->metrics.size.x();
-		const float lineWidth = showFavorite ? (iconSize + iconGap + textWidth) : textWidth;
+		const float lineWidth = leadingWidth + textWidth;
 
 		Vector3f offset(0, y, 0);
 
@@ -241,16 +248,25 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		if((mCursor == i) && (mMarqueeOffset > 0))
 			rowScrollOffset = (float)mMarqueeOffset;
 
+		if(showMarker)
+		{
+			Transform4x4f markerTrans = trans;
+			markerTrans.translate(offset - Vector3f(rowScrollOffset, 0, 0));
+			mMarkerIcon.setPosition(0, (font->getHeight(1.0f) - iconSize) * 0.5f, 0);
+			mMarkerIcon.setResize(iconSize, iconSize);
+			mMarkerIcon.render(markerTrans);
+		}
+
 		if(showFavorite)
 		{
 			Transform4x4f iconTrans = trans;
-			iconTrans.translate(offset - Vector3f(rowScrollOffset, 0, 0));
-			mFavoriteIcon.setPosition(0, (entrySize - iconSize) * 0.5f, 0);
+			iconTrans.translate(offset + Vector3f(markerWidth, 0, 0) - Vector3f(rowScrollOffset, 0, 0));
+			mFavoriteIcon.setPosition(0, (font->getHeight(1.0f) - iconSize) * 0.5f, 0);
 			mFavoriteIcon.setResize(iconSize, iconSize);
 			mFavoriteIcon.render(iconTrans);
 		}
 
-		Vector3f textOffset = offset + Vector3f(showFavorite ? (iconSize + iconGap) : 0.0f, 0, 0);
+		Vector3f textOffset = offset + Vector3f(leadingWidth, 0, 0);
 
 		// render text
 		Transform4x4f drawTrans = trans;
@@ -268,11 +284,17 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		// marquee is scrolled far enough for it to repeat
 		if((mCursor == i) && (mMarqueeOffset2 < 0))
 		{
-			// also render the favorite icon alongside the wrap-around copy of the text
+			// also render the icons alongside the wrap-around copy of the text
+			if(showMarker)
+			{
+				Transform4x4f markerTrans2 = trans;
+				markerTrans2.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
+				mMarkerIcon.render(markerTrans2);
+			}
 			if(showFavorite)
 			{
 				Transform4x4f iconTrans2 = trans;
-				iconTrans2.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
+				iconTrans2.translate(offset + Vector3f(markerWidth, 0, 0) - Vector3f((float)mMarqueeOffset2, 0, 0));
 				mFavoriteIcon.render(iconTrans2);
 			}
 

@@ -22,6 +22,7 @@ public:
 
 private:
 	void openGamelistFilter();
+	void openSuspendPoints();
 	bool launchSystemScreenSaver();
 	void openMetaDataEd();
 	void startEditMode();

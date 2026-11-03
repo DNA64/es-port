@@ -321,6 +321,8 @@ void VideoGameListView::updateInfoPanel()
 
 void VideoGameListView::launch(FileData* game)
 {
+	applyPendingResume();
+
 	float screenWidth = (float) Renderer::getScreenWidth();
 	float screenHeight = (float) Renderer::getScreenHeight();
 
@@ -395,7 +397,7 @@ void VideoGameListView::update(int deltaTime)
 
 void VideoGameListView::onShow()
 {
-	GuiComponent::onShow();
+	ISimpleGameListView::onShow();
 	updateInfoPanel();
 }
 

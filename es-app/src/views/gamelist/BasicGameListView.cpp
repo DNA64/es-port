@@ -16,6 +16,7 @@ BasicGameListView::BasicGameListView(Window* window, FileData* root)
 	mList.setFavoriteIndicatorCallback([](FileData* file) {
 		return file != nullptr && file->getType() == GAME && file->metadata.get("favorite") == "true";
 	});
+	mList.setMarkerCallback([this](FileData* file) { return isFloating(file); });
 	addChild(&mList);
 
 	populateList(root->getChildrenListToDisplay());
@@ -130,6 +131,7 @@ std::string BasicGameListView::getQuickSystemSelectLeftButton()
 
 void BasicGameListView::launch(FileData* game)
 {
+	applyPendingResume();
 	ViewController::get()->launch(game);
 }
 
@@ -217,7 +219,7 @@ std::vector<HelpPrompt> BasicGameListView::getHelpPrompts()
 		prompts.push_back(HelpPrompt("left/right", "system"));
 	prompts.push_back(HelpPrompt("up/down", "choose"));
 	prompts.push_back(HelpPrompt("a", "launch"));
-	prompts.push_back(HelpPrompt("b", "back"));
+	prompts.push_back(HelpPrompt("b", mFloating.valid && canJumpTo(findGame(mFloating.code)) ? "go to last saved game" : "back"));
 	if(!UIModeController::getInstance()->isUIModeKid())
 		prompts.push_back(HelpPrompt("select", "options"));
 	if(mRoot->getSystem()->isGameSystem())

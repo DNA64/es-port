@@ -13,11 +13,15 @@
 #include "GuiComponent.h"
 #include "components/ImageComponent.h"
 #include "components/TextComponent.h"
+#include <string>
 
 class DiskSpaceIndicator : public GuiComponent
 {
 public:
-	explicit DiskSpaceIndicator(Window* window);
+	DiskSpaceIndicator(Window* window, std::string mountPoint, const std::string& iconPath);
+
+	void placeLeftOf(const DiskSpaceIndicator& neighbour);
+	float getLeftEdge() const { return mLeftEdge; }
 
 	void update(int deltaTime) override;
 	void render(const Transform4x4f& parentTrans) override;
@@ -25,8 +29,11 @@ public:
 private:
 	void refresh();
 
+	std::string mMountPoint;
 	ImageComponent mIcon;
 	TextComponent mText;
+	const DiskSpaceIndicator* mNeighbour = nullptr;
+	float mLeftEdge = 0.0f;
 	int mElapsedMs = 0;
 };
 

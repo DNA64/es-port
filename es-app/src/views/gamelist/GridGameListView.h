@@ -90,6 +90,7 @@ private:
 	SuspendPoints mSuspendPoints;
 	MenuIconBar mIconBar;
 	DiskSpaceIndicator mDiskSpace;
+	DiskSpaceIndicator mNandSpace;
 	bool mHeaderFocus = false;
 	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
 	SuspendPoint mFloating;

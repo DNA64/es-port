@@ -23,6 +23,21 @@ gamelist=$out/gamelist.xml
 max_depth=8
 
 escXml() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+covers=/media/data/emulationstation/covers
+
+findCover() {
+  local cover alias slug
+  [ -d "$covers" ] || return 0
+  [ -f "$covers/$1.png" ] && { echo "$covers/$1.png"; return 0; }
+  alias=$(tr -d '\r' < "$covers/aliases.txt" 2>/dev/null | awk -F'\t' -v code="$1" '$1 == code { print $2; exit }')
+  if [ -n "$alias" ]; then
+    cover=$(find "$covers" -maxdepth 1 -iname "$alias.png" | head -n 1)
+    [ -n "$cover" ] && { echo "$cover"; return 0; }
+  fi
+  slug=$(echo "$2" | sed 's/([^)]*)//g; s/\[[^]]*\]//g' | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
+  [ -n "$slug" ] && find "$covers" -maxdepth 1 -iname "$slug.png" | head -n 1
+}
+
 readField() { tr -d '\r' < "$1" | sed -n "s/^$2 *= *//p" | head -n 1; }
 joinInfo() {
   local joined="" part
@@ -47,7 +62,7 @@ readDescription() {
 }
 
 buildMenu() {
-  local menu="$1" dir="$2" depth="$3" trail="$4 $1" game_dir code desktop name cmd icon rel entry sub desc year players released genre small
+  local menu="$1" dir="$2" depth="$3" trail="$4 $1" game_dir code desktop name cmd icon cover rel entry sub desc year players released genre small
   mkdir -p "$out/$dir"
   for game_dir in "$store/$menu"/CLV-*; do
     code=${game_dir##*/}
@@ -59,6 +74,8 @@ buildMenu() {
     icon=$(readField "$desktop" Icon)
     case $icon in /var/games/*) icon=$store/$menu/${icon#/var/games/} ;; esac
     [ -f "$icon" ] || icon=
+    cover=$(findCover "$code" "$name")
+    [ -n "$cover" ] && icon=$cover
     rel=./${dir:+$dir/}$code
 
     case $cmd in
@@ -95,6 +112,7 @@ buildMenu() {
         [ -n "$players" ] && echo "    <players>$players</players>"
         echo "    <genre>$(joinInfo "$genre" "${released%%-*}" "$(playersLabel "$players")" | escXml)</genre>"
         [ -f "$small" ] || small=$icon
+        [ -n "$cover" ] && small=$cover
         [ -n "$small" ] && echo "    <marquee>$(echo "$small" | escXml)</marquee>"
       fi
       echo "  </$entry>"

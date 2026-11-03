@@ -35,6 +35,7 @@ public:
 	void unloadAll();
 	void reloadAll();
 
+	void setThemeDirectory(const std::string& path) { mThemeDirectory = path; }
 	std::string getResourcePath(const std::string& path) const;
 	const ResourceData getFileData(const std::string& path) const;
 	bool fileExists(const std::string& path) const;
@@ -43,6 +44,8 @@ private:
 	ResourceManager();
 
 	static std::shared_ptr<ResourceManager> sInstance;
+
+	std::string mThemeDirectory;
 
 	ResourceData loadFile(const std::string& path) const;
 

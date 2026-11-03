@@ -1,0 +1,92 @@
+<theme>
+	<formatVersion>4</formatVersion>
+
+	<view name="system">
+		<carousel name="systemcarousel">
+			<type>horizontal</type>
+			<size>1 0.2</size>
+			<pos>0 0.4</pos>
+			<logoSize>0.3 0.12</logoSize>
+			<logoScale>1.2</logoScale>
+			<maxLogoCount>3</maxLogoCount>
+		</carousel>
+	</view>
+
+	<view name="grid">
+		<imagegrid name="gamegrid">
+			<pos>0 0.2</pos>
+			<size>1 0.3</size>
+			<margin>0.02 0</margin>
+			<padding>0.05 0.04 0.05 0.04</padding>
+			<autoLayout>5 1</autoLayout>
+			<autoLayoutSelectedZoom>1.4</autoLayoutSelectedZoom>
+			<imageSource>image</imageSource>
+			<scrollDirection>horizontal</scrollDirection>
+			<centerSelection>true</centerSelection>
+			<scrollLoop>true</scrollLoop>
+			<animate>true</animate>
+			<gameImage>:/cartridge.svg</gameImage>
+			<folderImage>:/folder.svg</folderImage>
+		</imagegrid>
+		<gridtile name="default">
+			<backgroundImage>:/grid_tile.png</backgroundImage>
+			<backgroundCornerSize>20 20</backgroundCornerSize>
+			<backgroundColor>FFFFFFFF</backgroundColor>
+			<imageColor>FFFFFFFF</imageColor>
+			<padding>8 8</padding>
+		</gridtile>
+		<gridtile name="selected">
+			<backgroundImage>:/grid_tile_selected.png</backgroundImage>
+			<backgroundCornerSize>20 20</backgroundCornerSize>
+			<backgroundColor>FFFFFFFF</backgroundColor>
+			<imageColor>FFFFFFFF</imageColor>
+			<padding>10 10</padding>
+		</gridtile>
+
+		<text name="md_lbl_rating"><visible>false</visible></text>
+		<text name="md_lbl_developer"><visible>false</visible></text>
+		<text name="md_lbl_publisher"><visible>false</visible></text>
+		<text name="md_lbl_genre"><visible>false</visible></text>
+		<text name="md_lbl_lastplayed"><visible>false</visible></text>
+		<text name="md_lbl_playcount"><visible>false</visible></text>
+		<text name="md_lbl_releasedate"><visible>false</visible></text>
+		<text name="md_lbl_players"><visible>false</visible></text>
+		<text name="md_publisher"><visible>false</visible></text>
+		<datetime name="md_lastplayed"><visible>false</visible></datetime>
+		<text name="md_playcount"><visible>false</visible></text>
+		<text name="md_players"><visible>false</visible></text>
+		<datetime name="md_releasedate"><visible>false</visible></datetime>
+		<rating name="md_rating"><visible>false</visible></rating>
+		<image name="md_image"><visible>false</visible></image>
+		<image name="md_marquee"><visible>false</visible></image>
+
+		<text name="md_name">
+			<pos>0.06 0.66</pos>
+			<size>0.4 0.07</size>
+			<color>FFFFFF</color>
+			<fontSize>0.05</fontSize>
+			<alignment>left</alignment>
+		</text>
+		<text name="md_developer">
+			<visible>true</visible>
+			<pos>0.06 0.74</pos>
+			<size>0.4 0.04</size>
+			<color>9A9AB0</color>
+			<fontSize>0.028</fontSize>
+			<alignment>left</alignment>
+		</text>
+		<text name="md_genre">
+			<pos>0.06 0.79</pos>
+			<size>0.4 0.05</size>
+			<color>B8B8CC</color>
+			<fontSize>0.032</fontSize>
+			<alignment>left</alignment>
+		</text>
+		<text name="md_description">
+			<pos>0.52 0.66</pos>
+			<size>0.42 0.21</size>
+			<color>C8C8D9</color>
+			<fontSize>0.03</fontSize>
+		</text>
+	</view>
+</theme>

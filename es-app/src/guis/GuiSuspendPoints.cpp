@@ -23,9 +23,9 @@ namespace
 {
 	constexpr int HoldToOverwriteMs = 400;
 	constexpr int NoticeMs = 1500;
-	constexpr unsigned int GaugeColor = 0xF4F1FFFF;
-	constexpr unsigned int TextColor = 0xF4F1FFFF;
-	constexpr unsigned int MutedColor = 0xB9A8FFFF;
+	constexpr unsigned int GaugeColor = 0xF0F0F0FF;
+	constexpr unsigned int TextColor = 0xF0F0F0FF;
+	constexpr unsigned int MutedColor = 0x9A9A9AFF;
 
 	constexpr float PanelLeft = 0.04f;
 	constexpr float PanelTop = 0.46f;

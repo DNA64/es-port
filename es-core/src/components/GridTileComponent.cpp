@@ -12,8 +12,8 @@ GridTileComponent::GridTileComponent(Window* window) : GuiComponent(window), mBa
 	mDefaultProperties.mSize = getDefaultTileSize();
 	mDefaultProperties.mPadding = Vector2f(16.0f, 16.0f);
 	mDefaultProperties.mImageColor = 0xAAAAAABB;
-	mDefaultProperties.mBackgroundImage = ":/frame.png";
-	mDefaultProperties.mBackgroundCornerSize = Vector2f(16 ,16);
+	mDefaultProperties.mBackgroundImage = ":/grid_tile.png";
+	mDefaultProperties.mBackgroundCornerSize = Vector2f(20, 20);
 	mDefaultProperties.mBackgroundCenterColor = 0xAAAAEEFF;
 	mDefaultProperties.mBackgroundEdgeColor = 0xAAAAEEFF;
 	mDefaultProperties.mBackgroundBleed = Vector2f::Zero();
@@ -49,7 +49,7 @@ void GridTileComponent::render(const Transform4x4f& parentTrans)
 
 	if (mVisible)
 	{
-		constexpr unsigned int backing = 0x0E0E1EFF;
+		constexpr unsigned int backing = 0x101010FF;
 		const Vector2f size = mCurrentProperties.mSize - mCurrentProperties.mPadding * 2;
 
 		Renderer::setMatrix(trans);

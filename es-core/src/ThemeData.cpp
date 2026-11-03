@@ -2,6 +2,7 @@
 
 #include "components/ImageComponent.h"
 #include "components/TextComponent.h"
+#include "resources/ResourceManager.h"
 #include "utils/FileSystemUtil.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
@@ -683,8 +684,8 @@ std::string ThemeData::getThemeFromCurrentSet(const std::string& system)
 	std::map<std::string, ThemeSet> themeSets = ThemeData::getThemeSets();
 	if(themeSets.empty())
 	{
-		// no theme sets available
-		return "";
+		ResourceManager::getInstance()->setThemeDirectory("");
+		return ResourceManager::getInstance()->getResourcePath(":/default_theme/theme.xml");
 	}
 
 	std::map<std::string, ThemeSet>::const_iterator set = themeSets.find(Settings::getInstance()->getString("ThemeSet"));
@@ -695,5 +696,6 @@ std::string ThemeData::getThemeFromCurrentSet(const std::string& system)
 		Settings::getInstance()->setString("ThemeSet", set->first);
 	}
 
+	ResourceManager::getInstance()->setThemeDirectory(set->second.path + "/ui");
 	return set->second.getThemePath(system);
 }

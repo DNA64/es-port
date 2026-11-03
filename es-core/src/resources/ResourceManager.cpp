@@ -27,6 +27,13 @@ std::string ResourceManager::getResourcePath(const std::string& path) const
 	{
 		std::string test;
 
+		if(!mThemeDirectory.empty())
+		{
+			test = mThemeDirectory + "/" + &path[2];
+			if(Utils::FileSystem::exists(test))
+				return test;
+		}
+
 		// check on the USB, where the heavy resources are moved to
 		test = std::string("/media/data/emulationstation/resources/") + &path[2];
 		if(Utils::FileSystem::exists(test))

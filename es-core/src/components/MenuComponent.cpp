@@ -131,6 +131,7 @@ std::shared_ptr<ImageComponent> makeArrow(Window* window)
 {
 	auto bracket = std::make_shared<ImageComponent>(window);
 	bracket->setImage(":/arrow.svg");
+	bracket->setColorShift(MenuColors::Icon);
 	bracket->setResize(0, Math::round(Font::get(FONT_SIZE_MENU)->getLetterHeight()));
 	return bracket;
 }

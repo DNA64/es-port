@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "SwitchComponent.h"
 
 #include "resources/Font.h"
@@ -5,6 +6,7 @@
 SwitchComponent::SwitchComponent(Window* window, bool state) : GuiComponent(window), mImage(window), mState(state)
 {
 	mImage.setImage(":/off.svg");
+	mImage.setColorShift(MenuColors::Icon);
 	mImage.setResize(0, Font::get(FONT_SIZE_MENU)->getLetterHeight());
 	mSize = mImage.getSize();
 }

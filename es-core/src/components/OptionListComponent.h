@@ -58,6 +58,7 @@ private:
 					// add checkbox
 					auto checkbox = std::make_shared<ImageComponent>(mWindow);
 					checkbox->setImage(it->selected ? CHECKED_PATH : UNCHECKED_PATH);
+					checkbox->setColorShift(MenuColors::Icon);
 					checkbox->setResize(0, font->getLetterHeight());
 					row.addElement(checkbox, false);
 
@@ -159,6 +160,9 @@ public:
 			mRightArrow.setImage(":/option_arrow.svg");
 			addChild(&mRightArrow);
 		}
+
+		mLeftArrow.setColorShift(MenuColors::Icon);
+		mRightArrow.setColorShift(MenuColors::Icon);
 
 		setSize(mLeftArrow.getSize().x() + mRightArrow.getSize().x(), font->getHeight());
 	}

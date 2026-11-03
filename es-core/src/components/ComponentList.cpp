@@ -180,7 +180,7 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	for(unsigned int i = 0; i < mEntries.size(); i++)
 	{
 		auto& entry = mEntries.at(i);
-		drawAll = !mFocused || i != (unsigned int)mCursor;
+		drawAll = !mFocused || i != (unsigned int)mCursor || MenuColors::isLight();
 		for(auto it = entry.data.elements.cbegin(); it != entry.data.elements.cend(); it++)
 		{
 			if(drawAll)
@@ -199,7 +199,13 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	if(mFocused)
 	{
 		const float selectedRowHeight = getRowHeight(mEntries.at(mCursor).data);
-		Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, MenuColors::Selector, MenuColors::Selector);
+		if(MenuColors::isLight())
+		{
+			Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, 0xFFFFFFFF, 0xFFFFFFFF, false, Renderer::Blend::ONE_MINUS_DST_COLOR, Renderer::Blend::ZERO);
+			Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, 0x777777FF, 0x777777FF, false, Renderer::Blend::ONE, Renderer::Blend::ONE);
+		}
+		else
+			Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, MenuColors::Selector, MenuColors::Selector);
 		Renderer::drawRect(0.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, MenuColors::SelectorEdge, MenuColors::SelectorEdge);
 		Renderer::drawRect(mSize.x() - 2.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, MenuColors::SelectorEdge, MenuColors::SelectorEdge);
 

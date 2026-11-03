@@ -9,7 +9,7 @@ ButtonComponent::ButtonComponent(Window* window, const std::string& text, const 
 	mFont(Font::get(FONT_SIZE_MENU)),
 	mFocused(false),
 	mEnabled(true),
-	mTextColorFocused(MenuColors::Text), mTextColorUnfocused(MenuColors::Text)
+	mTextColorFocused(MenuColors::isLight() ? 0xFFFFFFFF : MenuColors::Text), mTextColorUnfocused(MenuColors::Text)
 {
 	setPressedFunc(func);
 	setText(text, helpText);
@@ -79,7 +79,7 @@ void ButtonComponent::updateImage()
 		return;
 	}
 
-	const unsigned int tint = mFocused ? MenuColors::ButtonFocused : MenuColors::Dim;
+	const unsigned int tint = mFocused ? MenuColors::ButtonFocused : (MenuColors::isLight() ? 0xFFFFFFFF : MenuColors::Dim);
 	mBox.setCenterColor(tint);
 	mBox.setEdgeColor(tint);
 	mBox.setImagePath(mFocused ? ":/button_filled.png" : ":/button.png");

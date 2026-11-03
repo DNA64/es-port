@@ -15,10 +15,31 @@
 #include "ThemeData.h"
 #include <pugixml.hpp>
 #include <fstream>
+#include <cstdlib>
 #include <cstring>
 
 /* Handling the getting, initialization, deinitialization, saving and deletion of
  * a CollectionSystemManager Instance */
+namespace
+{
+	void saveFavoritesFile()
+	{
+		const char* path = std::getenv("ES_FAVORITES_FILE");
+		if(path == nullptr)
+			return;
+
+		std::ofstream out(path, std::ios::trunc);
+		for(SystemData* system : SystemData::sSystemVector)
+		{
+			if(system->isCollection())
+				continue;
+			for(FileData* game : system->getRootFolder()->getFilesRecursive(GAME))
+				if(game->metadata.get("favorite") == "true")
+					out << Utils::FileSystem::getStem(game->getPath()) << '\n';
+		}
+	}
+}
+
 CollectionSystemManager* CollectionSystemManager::sInstance = NULL;
 
 CollectionSystemManager::CollectionSystemManager(Window* window) : mWindow(window)
@@ -571,6 +592,7 @@ bool CollectionSystemManager::toggleGameInCollection(FileData* file)
 			file->getSourceFileData()->getSystem()->getIndex()->addToIndex(file);
 
 			file->getSourceFileData()->getSystem()->onMetaDataSavePoint();
+			saveFavoritesFile();
 
 			refreshCollectionSystems(file->getSourceFileData());
 		}

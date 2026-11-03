@@ -59,12 +59,13 @@ else
   echo "$games_count" > "$library_stamp.count"
   touch "$library_stamp"
 fi
+sh "$es_dir/es-favorites.sh" /tmp/es-library "$es_dir/favorites.txt"
 sh "$es_dir/es-systems.sh" /tmp/es-library "$es_dir/es_systems.cfg" "$es_dir/home/.emulationstation/es_systems.cfg"
 [ -f /media/data/emulationstation/audio/bgm_home.wav ] || sh "$es_dir/es-tools.sh" audio import >/dev/null 2>&1
 while true; do
   rm -f /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
   es_started=$(date +%s)
-  HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
+  HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir ES_FAVORITES_FILE=$es_dir/favorites.txt "$es_dir/emulationstation" "$@"
   es_status=$?
   case $es_status in 129|143) restore_ui=0; break ;; esac
   if [ "$es_status" -ne 0 ] && [ $(($(date +%s) - es_started)) -lt 15 ]; then

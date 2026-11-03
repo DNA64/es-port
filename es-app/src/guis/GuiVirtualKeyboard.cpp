@@ -6,9 +6,11 @@
   * the Free Software Foundation, either version 3 of the License, or
   * (at your option) any later version.
   */
+#include "MenuColors.h"
 #include "guis/GuiVirtualKeyboard.h"
 
 #include "InputConfig.h"
+#include "UiSound.h"
 #include "Window.h"
 #include "renderers/Renderer.h"
 #include "resources/Font.h"
@@ -19,13 +21,13 @@ namespace
 {
 	constexpr std::size_t MaxSecretLength = 63;
 	constexpr std::size_t MaxTextLength = 120;
-	constexpr unsigned int PanelColor = 0x1F1D45FF;
-	constexpr unsigned int FieldColor = 0x14122EFF;
-	constexpr unsigned int KeyColor = 0x2B2960FF;
-	constexpr unsigned int ActiveKeyColor = 0x4A43A8FF;
-	constexpr unsigned int SelectedColor = 0x7B6FF5FF;
-	constexpr unsigned int TextColor = 0xF4F1FFFF;
-	constexpr unsigned int SelectedTextColor = 0x14122EFF;
+	constexpr unsigned int PanelColor = MenuColors::Panel;
+	constexpr unsigned int FieldColor = MenuColors::Field;
+	constexpr unsigned int KeyColor = 0x2E2E2EFF;
+	constexpr unsigned int ActiveKeyColor = MenuColors::Selector;
+	constexpr unsigned int SelectedColor = 0xE0E0E0FF;
+	constexpr unsigned int TextColor = MenuColors::Text;
+	constexpr unsigned int SelectedTextColor = 0x121212FF;
 
 	const std::array<const char*, 4> LowerRows = { "1234567890", "qwertyuiop", "asdfghjkl-", "zxcvbnm._@" };
 	const std::array<const char*, 4> UpperRows = { "!#$%^&*()+", "QWERTYUIOP", "ASDFGHJKL_", "ZXCVBNM,;:" };
@@ -150,6 +152,7 @@ void GuiVirtualKeyboard::finish(bool accepted)
 
 void GuiVirtualKeyboard::pressKey()
 {
+	UiSound::play("se_sys_click_short.wav");
 	if(mRow < LetterRows)
 	{
 		insert(keyCharacter(mRow, mColumn));

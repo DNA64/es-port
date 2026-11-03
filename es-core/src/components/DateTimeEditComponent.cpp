@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "components/DateTimeEditComponent.h"
 
 #include "DateTimeComponent.h"
@@ -6,7 +7,7 @@
 
 DateTimeEditComponent::DateTimeEditComponent(Window* window, DisplayMode dispMode) : GuiComponent(window),
 	mEditing(false), mEditIndex(0), mDisplayMode(dispMode), mRelativeUpdateAccumulator(0),
-	mColor(0x777777FF), mFont(Font::get(FONT_SIZE_SMALL, FONT_PATH_LIGHT)), mUppercase(false), mAutoSize(true)
+	mColor(MenuColors::Text), mFont(Font::get(FONT_SIZE_SMALL, FONT_PATH_LIGHT)), mUppercase(false), mAutoSize(true)
 {
 	updateTextCache();
 }
@@ -160,7 +161,7 @@ void DateTimeEditComponent::render(const Transform4x4f& parentTrans)
 			if(mEditIndex >= 0 && (unsigned int)mEditIndex < mCursorBoxes.size())
 			{
 				Renderer::drawRect(mCursorBoxes[mEditIndex][0], mCursorBoxes[mEditIndex][1],
-					mCursorBoxes[mEditIndex][2], mCursorBoxes[mEditIndex][3], 0x00000022, 0x00000022);
+					mCursorBoxes[mEditIndex][2], mCursorBoxes[mEditIndex][3], 0xFFFFFF33, 0xFFFFFF33);
 			}
 		}
 	}
@@ -237,7 +238,7 @@ std::shared_ptr<Font> DateTimeEditComponent::getFont() const
 	if(mFont)
 		return mFont;
 
-	return Font::get(FONT_SIZE_MEDIUM);
+	return Font::get(FONT_SIZE_MENU);
 }
 
 void DateTimeEditComponent::updateTextCache()

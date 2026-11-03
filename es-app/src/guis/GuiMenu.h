@@ -34,8 +34,10 @@ private:
 	void showToolResult(const std::string& arguments);
 	void openController();
 	void openNetworkList();
+	void copyResourcesToUsb();
 	static bool isFamicomPad();
 	void openAbout();
+	void openSystemInfo();
 	void openCollectionSystemSettings();
 	void openConfigInput();
 	void openOtherSettings();

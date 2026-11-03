@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "guis/GuiScreensaverOptions.h"
 
 #include "guis/GuiVirtualKeyboard.h"
@@ -73,7 +74,7 @@ void GuiScreensaverOptions::addEditableTextComponent(ComponentListRow row, const
 {
 	row.elements.clear();
 
-	auto lbl = std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(label), Font::get(FONT_SIZE_MEDIUM), 0x777777FF);
+	auto lbl = std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(label), Font::get(FONT_SIZE_MENU), MenuColors::Text);
 	row.addElement(lbl, true); // label
 
 	row.addElement(ed, true);

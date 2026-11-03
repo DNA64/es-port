@@ -9,6 +9,7 @@
 #include "guis/GuiSuspendPoints.h"
 
 #include "guis/GuiMsgBox.h"
+#include "UiSound.h"
 #include "InputConfig.h"
 #include "Window.h"
 #include "renderers/Renderer.h"
@@ -148,15 +149,18 @@ void GuiSuspendPoints::saveSelected(SuspendPoints::SaveMode mode)
 	switch(mPoints.save(mCode, mSelected, mode))
 	{
 	case SuspendPoints::SaveResult::Saved:
+		UiSound::play("se_sys_push.wav");
 		refresh();
 		notify("SAVED");
 		if(mOnChanged)
 			mOnChanged();
 		break;
 	case SuspendPoints::SaveResult::Locked:
+		UiSound::play("se_sys_attention.wav");
 		notify("SLOT IS LOCKED");
 		break;
 	case SuspendPoints::SaveResult::Occupied:
+		UiSound::play("se_sys_attention.wav");
 		notify("HOLD TO OVERWRITE");
 		break;
 	default:
@@ -195,15 +199,22 @@ bool GuiSuspendPoints::input(InputConfig* config, Input input)
 		return true;
 
 	if(config->isMappedLike("left", input))
+	{
 		mSelected = std::max(1, mSelected - 1);
+		UiSound::play("se_sys_cursor.wav");
+	}
 	else if(config->isMappedLike("right", input))
+	{
 		mSelected = std::min(SuspendPoints::MaxSlots, mSelected + 1);
+		UiSound::play("se_sys_cursor.wav");
+	}
 	else if(config->isMappedTo("start", input) || (mPad == Pad::Snes && config->isMappedTo("a", input)))
 	{
 		if(selectedPoint().valid)
 		{
 			const std::function<void(int)> resume = mOnResume;
 			const int slot = mSelected;
+			UiSound::play("se_sys_click_game.wav");
 			close();
 			if(resume)
 				resume(slot);
@@ -214,6 +225,7 @@ bool GuiSuspendPoints::input(InputConfig* config, Input input)
 		const SuspendPoint& point = selectedPoint();
 		if(point.valid)
 		{
+			UiSound::play(point.locked ? "se_sys_unlock.wav" : "se_sys_lock.wav");
 			static_cast<void>(point.locked ? mPoints.unlock(mCode, mSelected) : mPoints.lock(mCode, mSelected));
 			refresh();
 		}
@@ -226,13 +238,17 @@ bool GuiSuspendPoints::input(InputConfig* config, Input input)
 		else if(point.valid)
 		{
 			mWindow->pushGui(new GuiMsgBox(mWindow, "DELETE THIS SUSPEND POINT?", "YES", [this] {
+				UiSound::play("se_sys_delete.wav");
 				static_cast<void>(mPoints.remove(mCode, mSelected));
 				refresh();
 			}, "NO", nullptr));
 		}
 	}
 	else if(config->isMappedLike("up", input) || config->isMappedTo("b", input))
+	{
+		UiSound::play("se_sys_cancel.wav");
 		close();
+	}
 
 	return true;
 }

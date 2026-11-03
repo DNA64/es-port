@@ -2,6 +2,7 @@
 #ifndef ES_CORE_COMPONENTS_OPTION_LIST_COMPONENT_H
 #define ES_CORE_COMPONENTS_OPTION_LIST_COMPONENT_H
 
+#include "MenuColors.h"
 #include "GuiComponent.h"
 #include "Log.h"
 #include "Window.h"
@@ -39,7 +40,7 @@ private:
 		OptionListPopup(Window* window, OptionListComponent<T>* parent, const std::string& title) : GuiComponent(window),
 			mMenu(window, title.c_str()), mParent(parent)
 		{
-			auto font = Font::get(FONT_SIZE_MEDIUM);
+			auto font = Font::get(FONT_SIZE_MENU);
 			ComponentListRow row;
 
 			// for select all/none
@@ -48,7 +49,7 @@ private:
 			for(auto it = mParent->mEntries.begin(); it != mParent->mEntries.end(); it++)
 			{
 				row.elements.clear();
-				row.addElement(std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(it->name), font, 0x777777FF), true);
+				row.addElement(std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(it->name), font, MenuColors::Text), true);
 
 				OptionListData& e = *it;
 
@@ -137,9 +138,9 @@ public:
 	OptionListComponent(Window* window, const std::string& name, bool multiSelect = false) : GuiComponent(window), mMultiSelect(multiSelect), mName(name),
 		 mText(window), mLeftArrow(window), mRightArrow(window)
 	{
-		auto font = Font::get(FONT_SIZE_MEDIUM, FONT_PATH_LIGHT);
+		auto font = Font::get(FONT_SIZE_MENU, FONT_PATH_LIGHT);
 		mText.setFont(font);
-		mText.setColor(0x777777FF);
+		mText.setColor(MenuColors::Text);
 		mText.setHorizontalAlignment(ALIGN_CENTER);
 		addChild(&mText);
 

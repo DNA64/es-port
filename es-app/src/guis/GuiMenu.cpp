@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "guis/GuiMenu.h"
 
 #include "components/OptionListComponent.h"
@@ -24,7 +25,10 @@
 #include "views/gamelist/IGameListView.h"
 #include "guis/GuiInfoPopup.h"
 #include "ConsoleTools.h"
+#include "MusicPlayer.h"
 #include "guis/GuiNetworkList.h"
+#include "guis/GuiAbout.h"
+#include "guis/GuiSystemInfo.h"
 #include "guis/GuiToolRunner.h"
 #include <cstdlib>
 
@@ -53,39 +57,41 @@ void GuiMenu::showCategory(int category)
 	mCategory = category;
 	mBar.setSelected(category);
 	mMenu.clear();
-	mMenu.setTitle(CategoryTitles[category], Font::get(FONT_SIZE_LARGE));
+	mMenu.setTitle(CategoryTitles[category], Font::get(FONT_SIZE_MENU_TITLE));
 
 	switch (category)
 	{
 	case Display:
-		addEntry("UI SETTINGS", 0x777777FF, true, [this] { openUISettings(); });
-		addEntry("SCREENSAVER SETTINGS", 0x777777FF, true, [this] { openScreensaverOptions(); });
+		addEntry("UI SETTINGS", MenuColors::Text, true, [this] { openUISettings(); });
+		addEntry("SCREENSAVER SETTINGS", MenuColors::Text, true, [this] { openScreensaverOptions(); });
 		if (isFamicomPad())
 			addToggle("EPILEPSY PROTECTION", "epilepsy state", "epilepsy toggle");
 		break;
 	case System:
-		addEntry("SOUND SETTINGS", 0x777777FF, true, [this] { openSoundSettings(); });
+		addEntry("SOUND SETTINGS", MenuColors::Text, true, [this] { openSoundSettings(); });
 		if (mFullUI)
 		{
-			addEntry("CONTROLLER", 0x777777FF, true, [this] { openController(); });
-			addEntry("CLEAR CACHE", 0x777777FF, false, [this] { showToolResult("cache"); });
-			addEntry("OTHER SETTINGS", 0x777777FF, true, [this] { openOtherSettings(); });
+			addEntry("CONTROLLER", MenuColors::Text, true, [this] { openController(); });
+			addEntry("CLEAR CACHE", MenuColors::Text, false, [this] { showToolResult("cache"); });
+			if (ConsoleTools::isOn("usb available"))
+				addEntry("COPY RESOURCES TO USB", MenuColors::Text, false, [this] { copyResourcesToUsb(); });
+			addEntry("OTHER SETTINGS", MenuColors::Text, true, [this] { openOtherSettings(); });
 		}
-		addEntry("QUIT", 0x777777FF, true, [this] { openQuitMenu(); });
+		addEntry("QUIT", MenuColors::Text, true, [this] { openQuitMenu(); });
 		break;
 	case Network:
-		addEntry("SCRAPER", 0x777777FF, true, [this] { openScraperSettings(); });
-		addEntry("DISPLAY IP ADDRESS", 0x777777FF, false, [this] { showToolResult("ip"); });
-		addEntry("RECONNECT", 0x777777FF, false, [this] { showToolResult("reconnect"); });
-		addEntry("CONNECT TO NETWORK", 0x777777FF, true, [this] { openNetworkList(); });
+		addEntry("SCRAPER", MenuColors::Text, true, [this] { openScraperSettings(); });
+		addEntry("DISPLAY IP ADDRESS", MenuColors::Text, false, [this] { showToolResult("ip"); });
+		addEntry("RECONNECT", MenuColors::Text, false, [this] { showToolResult("reconnect"); });
+		addEntry("CONNECT TO NETWORK", MenuColors::Text, true, [this] { openNetworkList(); });
 		break;
 	case Library:
-		addEntry("GAME COLLECTION SETTINGS", 0x777777FF, true, [this] { openCollectionSystemSettings(); });
+		addEntry("GAME COLLECTION SETTINGS", MenuColors::Text, true, [this] { openCollectionSystemSettings(); });
 		break;
 	default:
-		addEntry("SYSTEM INFORMATION", 0x777777FF, false, [this] { showToolResult("sysinfo"); });
-		addEntry("SAVE KERNEL LOG TO USB", 0x777777FF, false, [this] { showToolResult("savelog"); });
-		addEntry("ABOUT", 0x777777FF, true, [this] { openAbout(); });
+		addEntry("SYSTEM INFORMATION", MenuColors::Text, false, [this] { openSystemInfo(); });
+		addEntry("SAVE KERNEL LOG TO USB", MenuColors::Text, false, [this] { showToolResult("savelog"); });
+		addEntry("ABOUT", MenuColors::Text, true, [this] { openAbout(); });
 		break;
 	}
 
@@ -114,7 +120,7 @@ void GuiMenu::addToggle(const char* name, const std::string& stateArguments, con
 	toggle->setChangedCallback([toggleArguments](bool) { ConsoleTools::run(toggleArguments); });
 
 	ComponentListRow row;
-	row.addElement(std::make_shared<TextComponent>(mWindow, name, Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(std::make_shared<TextComponent>(mWindow, name, Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	row.addElement(toggle, false);
 	mMenu.addRow(row);
 }
@@ -136,7 +142,7 @@ void GuiMenu::openController()
 	};
 
 	ComponentListRow configureRow;
-	configureRow.addElement(std::make_shared<TextComponent>(mWindow, "CONFIGURE INPUT", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	configureRow.addElement(std::make_shared<TextComponent>(mWindow, "CONFIGURE INPUT", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	configureRow.addElement(makeArrow(mWindow), false);
 	configureRow.makeAcceptInputHandler([this] { openConfigInput(); });
 	s->addRow(configureRow);
@@ -175,11 +181,25 @@ void GuiMenu::openNetworkList()
 	}));
 }
 
+void GuiMenu::copyResourcesToUsb()
+{
+	Window* window = mWindow;
+	window->pushGui(new GuiToolRunner(window, [] { return ConsoleTools::run("usb copy"); }, [window](const std::string& text) {
+		window->pushGui(new GuiMsgBox(window, text, "OK", [] { quitES(QuitMode::RESTART); }));
+	}));
+}
+
+void GuiMenu::openSystemInfo()
+{
+	Window* window = mWindow;
+	window->pushGui(new GuiToolRunner(window, [] { return ConsoleTools::run("sysinfo"); }, [window](const std::string& text) {
+		window->pushGui(new GuiSystemInfo(window, text));
+	}));
+}
+
 void GuiMenu::openAbout()
 {
-	const std::string message = "EMULATIONSTATION V" + Utils::String::toUpper(PROGRAM_VERSION_STRING) +
-		"\n\nUP: MENU   DOWN: SUSPEND POINT LIST\nA: SELECT   B: GO TO SAVED GAME   Y: SORT";
-	mWindow->pushGui(new GuiMsgBox(mWindow, message, "OK", [] { return; }));
+	mWindow->pushGui(new GuiAbout(mWindow));
 }
 
 void GuiMenu::openScraperSettings()
@@ -225,7 +245,7 @@ void GuiMenu::openScraperSettings()
 	openAndSave = [s, openAndSave] { s->save(); openAndSave(); };
 	row.makeAcceptInputHandler(openAndSave);
 
-	auto scrape_now = std::make_shared<TextComponent>(mWindow, "SCRAPE NOW", Font::get(FONT_SIZE_MEDIUM), 0x777777FF);
+	auto scrape_now = std::make_shared<TextComponent>(mWindow, "SCRAPE NOW", Font::get(FONT_SIZE_MENU), MenuColors::Text);
 	auto bracket = makeArrow(mWindow);
 	row.addElement(scrape_now, true);
 	row.addElement(bracket, false);
@@ -243,6 +263,22 @@ void GuiMenu::openSoundSettings()
 	volume->setValue((float)VolumeControl::getInstance()->getVolume());
 	s->addWithLabel("SYSTEM VOLUME", volume);
 	s->addSaveFunc([volume] { VolumeControl::getInstance()->setVolume((int)Math::round(volume->getValue())); });
+
+	auto music = std::make_shared<SwitchComponent>(mWindow);
+	music->setState(Settings::getInstance()->getBool("MusicEnabled"));
+	s->addWithLabel("BACKGROUND MUSIC", music);
+	s->addSaveFunc([music] {
+		Settings::getInstance()->setBool("MusicEnabled", music->getState());
+		if (music->getState())
+			MusicPlayer::get().start();
+		else
+			MusicPlayer::get().stop();
+	});
+
+	auto musicVolume = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 5.f, "%");
+	musicVolume->setValue((float)Settings::getInstance()->getInt("MusicVolume"));
+	s->addWithLabel("MUSIC VOLUME", musicVolume);
+	s->addSaveFunc([musicVolume] { Settings::getInstance()->setInt("MusicVolume", (int)Math::round(musicVolume->getValue())); });
 
 	if (UIModeController::getInstance()->isUIModeFull())
 	{
@@ -378,7 +414,7 @@ void GuiMenu::openUISettings()
 	// screensaver
 	ComponentListRow screensaver_row;
 	screensaver_row.elements.clear();
-	screensaver_row.addElement(std::make_shared<TextComponent>(mWindow, "SCREENSAVER SETTINGS", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	screensaver_row.addElement(std::make_shared<TextComponent>(mWindow, "SCREENSAVER SETTINGS", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	screensaver_row.addElement(makeArrow(mWindow), false);
 	screensaver_row.makeAcceptInputHandler(std::bind(&GuiMenu::openScreensaverOptions, this));
 	s->addRow(screensaver_row);
@@ -692,7 +728,7 @@ void GuiMenu::openQuitMenu()
 		} else {
 			row.makeAcceptInputHandler(restart_es_fx);
 		}
-		row.addElement(std::make_shared<TextComponent>(window, "RESTART EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+		row.addElement(std::make_shared<TextComponent>(window, "RESTART EMULATIONSTATION", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 		s->addRow(row);
 
 		if(Settings::getInstance()->getBool("ShowExit"))
@@ -710,7 +746,7 @@ void GuiMenu::openQuitMenu()
 			} else {
 				row.makeAcceptInputHandler(quit_es_fx);
 			}
-			row.addElement(std::make_shared<TextComponent>(window, "QUIT EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+			row.addElement(std::make_shared<TextComponent>(window, "QUIT EMULATIONSTATION", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 			s->addRow(row);
 		}
 	}
@@ -731,7 +767,7 @@ void GuiMenu::openQuitMenu()
 	} else {
 		row.makeAcceptInputHandler(reboot_sys_fx);
 	}
-	row.addElement(std::make_shared<TextComponent>(window, "RESTART SYSTEM", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(std::make_shared<TextComponent>(window, "RESTART SYSTEM", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	s->addRow(row);
 
 	auto static shutdown_sys_fx = [] {
@@ -750,7 +786,7 @@ void GuiMenu::openQuitMenu()
 	} else {
 		row.makeAcceptInputHandler(shutdown_sys_fx);
 	}
-	row.addElement(std::make_shared<TextComponent>(window, "SHUTDOWN SYSTEM", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(std::make_shared<TextComponent>(window, "SHUTDOWN SYSTEM", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	s->addRow(row);
 	mWindow->pushGui(s);
 }
@@ -760,7 +796,7 @@ void GuiMenu::addVersionInfo()
 	std::string  buildDate = (Settings::getInstance()->getBool("Debug") ? std::string( "   (" + Utils::String::toUpper(PROGRAM_BUILT_STRING) + ")") : (""));
 
 	mVersion.setFont(Font::get(FONT_SIZE_SMALL));
-	mVersion.setColor(0x5E5E5EFF);
+	mVersion.setColor(MenuColors::Dim);
 	mVersion.setText("EMULATIONSTATION V" + Utils::String::toUpper(PROGRAM_VERSION_STRING) + buildDate);
 	mVersion.setHorizontalAlignment(ALIGN_CENTER);
 	addChild(&mVersion);
@@ -782,7 +818,7 @@ void GuiMenu::onSizeChanged()
 
 void GuiMenu::addEntry(const char* name, unsigned int color, bool add_arrow, const std::function<void()>& func)
 {
-	std::shared_ptr<Font> font = Font::get(FONT_SIZE_MEDIUM);
+	std::shared_ptr<Font> font = Font::get(FONT_SIZE_MENU);
 
 	// populate the list
 	ComponentListRow row;

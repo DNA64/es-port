@@ -17,6 +17,8 @@ class TextCache;
 #define FONT_SIZE_SMALL ((unsigned int)(0.035f * Math::min((int)Renderer::getScreenHeight(), (int)Renderer::getScreenWidth())))
 #define FONT_SIZE_MEDIUM ((unsigned int)(0.045f * Math::min((int)Renderer::getScreenHeight(), (int)Renderer::getScreenWidth())))
 #define FONT_SIZE_LARGE ((unsigned int)(0.085f * Math::min((int)Renderer::getScreenHeight(), (int)Renderer::getScreenWidth())))
+#define FONT_SIZE_MENU ((unsigned int)(0.036f * Math::min((int)Renderer::getScreenHeight(), (int)Renderer::getScreenWidth())))
+#define FONT_SIZE_MENU_TITLE ((unsigned int)(0.06f * Math::min((int)Renderer::getScreenHeight(), (int)Renderer::getScreenWidth())))
 
 #define FONT_PATH_LIGHT ":/opensans_hebrew_condensed_light.ttf"
 #define FONT_PATH_REGULAR ":/opensans_hebrew_condensed_regular.ttf"

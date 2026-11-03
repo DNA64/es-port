@@ -7,7 +7,7 @@
 #define PROGRAM_VERSION_MAJOR       2
 #define PROGRAM_VERSION_MINOR        12
 #define PROGRAM_VERSION_MAINTENANCE  0
-#define PROGRAM_VERSION_STRING "2.12.0rp"
+#define PROGRAM_VERSION_STRING "2.12.0-classicmini"
 
 #define PROGRAM_BUILT_STRING __DATE__ " - " __TIME__
 

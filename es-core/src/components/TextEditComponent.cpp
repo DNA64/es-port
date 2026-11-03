@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "components/TextEditComponent.h"
 
 #include "resources/Font.h"
@@ -11,10 +12,11 @@
 
 TextEditComponent::TextEditComponent(Window* window) : GuiComponent(window),
 	mBox(window, ":/textinput_ninepatch.png"), mFocused(false),
-	mScrollOffset(0.0f, 0.0f), mCursor(0), mEditing(false), mFont(Font::get(FONT_SIZE_MEDIUM, FONT_PATH_LIGHT)),
+	mScrollOffset(0.0f, 0.0f), mCursor(0), mEditing(false), mFont(Font::get(FONT_SIZE_MENU, FONT_PATH_LIGHT)),
 	mCursorRepeatDir(0)
 {
 	addChild(&mBox);
+	mBox.setCenterColor(MenuColors::Field);
 
 	onFocusLost();
 
@@ -25,12 +27,14 @@ void TextEditComponent::onFocusGained()
 {
 	mFocused = true;
 	mBox.setImagePath(":/textinput_ninepatch_active.png");
+	mBox.setEdgeColor(MenuColors::SelectorEdge);
 }
 
 void TextEditComponent::onFocusLost()
 {
 	mFocused = false;
 	mBox.setImagePath(":/textinput_ninepatch.png");
+	mBox.setEdgeColor(MenuColors::Dim);
 }
 
 void TextEditComponent::onSizeChanged()
@@ -207,7 +211,7 @@ void TextEditComponent::setCursor(size_t pos)
 void TextEditComponent::onTextChanged()
 {
 	std::string wrappedText = (isMultiline() ? mFont->wrapText(mText, getTextAreaSize().x()) : mText);
-	mTextCache = std::unique_ptr<TextCache>(mFont->buildTextCache(wrappedText, 0, 0, 0x77777700 | getOpacity()));
+	mTextCache = std::unique_ptr<TextCache>(mFont->buildTextCache(wrappedText, 0, 0, (MenuColors::Text & 0xFFFFFF00) | getOpacity()));
 
 	if(mCursor > (int)mText.length())
 		mCursor = (unsigned int)mText.length();
@@ -277,7 +281,7 @@ void TextEditComponent::render(const Transform4x4f& parentTrans)
 		}
 
 		float cursorHeight = mFont->getHeight() * 0.8f;
-		Renderer::drawRect(cursorPos.x(), cursorPos.y() + (mFont->getHeight() - cursorHeight) / 2, 2.0f, cursorHeight, 0x000000FF, 0x000000FF);
+		Renderer::drawRect(cursorPos.x(), cursorPos.y() + (mFont->getHeight() - cursorHeight) / 2, 2.0f, cursorHeight, MenuColors::Text, MenuColors::Text);
 	}
 }
 

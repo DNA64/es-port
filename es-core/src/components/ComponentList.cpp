@@ -1,4 +1,7 @@
+#include "MenuColors.h"
 #include "components/ComponentList.h"
+
+#include "UiSound.h"
 
 #define TOTAL_HORIZONTAL_PADDING_PX 20
 
@@ -180,7 +183,7 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 		drawAll = !mFocused || i != (unsigned int)mCursor;
 		for(auto it = entry.data.elements.cbegin(); it != entry.data.elements.cend(); it++)
 		{
-			if(drawAll || it->invert_when_selected)
+			if(drawAll)
 			{
 				it->component->render(trans);
 			}else{
@@ -195,18 +198,10 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	// draw selector bar
 	if(mFocused)
 	{
-		// inversion: src * (1 - dst) + dst * 0 = where src = 1
-		// need a function that goes roughly 0x777777 -> 0xFFFFFF
-		// and 0xFFFFFF -> 0x777777
-		// (1 - dst) + 0x77
-
 		const float selectedRowHeight = getRowHeight(mEntries.at(mCursor).data);
-		Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, 0xFFFFFFFF, 0xFFFFFFFF, false, Renderer::Blend::ONE_MINUS_DST_COLOR, Renderer::Blend::ZERO);
-		Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, 0x777777FF, 0x777777FF, false, Renderer::Blend::ONE,                 Renderer::Blend::ONE);
-
-		// hack to draw 2px dark on left/right of the bar
-		Renderer::drawRect(0.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, 0x878787FF, 0x878787FF);
-		Renderer::drawRect(mSize.x() - 2.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, 0x878787FF, 0x878787FF);
+		Renderer::drawRect(0.0f, mSelectorBarOffset, mSize.x(), selectedRowHeight, MenuColors::Selector, MenuColors::Selector);
+		Renderer::drawRect(0.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, MenuColors::SelectorEdge, MenuColors::SelectorEdge);
+		Renderer::drawRect(mSize.x() - 2.0f, mSelectorBarOffset, 2.0f, selectedRowHeight, MenuColors::SelectorEdge, MenuColors::SelectorEdge);
 
 		for(auto it = drawAfterCursor.cbegin(); it != drawAfterCursor.cend(); it++)
 			(*it)->render(trans);
@@ -220,10 +215,10 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	float y = 0;
 	for(unsigned int i = 0; i < mEntries.size(); i++)
 	{
-		Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, 0xC6C7C6FF, 0xC6C7C6FF);
+		Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, MenuColors::Separator, MenuColors::Separator);
 		y += getRowHeight(mEntries.at(i).data);
 	}
-	Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, 0xC6C7C6FF, 0xC6C7C6FF);
+	Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, MenuColors::Separator, MenuColors::Separator);
 
 	Renderer::popClipRect();
 }
@@ -327,6 +322,11 @@ std::vector<HelpPrompt> ComponentList::getHelpPrompts()
 	}
 
 	return prompts;
+}
+
+void ComponentList::onScroll(int /*amt*/)
+{
+	UiSound::play("se_sys_cursor.wav");
 }
 
 bool ComponentList::moveCursor(int amt)

@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "guis/GuiInfoPopup.h"
 
 #include "components/ComponentGrid.h"
@@ -9,13 +10,15 @@ GuiInfoPopup::GuiInfoPopup(Window* window, std::string message, int duration, in
 	GuiComponent(window), mMessage(message), mDuration(duration), mFadein(fadein), mFadeout(fadeout), running(true)
 {
 	mFrame = new NinePatchComponent(window);
+	mFrame->setCenterColor(MenuColors::Panel);
+	mFrame->setEdgeColor(MenuColors::Panel);
 	float maxWidth = Renderer::getScreenWidth() * 0.9f;
 	float maxHeight = Renderer::getScreenHeight() * 0.2f;
 
 	std::shared_ptr<TextComponent> s = std::make_shared<TextComponent>(mWindow,
 		"",
 		Font::get(FONT_SIZE_MINI),
-		0x444444FF,
+		MenuColors::Text,
 		ALIGN_CENTER);
 
 	// we do this to force the text container to resize and return an actual expected popup size

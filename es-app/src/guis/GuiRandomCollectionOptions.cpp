@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "guis/GuiRandomCollectionOptions.h"
 
 #include "GuiRandomCollectionOptions.h"
@@ -24,9 +25,9 @@ GuiRandomCollectionOptions::GuiRandomCollectionOptions(Window* window) : GuiComp
 void GuiRandomCollectionOptions::initializeMenu()
 {
 	// get collections
-	addEntry("INCLUDE SYSTEMS", 0x777777FF, true, [this] { selectSystems(); });
-	addEntry("INCLUDE AUTO COLLECTIONS", 0x777777FF, true, [this] { selectAutoCollections(); });
-	addEntry("INCLUDE CUSTOM COLLECTIONS", 0x777777FF, true, [this] { selectCustomCollections(); });
+	addEntry("INCLUDE SYSTEMS", MenuColors::Text, true, [this] { selectSystems(); });
+	addEntry("INCLUDE AUTO COLLECTIONS", MenuColors::Text, true, [this] { selectAutoCollections(); });
+	addEntry("INCLUDE CUSTOM COLLECTIONS", MenuColors::Text, true, [this] { selectCustomCollections(); });
 
 	// Add option to exclude games from a collection
 	exclusionCollection = std::make_shared< OptionListComponent<std::string> >(mWindow, "EXCLUDE GAMES FROM", false);
@@ -68,7 +69,7 @@ void GuiRandomCollectionOptions::initializeMenu()
 
 void GuiRandomCollectionOptions::addEntry(const char* name, unsigned int color, bool add_arrow, const std::function<void()>& func)
 {
-	std::shared_ptr<Font> font = Font::get(FONT_SIZE_MEDIUM);
+	std::shared_ptr<Font> font = Font::get(FONT_SIZE_MENU);
 
 	// populate the list
 	ComponentListRow row;
@@ -155,7 +156,7 @@ void GuiRandomCollectionOptions::selectEntries(std::map<std::string, CollectionS
 			{
 				colItems->add(std::to_string(i), i, i == selectedValue);
 			}
-			row.addElement(std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(label), Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+			row.addElement(std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(label), Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 			row.addElement(colItems, false);
 
 			s->addRow(row);

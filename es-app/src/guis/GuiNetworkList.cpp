@@ -6,6 +6,7 @@
   * the Free Software Foundation, either version 3 of the License, or
   * (at your option) any later version.
   */
+#include "MenuColors.h"
 #include "guis/GuiNetworkList.h"
 
 #include "guis/GuiToolRunner.h"
@@ -58,9 +59,9 @@ std::vector<WifiNetwork> GuiNetworkList::parse(const std::string& scanOutput)
 void GuiNetworkList::addNetworkRow(const std::string& label, const std::string& detail, const std::function<void()>& action)
 {
 	ComponentListRow row;
-	row.addElement(std::make_shared<TextComponent>(mWindow, label, Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+	row.addElement(std::make_shared<TextComponent>(mWindow, label, Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
 	if(!detail.empty())
-		row.addElement(std::make_shared<TextComponent>(mWindow, detail, Font::get(FONT_SIZE_SMALL), 0x999999FF), false);
+		row.addElement(std::make_shared<TextComponent>(mWindow, detail, Font::get(FONT_SIZE_SMALL), MenuColors::Dim), false);
 	row.makeAcceptInputHandler(action);
 	mMenu.addRow(row);
 }

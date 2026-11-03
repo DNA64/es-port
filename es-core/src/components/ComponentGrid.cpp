@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "components/ComponentGrid.h"
 
 #include "Settings.h"
@@ -150,7 +151,7 @@ void ComponentGrid::updateSeparators()
 {
 	mLines.clear();
 
-	const unsigned int color = Renderer::convertColor(0xC6C7C6FF);
+	const unsigned int color = Renderer::convertColor(MenuColors::Separator);
 	bool drawAll = Settings::getInstance()->getBool("DebugGrid");
 
 	Vector2f pos;

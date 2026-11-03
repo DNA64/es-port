@@ -1,3 +1,4 @@
+#include "MenuColors.h"
 #include "components/ButtonComponent.h"
 
 #include "resources/Font.h"
@@ -5,10 +6,10 @@
 
 ButtonComponent::ButtonComponent(Window* window, const std::string& text, const std::string& helpText, const std::function<void()>& func) : GuiComponent(window),
 	mBox(window, ":/button.png"),
-	mFont(Font::get(FONT_SIZE_MEDIUM)),
+	mFont(Font::get(FONT_SIZE_MENU)),
 	mFocused(false),
 	mEnabled(true),
-	mTextColorFocused(0xFFFFFFFF), mTextColorUnfocused(0x777777FF)
+	mTextColorFocused(MenuColors::Text), mTextColorUnfocused(MenuColors::Text)
 {
 	setPressedFunc(func);
 	setText(text, helpText);
@@ -73,13 +74,14 @@ void ButtonComponent::updateImage()
 	if(!mEnabled || !mPressedFunc)
 	{
 		mBox.setImagePath(":/button_filled.png");
-		mBox.setCenterColor(0x770000FF);
-		mBox.setEdgeColor(0x770000FF);
+		mBox.setCenterColor(MenuColors::Disabled);
+		mBox.setEdgeColor(MenuColors::Disabled);
 		return;
 	}
 
-	mBox.setCenterColor(0xFFFFFFFF);
-	mBox.setEdgeColor(0xFFFFFFFF);
+	const unsigned int tint = mFocused ? MenuColors::Selector : MenuColors::Dim;
+	mBox.setCenterColor(tint);
+	mBox.setEdgeColor(tint);
 	mBox.setImagePath(mFocused ? ":/button_filled.png" : ":/button.png");
 }
 

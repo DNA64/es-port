@@ -31,7 +31,7 @@ uistop
 library_stamp=$es_dir/library.stamp
 games_dir=$(findGameStorage)
 games_count=$(find "$games_dir" -name '*.desktop' | wc -l)
-if [ -d "$es_dir/library" ] && [ "$(cat "$library_stamp.count" 2>/dev/null)" = "$games_count" ]   && [ -z "$(find "$games_dir" /media/data/emulationstation/covers \( -name '*.desktop' -o -name '*.png' -o -name 'aliases.txt' \) -newer "$library_stamp" 2>/dev/null | head -n 1)" ]; then
+if [ -d "$es_dir/library" ] && [ "$(cat "$library_stamp.count" 2>/dev/null)" = "$games_count" ]   && [ -z "$(find "$games_dir" /media/data/emulationstation/covers "$es_dir/es-library.sh" \( -name '*.desktop' -o -name '*.png' -o -name 'aliases.txt' -o -name 'es-library.sh' \) -newer "$library_stamp" 2>/dev/null | head -n 1)" ]; then
   rm -rf /tmp/es-library
   cp -a "$es_dir/library" /tmp/es-library
 else
@@ -47,6 +47,7 @@ while true; do
   es_started=$(date +%s)
   HOME=$es_dir/home LD_LIBRARY_PATH=$es_dir "$es_dir/emulationstation" "$@"
   es_status=$?
+  case $es_status in 129|143) restore_ui=0; break ;; esac
   if [ "$es_status" -ne 0 ] && [ $(($(date +%s) - es_started)) -lt 15 ]; then
     es_failures=$(($(cat "$es_dir/boot_failures" 2>/dev/null || echo 0) + 1))
     echo "$es_failures" > "$es_dir/boot_failures"

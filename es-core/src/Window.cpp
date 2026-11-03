@@ -286,33 +286,30 @@ void Window::renderLoadingScreen(std::string text, float percent, unsigned char 
 {
 	Transform4x4f trans = Transform4x4f::Identity();
 	Renderer::setMatrix(trans);
-	Renderer::drawRect(0.0f, 0.0f, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x000000FF, 0x000000FF);
+	Renderer::drawRect(0.0f, 0.0f, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x17171AFF, 0x17171AFF);
+
+	ImageComponent splash(this, true);
+	splash.setResize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+	splash.setImage(":/splash.png");
+	splash.render(trans);
 
 	if (percent >= 0)
 	{
-		float baseHeight = 0.04f;
-
-		float w = Renderer::getScreenWidth() / 2;
-		float h = Renderer::getScreenHeight() * baseHeight;
+		float w = Renderer::getScreenWidth() * 0.25f;
+		float h = std::max(2.0f, Math::round(Renderer::getScreenHeight() * 0.004f));
 
 		float x = Renderer::getScreenWidth() / 2 - w / 2;
-		float y = Renderer::getScreenHeight() - (Renderer::getScreenHeight() * 3 * baseHeight);
+		float y = Math::round(Renderer::getScreenHeight() * 0.889f);
 
-		Renderer::drawRect(x, y, w, h, 0x25252500 | opacity, 0x25252500 | opacity);
-		Renderer::drawRect(x, y, (w*percent), h, 0x006C9E00 | opacity, 0x006C9E00 | opacity); // 0xFFFFFFFF
+		Renderer::drawRect(x, y, w, h, 0x2C2C3100 | opacity, 0x2C2C3100 | opacity);
+		Renderer::drawRect(x, y, (w*percent), h, 0xF5B90A00 | opacity, 0xF5B90A00 | opacity);
 	}
 
-	ImageComponent splash(this, true);
-	splash.setResize(Renderer::getScreenWidth() * 0.6f, 0.0f);
-	splash.setImage(":/splash.svg");
-	splash.setPosition((Renderer::getScreenWidth() - splash.getSize().x()) / 2, (Renderer::getScreenHeight() - splash.getSize().y()) / 2 * 0.6f);
-	splash.render(trans);
-
 	auto& font = mDefaultFonts.at(1);
-	TextCache* cache = font->buildTextCache(text, 0, 0, 0x656565FF);
+	TextCache* cache = font->buildTextCache(text, 0, 0, 0x8A8A92FF);
 
 	float x = Math::round((Renderer::getScreenWidth() - cache->metrics.size.x()) / 2.0f);
-	float y = Math::round(Renderer::getScreenHeight() * 0.78f);
+	float y = Math::round(Renderer::getScreenHeight() * 0.82f);
 	trans = trans.translate(Vector3f(x, y, 0.0f));
 	Renderer::setMatrix(trans);
 	font->renderTextCache(cache);

@@ -7,7 +7,9 @@ to its font.
 
 - Noto Sans, by The Noto Project Authors (<https://github.com/notofonts/latin-greek-cyrillic>):
   `device/resources/fallback_latin.ttf`, the Regular weight reduced to Latin Extended-A/B and Latin Extended
-  Additional, used as the fallback for accented letters such as macrons.
+  Additional, used as the fallback for accented letters such as macrons. The text on `device/resources/splash.png`,
+  `shutdown.png` and `restart.png` is rendered in Noto Sans Bold and Regular from the same project; the licence text
+  is `device/resources/OFL-NotoSans.txt`.
 - Noto Sans JP, by Adobe and The Noto Project Authors (<https://github.com/notofonts/noto-cjk>):
   `device/resources/fallback_ja.ttf`, the fallback for Japanese glyphs. It is the variable font instantiated at
   weight 400 and reduced to kana, punctuation and the JIS X 0208 kanji.
@@ -37,9 +39,12 @@ cover names, and a script to shrink covers.
 The approach in `device/es-library.sh` of resolving every cover in a single `awk` pass (listing the covers folder
 and reading `aliases.txt` once) comes from code shared by DNA64 (<https://github.com/dna64>) to test the cover timings.
 
-## DefKorns logo
+## Icons
 
-`resources/defkorns_logo.png` is the DefKorns logo, used on the About screen.
+The power and restart icons on `device/resources/shutdown.png` and `device/resources/restart.png` are the `power` and
+`rotate-cw` icons from [Lucide](https://lucide.dev), licensed under the [ISC License](https://lucide.dev/license).
+
+## Trademarks
 
 "Super Nintendo Entertainment System" and the logo are trademarks of Nintendo. This project is not affiliated with
 or endorsed by Nintendo.

@@ -241,7 +241,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 	cancelAnimation(1);
 	cancelAnimation(2);
 
-	std::string transition_style = Settings::getInstance()->getString("TransitionStyle");
+	const std::string transition_style = "slide";
 	bool goFast = transition_style == "instant";
 	const float infoStartOpacity = mSystemInfo.getOpacity() / 255.f;
 
@@ -320,7 +320,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 				f -= posMax;
 
 			this->mCamOffset = move_carousel ? f : endPos;
-			this->mExtrasCamOffset = f;
+			this->mExtrasCamOffset = endPos;
 		}, 500);
 	} else {
 		// instant

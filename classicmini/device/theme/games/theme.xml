@@ -127,7 +127,7 @@
 		</image>
 
 		<text name="md_name">
-			<pos>0.222 0.712</pos>
+			<pos>0.222 0.700</pos>
 			<size>0.35 0.07</size>
 			<color>FFFFFF</color>
 			<fontPath>./assets/fonts/NotoSans-SemiBold.ttf</fontPath>
@@ -135,8 +135,18 @@
 			<alignment>left</alignment>
 			<zIndex>10</zIndex>
 		</text>
+		<text name="md_developer">
+			<visible>true</visible>
+			<pos>0.222 0.755</pos>
+			<size>0.35 0.04</size>
+			<color>A3A0D0</color>
+			<fontPath>./assets/fonts/NotoSans-Regular.ttf</fontPath>
+			<fontSize>0.024</fontSize>
+			<alignment>left</alignment>
+			<zIndex>10</zIndex>
+		</text>
 		<text name="md_genre">
-			<pos>0.222 0.793</pos>
+			<pos>0.222 0.797</pos>
 			<size>0.35 0.05</size>
 			<color>B9B6E0</color>
 			<fontPath>./assets/fonts/NotoSans-Regular.ttf</fontPath>

@@ -203,7 +203,7 @@ bool GridGameListView::input(InputConfig* config, Input input)
 	if(input.value != 0 && config->isMappedTo("b", input) && mFloating.valid)
 	{
 		FileData* target = findGame(mFloating.code);
-		if(target != nullptr && target != getCursor())
+		if(canJumpTo(target))
 		{
 			jumpTo(target);
 			return true;
@@ -562,18 +562,15 @@ std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 		return headerPrompts;
 	}
 
-	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
-	const bool canJump = mFloating.valid && (cursor == nullptr || gameCode(cursor) != mFloating.code);
 
 	std::vector<HelpPrompt> prompts;
 	prompts.push_back(HelpPrompt("up", "menu"));
 	prompts.push_back(HelpPrompt("down", "suspend point list"));
 	prompts.push_back(HelpPrompt("a", "select"));
-	const bool hasTarget = canJump && findGame(mFloating.code) != nullptr;
-	if(hasTarget)
+	if(mFloating.valid && canJumpTo(findGame(mFloating.code)))
 		prompts.push_back(HelpPrompt("b", "go to last saved game"));
-	else if(!mCursorStack.empty())
-		prompts.push_back(HelpPrompt("b", "back"));
+	else
+		prompts.push_back(HelpPrompt("b", mCursorStack.empty() ? "systems" : "back"));
 	prompts.push_back(HelpPrompt("y", "sort"));
 	return prompts;
 }
@@ -605,6 +602,14 @@ FileData* GridGameListView::findGame(const std::string& code) const
 		if(gameCode(game) == code)
 			return game;
 	return nullptr;
+}
+
+bool GridGameListView::canJumpTo(const FileData* game) const
+{
+	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
+	if(game == nullptr || game == cursor)
+		return false;
+	return game->getParent() == (mCursorStack.empty() ? mRoot : mCursorStack.top());
 }
 
 void GridGameListView::jumpTo(FileData* game)

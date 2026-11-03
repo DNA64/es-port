@@ -61,6 +61,7 @@ private:
 	void setHeaderFocus(bool focus);
 	void openHeaderMenu();
 	bool openSuspendPoints();
+	bool canJumpTo(const FileData* game) const;
 	void jumpTo(FileData* game);
 	void cycleSort();
 	FileData* findGame(const std::string& code) const;

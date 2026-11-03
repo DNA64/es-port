@@ -43,6 +43,9 @@ public:
 	virtual const char* getName() const = 0;
 	virtual void launch(FileData* game) = 0;
 
+	virtual bool openSuspendPoints() { return false; }
+	virtual bool supportsSuspendPoints() const { return false; }
+
 	virtual HelpStyle getHelpStyle() override;
 
 	void render(const Transform4x4f& parentTrans) override;

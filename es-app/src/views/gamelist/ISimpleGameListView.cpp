@@ -1,5 +1,7 @@
 #include "views/gamelist/ISimpleGameListView.h"
 
+#include "guis/GuiSuspendPoints.h"
+#include "utils/FileSystemUtil.h"
 #include "views/UIModeController.h"
 #include "views/ViewController.h"
 #include "CollectionSystemManager.h"
@@ -7,9 +9,26 @@
 #include "Settings.h"
 #include "Sound.h"
 #include "SystemData.h"
+#include "Window.h"
+#include <cstdlib>
+
+namespace
+{
+	GuiSuspendPoints::Pad environmentPad()
+	{
+		const char* pad = std::getenv("ES_PAD");
+		return pad != nullptr && std::string(pad) == "nes" ? GuiSuspendPoints::Pad::Nes : GuiSuspendPoints::Pad::Snes;
+	}
+
+	std::string gameCode(const FileData* game)
+	{
+		return Utils::FileSystem::getStem(game->getPath());
+	}
+}
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGameListView(window, root),
-	mHeaderText(window), mHeaderImage(window), mBackground(window)
+	mHeaderText(window), mHeaderImage(window), mBackground(window),
+	mSuspendPoints(SuspendPoints::fromEnvironment()), mPad(environmentPad())
 {
 	mHeaderText.setText("Logo Text");
 	mHeaderText.setSize(mSize.x(), 0);
@@ -81,6 +100,9 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 {
 	if(input.value != 0)
 	{
+		if(config->isMappedTo("b", input) && mFloating.valid && jumpToFloating())
+			return true;
+
 		if(config->isMappedTo("a", input))
 		{
 			FileData* cursor = getCursor();
@@ -169,4 +191,85 @@ bool ISimpleGameListView::input(InputConfig* config, Input input)
 	    Scripting::fireEvent("game-select", "NULL", "NULL", "NULL", "input");
 	}
 	return IGameListView::input(config, input);
+}
+
+void ISimpleGameListView::onShow()
+{
+	GuiComponent::onShow();
+	refreshFloating();
+}
+
+bool ISimpleGameListView::isFloating(const FileData* file) const
+{
+	return mFloating.valid && file != nullptr && file->getType() == GAME && gameCode(file) == mFloating.code;
+}
+
+void ISimpleGameListView::refreshFloating()
+{
+	mFloating = mSuspendPoints.floating();
+	onFloatingChanged();
+	updateHelpPrompts();
+}
+
+FileData* ISimpleGameListView::findGame(const std::string& code) const
+{
+	for(FileData* game : mRoot->getFilesRecursive(GAME))
+		if(gameCode(game) == code)
+			return game;
+	return nullptr;
+}
+
+bool ISimpleGameListView::canJumpTo(const FileData* game)
+{
+	const FileData* cursor = getCursor();
+	if(game == nullptr || game == cursor)
+		return false;
+	return game->getParent() == (mCursorStack.empty() ? mRoot : mCursorStack.top());
+}
+
+void ISimpleGameListView::jumpTo(FileData* game)
+{
+	std::vector<FileData*> folders;
+	for(FileData* parent = game->getParent(); parent != nullptr && parent != mRoot; parent = parent->getParent())
+		folders.push_back(parent);
+
+	mCursorStack = std::stack<FileData*>();
+	for(auto folder = folders.rbegin(); folder != folders.rend(); ++folder)
+		mCursorStack.push(*folder);
+
+	populateList(game->getParent()->getChildrenListToDisplay());
+	setCursor(game);
+}
+
+bool ISimpleGameListView::jumpToFloating()
+{
+	FileData* target = findGame(mFloating.code);
+	if(!canJumpTo(target))
+		return false;
+	jumpTo(target);
+	return true;
+}
+
+bool ISimpleGameListView::openSuspendPoints()
+{
+	FileData* game = getCursor();
+	if(game == nullptr || game->getType() != GAME)
+		return false;
+
+	mWindow->pushGui(new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
+		[this, game](int slot) {
+			mPendingResume = slot;
+			launch(game);
+		},
+		[this] { refreshFloating(); }));
+	return true;
+}
+
+void ISimpleGameListView::applyPendingResume()
+{
+	if(mPendingResume > 0)
+		setenv("ES_RESUME", std::to_string(mPendingResume).c_str(), 1);
+	else
+		unsetenv("ES_RESUME");
+	mPendingResume = 0;
 }

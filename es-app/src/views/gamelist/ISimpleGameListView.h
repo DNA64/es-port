@@ -5,8 +5,11 @@
 
 #include "components/ImageComponent.h"
 #include "components/TextComponent.h"
+#include "guis/GuiSuspendPoints.h"
 #include "views/gamelist/IGameListView.h"
+#include "SuspendPoints.h"
 #include <stack>
+#include <string>
 
 class ISimpleGameListView : public IGameListView
 {
@@ -29,6 +32,10 @@ public:
 
 	virtual bool input(InputConfig* config, Input input) override;
 	virtual void launch(FileData* game) override = 0;
+	virtual void onShow() override;
+
+	virtual bool openSuspendPoints() override;
+	virtual bool supportsSuspendPoints() const override { return true; }
 
 protected:
 	static const int DESCRIPTION_SCROLL_DELAY = 5 * 1000; // five secs
@@ -44,6 +51,20 @@ protected:
 	std::vector<GuiComponent*> mThemeExtras;
 
 	std::stack<FileData*> mCursorStack;
+
+	void refreshFloating();
+	virtual void onFloatingChanged() {}
+	bool isFloating(const FileData* file) const;
+	bool jumpToFloating();
+	bool canJumpTo(const FileData* game);
+	void jumpTo(FileData* game);
+	FileData* findGame(const std::string& code) const;
+	void applyPendingResume();
+
+	SuspendPoints mSuspendPoints;
+	SuspendPoint mFloating;
+	GuiSuspendPoints::Pad mPad;
+	int mPendingResume = 0;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_ISIMPLE_GAME_LIST_VIEW_H

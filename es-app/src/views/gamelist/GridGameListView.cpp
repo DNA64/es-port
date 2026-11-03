@@ -20,20 +20,6 @@
 #include <stack>
 #include <string>
 
-namespace
-{
-	GuiSuspendPoints::Pad environmentPad()
-	{
-		const char* pad = std::getenv("ES_PAD");
-		return pad != nullptr && std::string(pad) == "nes" ? GuiSuspendPoints::Pad::Nes : GuiSuspendPoints::Pad::Snes;
-	}
-
-	std::string gameCode(const FileData* game)
-	{
-		return Utils::FileSystem::getStem(game->getPath());
-	}
-}
-
 GridGameListView::GridGameListView(Window* window, FileData* root) :
 	ISimpleGameListView(window, root),
 	mGrid(window), mMarquee(window),
@@ -47,9 +33,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window), mIconBar(window), mDiskSpace(window, "/media", ":/menu_disk.svg"), mNandSpace(window, "/var/lib", ":/menu_nand.svg"),
-	mSuspendPoints(SuspendPoints::fromEnvironment()),
-	mPad(environmentPad())
+	mName(window), mIconBar(window), mDiskSpace(window, "/media", ":/menu_disk.svg"), mNandSpace(window, "/var/lib", ":/menu_nand.svg")
 {
 	const float padding = 0.01f;
 
@@ -150,9 +134,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	initMDLabels();
 	initMDValues();
-	mGrid.setMarkFunction([this](FileData* file) {
-		return mFloating.valid && file->getType() == GAME && gameCode(file) == mFloating.code;
-	});
+	mGrid.setMarkFunction([this](FileData* file) { return isFloating(file); });
 	refreshFloating();
 	updateInfoPanel();
 }
@@ -205,15 +187,8 @@ bool GridGameListView::input(InputConfig* config, Input input)
 		return true;
 	}
 
-	if(input.value != 0 && config->isMappedTo("b", input) && mFloating.valid)
-	{
-		FileData* target = findGame(mFloating.code);
-		if(canJumpTo(target))
-		{
-			jumpTo(target);
-			return true;
-		}
-	}
+	if(input.value != 0 && config->isMappedTo("b", input) && mFloating.valid && jumpToFloating())
+		return true;
 
 	if(input.value != 0 && config->isMappedTo("down", input) && openSuspendPoints())
 		return true;
@@ -464,11 +439,7 @@ void GridGameListView::addPlaceholder()
 
 void GridGameListView::launch(FileData* game)
 {
-	if(mPendingResume > 0)
-		setenv("ES_RESUME", std::to_string(mPendingResume).c_str(), 1);
-	else
-		unsetenv("ES_RESUME");
-	mPendingResume = 0;
+	applyPendingResume();
 
 	float screenWidth = (float) Renderer::getScreenWidth();
 	float screenHeight = (float) Renderer::getScreenHeight();
@@ -593,44 +564,6 @@ void GridGameListView::onShow()
 	updateInfoPanel();
 }
 
-void GridGameListView::refreshFloating()
-{
-	mFloating = mSuspendPoints.floating();
-	if(mGrid.size() > 0)
-		mGrid.refreshMarks();
-	updateHelpPrompts();
-}
-
-FileData* GridGameListView::findGame(const std::string& code) const
-{
-	for(FileData* game : mRoot->getFilesRecursive(GAME))
-		if(gameCode(game) == code)
-			return game;
-	return nullptr;
-}
-
-bool GridGameListView::canJumpTo(const FileData* game) const
-{
-	const FileData* cursor = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
-	if(game == nullptr || game == cursor)
-		return false;
-	return game->getParent() == (mCursorStack.empty() ? mRoot : mCursorStack.top());
-}
-
-void GridGameListView::jumpTo(FileData* game)
-{
-	std::vector<FileData*> folders;
-	for(FileData* parent = game->getParent(); parent != nullptr && parent != mRoot; parent = parent->getParent())
-		folders.push_back(parent);
-
-	mCursorStack = std::stack<FileData*>();
-	for(auto folder = folders.rbegin(); folder != folders.rend(); ++folder)
-		mCursorStack.push(*folder);
-
-	populateList(game->getParent()->getChildrenListToDisplay());
-	setCursor(game);
-}
-
 void GridGameListView::cycleSort()
 {
 	const std::vector<FileData::SortType>& types = FileSorts::SortTypes;
@@ -642,21 +575,6 @@ void GridGameListView::cycleSort()
 	mRoot->sort(types[next]);
 	onFileChanged(mRoot, FILE_SORTED);
 	mWindow->setInfoPopup(new GuiInfoPopup(mWindow, "Sorted by " + types[next].description, 2000));
-}
-
-bool GridGameListView::openSuspendPoints()
-{
-	FileData* game = mGrid.size() == 0 ? nullptr : mGrid.getSelected();
-	if(game == nullptr || game->getType() != GAME)
-		return false;
-
-	mWindow->pushGui(new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
-		[this, game](int slot) {
-			mPendingResume = slot;
-			launch(game);
-		},
-		[this] { refreshFloating(); }));
-	return true;
 }
 
 void GridGameListView::onFocusLost() {
@@ -680,4 +598,10 @@ void GridGameListView::openHeaderMenu()
 		mIconBar.setSelected(category);
 		setHeaderFocus(true);
 	}));
+}
+
+void GridGameListView::onFloatingChanged()
+{
+	if(mGrid.size() > 0)
+		mGrid.refreshMarks();
 }

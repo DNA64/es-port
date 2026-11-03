@@ -57,14 +57,10 @@ private:
 	void initMDLabels();
 	void initMDValues();
 
-	void refreshFloating();
+	void onFloatingChanged() override;
 	void setHeaderFocus(bool focus);
 	void openHeaderMenu();
-	bool openSuspendPoints();
-	bool canJumpTo(const FileData* game) const;
-	void jumpTo(FileData* game);
 	void cycleSort();
-	FileData* findGame(const std::string& code) const;
 
 	TextComponent mLblRating, mLblReleaseDate, mLblDeveloper, mLblPublisher, mLblGenre, mLblPlayers, mLblLastPlayed, mLblPlayCount;
 
@@ -87,15 +83,11 @@ private:
 
 	PagedTextComponent mDescription;
 
-	SuspendPoints mSuspendPoints;
 	MenuIconBar mIconBar;
 	DiskSpaceIndicator mDiskSpace;
 	DiskSpaceIndicator mNandSpace;
 	bool mHeaderFocus = false;
 	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
-	SuspendPoint mFloating;
-	GuiSuspendPoints::Pad mPad;
-	int mPendingResume = 0;
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H

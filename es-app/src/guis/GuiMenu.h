@@ -18,7 +18,10 @@ public:
 	GuiMenu(Window* window, int category = 0, std::function<void(int)> onClose = nullptr);
 	~GuiMenu() override;
 
+	static void requestRebuild() { sRebuildPending = true; }
+
 	bool input(InputConfig* config, Input input) override;
+	void update(int deltaTime) override;
 	void onSizeChanged() override;
 	void render(const Transform4x4f& parentTrans) override;
 	std::vector<HelpPrompt> getHelpPrompts() override;
@@ -46,6 +49,8 @@ private:
 	void openScreensaverOptions();
 	void openSoundSettings();
 	void openUISettings();
+
+	static bool sRebuildPending;
 
 	MenuComponent mMenu;
 	TextComponent mVersion;

@@ -37,6 +37,8 @@ namespace
 	const char* const CategoryTitles[] = { "DISPLAY", "SYSTEM", "NETWORK", "LIBRARY", "HELP" };
 }
 
+bool GuiMenu::sRebuildPending = false;
+
 GuiMenu::GuiMenu(Window* window, int category, std::function<void(int)> onClose) : GuiComponent(window),
 	mMenu(window, CategoryTitles[Display]), mVersion(window), mBar(window), mOnClose(std::move(onClose)),
 	mFullUI(UIModeController::getInstance()->isUIModeFull())
@@ -50,6 +52,21 @@ GuiMenu::~GuiMenu()
 {
 	if (mOnClose)
 		mOnClose(mCategory);
+}
+
+void GuiMenu::update(int deltaTime)
+{
+	GuiComponent::update(deltaTime);
+	if(!sRebuildPending)
+		return;
+
+	sRebuildPending = false;
+	Window* window = mWindow;
+	const int category = mCategory;
+	std::function<void(int)> onClose = std::move(mOnClose);
+	mOnClose = nullptr;
+	delete this;
+	window->pushGui(new GuiMenu(window, category, std::move(onClose)));
 }
 
 void GuiMenu::showCategory(int category)
@@ -492,6 +509,24 @@ void GuiMenu::openUISettings()
 			}
 		});
 	}
+
+	// color scheme
+	auto color_scheme = std::make_shared< OptionListComponent<std::string> >(mWindow, "COLOR SCHEME", false);
+	const bool lightScheme = Settings::getInstance()->getString("ColorScheme") == "light";
+	color_scheme->add("DARK", "dark", !lightScheme);
+	color_scheme->add("LIGHT", "light", lightScheme);
+	s->addWithLabel("COLOR SCHEME", color_scheme);
+	s->addSaveFunc([color_scheme, window]
+	{
+		if(color_scheme->getSelected() == Settings::getInstance()->getString("ColorScheme"))
+			return;
+
+		window->renderLoadingScreen("Loading...");
+		Settings::getInstance()->setString("ColorScheme", color_scheme->getSelected());
+		MenuColors::apply(MenuColors::schemeFromName(color_scheme->getSelected()));
+		ViewController::get()->reloadAll(true);
+		GuiMenu::requestRebuild();
+	});
 
 	// GameList view style
 	auto gamelist_style = std::make_shared< OptionListComponent<std::string> >(mWindow, "GAMELIST VIEW STYLE", false);

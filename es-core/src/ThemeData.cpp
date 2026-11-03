@@ -10,6 +10,7 @@
 #include "Settings.h"
 #include <pugixml.hpp>
 #include <algorithm>
+#include <cstdlib>
 
 std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" } };
 std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "z-index" }, { "visible" } };
@@ -520,7 +521,15 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 		{
 			size_t divider = str.find(' ');
 			if(divider == std::string::npos)
-				throw error << "invalid normalized pair (property \"" << node.name() << "\", value \"" << str.c_str() << "\")";
+			{
+				char* end = nullptr;
+				const float width = std::strtof(str.c_str(), &end);
+				if(str.empty() || *end != '\0')
+					throw error << "invalid normalized pair (property \"" << node.name() << "\", value \"" << str.c_str() << "\")";
+
+				element.properties[node.name()] = Vector2f(width, 0.0f) / mResolution;
+				break;
+			}
 
 			std::string first = str.substr(0, divider);
 			std::string second = str.substr(divider, std::string::npos);
@@ -574,9 +583,14 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			break;
 		case PATH:
 		{
-			std::string path = (str.size() >= 2 && str[0] == ':' && str[1] == '/')
-				? str
-				: Utils::FileSystem::resolveRelativePath(str, mPaths.back(), true, false);
+			const bool isResource = str.size() >= 2 && str[0] == ':' && str[1] == '/';
+			std::string path = isResource ? str : Utils::FileSystem::resolveRelativePath(str, mPaths.back(), true, false);
+			if(!isResource && mPaths.size() > 1 && !ResourceManager::getInstance()->fileExists(path))
+			{
+				const std::string fromRoot = Utils::FileSystem::resolveRelativePath(str, mPaths.front(), true, false);
+				if(ResourceManager::getInstance()->fileExists(fromRoot))
+					path = fromRoot;
+			}
 			if(!ResourceManager::getInstance()->fileExists(path))
 			{
 				std::stringstream ss;

@@ -40,6 +40,11 @@ files at first run and are not shipped in this repository. Cover images are user
 `/media/data/emulationstation/covers`; this repository ships only the alias table that maps console game codes to
 cover names, and a script to shrink covers.
 
+## Library generation
+
+The approach in `device/es-library.sh` of resolving every cover in a single `awk` pass (listing the covers folder
+and reading `aliases.txt` once) comes from code shared by DNA64 (<https://github.com/dna64>) to test the cover timings.
+
 ## DefKorns logo
 
 `resources/defkorns_logo.png` is the DefKorns logo, used on the About screen.

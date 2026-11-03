@@ -20,6 +20,7 @@ public:
 	int getInt(const std::string& name);
 	float getFloat(const std::string& name);
 	const std::string& getString(const std::string& name);
+	bool hasString(const std::string& name) const { return mStringMap.find(name) != mStringMap.cend(); }
 	const std::map<std::string, int> getMap(const std::string& name);
 
 	void setBool(const std::string& name, bool value);

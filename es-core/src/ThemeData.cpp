@@ -243,6 +243,7 @@ void ThemeData::loadFile(std::map<std::string, std::string> sysDataMap, const st
 	mResolution = { 1, 1 };
 	mViews.clear();
 	mVariables.clear();
+	mSubsets.clear();
 
 	mVariables.insert(sysDataMap.cbegin(), sysDataMap.cend());
 
@@ -286,38 +287,92 @@ void ThemeData::loadFile(std::map<std::string, std::string> sysDataMap, const st
 	parseFeatures(root);
 }
 
+std::string ThemeSubset::settingKey() const
+{
+	return "ThemeSubset." + Settings::getInstance()->getString("ThemeSet") + "." + name;
+}
+
 void ThemeData::parseIncludes(const pugi::xml_node& root)
+{
+	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling())
+	{
+		const std::string tag = node.name();
+		if(tag == "include")
+			includeFile(node.text().as_string());
+		else if(tag == "subset")
+			includeSubset(node);
+	}
+}
+
+void ThemeData::includeSubset(const pugi::xml_node& subsetNode)
 {
 	ThemeException error;
 	error.setFiles(mPaths);
 
-	for(pugi::xml_node node = root.child("include"); node; node = node.next_sibling("include"))
+	ThemeSubset subset;
+	subset.name = subsetNode.attribute("name").as_string();
+	subset.displayName = subsetNode.attribute("displayName").as_string(subset.name.c_str());
+	if(subset.name.empty())
+		throw error << "Subset missing \"name\" attribute!";
+
+	std::vector<std::string> files;
+	for(pugi::xml_node option = subsetNode.child("include"); option; option = option.next_sibling("include"))
 	{
-		std::string relPath = resolvePlaceholders(node.text().as_string());
-		std::string path = Utils::FileSystem::resolveRelativePath(relPath, mPaths.back(), true, false);
-		if(!ResourceManager::getInstance()->fileExists(path))
-			throw error << "Included file \"" << relPath << "\" not found! (resolved to \"" << path << "\")";
-
-		error << "    from included file \"" << relPath << "\":\n    ";
-
-		mPaths.push_back(path);
-
-		pugi::xml_document includeDoc;
-		pugi::xml_parse_result result = includeDoc.load_file(path.c_str());
-		if(!result)
-			throw error << "Error parsing file: \n    " << result.description();
-
-		pugi::xml_node theme = includeDoc.child("theme");
-		if(!theme)
-			throw error << "Missing <theme> tag!";
-
-		parseVariables(theme);
-		parseIncludes(theme);
-		parseViews(theme);
-		parseFeatures(theme);
-
-		mPaths.pop_back();
+		ThemeSubsetOption entry;
+		entry.name = option.attribute("name").as_string();
+		entry.displayName = option.attribute("displayName").as_string(entry.name.c_str());
+		subset.options.push_back(entry);
+		files.push_back(option.text().as_string());
 	}
+	if(subset.options.empty())
+		return;
+
+	const std::string key = subset.settingKey();
+	subset.selected = subset.options.front().name;
+	if(Settings::getInstance()->hasString(key))
+	{
+		const std::string wanted = Settings::getInstance()->getString(key);
+		for(const ThemeSubsetOption& entry : subset.options)
+			if(entry.name == wanted)
+				subset.selected = wanted;
+	}
+
+	for(std::size_t i = 0; i < subset.options.size(); ++i)
+		if(subset.options[i].name == subset.selected && !files[i].empty())
+			includeFile(files[i]);
+
+	mSubsets.push_back(subset);
+}
+
+void ThemeData::includeFile(const std::string& includePath)
+{
+	ThemeException error;
+	error.setFiles(mPaths);
+
+	std::string relPath = resolvePlaceholders(includePath.c_str());
+	std::string path = Utils::FileSystem::resolveRelativePath(relPath, mPaths.back(), true, false);
+	if(!ResourceManager::getInstance()->fileExists(path))
+		throw error << "Included file \"" << relPath << "\" not found! (resolved to \"" << path << "\")";
+
+	error << "    from included file \"" << relPath << "\":\n    ";
+
+	mPaths.push_back(path);
+
+	pugi::xml_document includeDoc;
+	pugi::xml_parse_result result = includeDoc.load_file(path.c_str());
+	if(!result)
+		throw error << "Error parsing file: \n    " << result.description();
+
+	pugi::xml_node theme = includeDoc.child("theme");
+	if(!theme)
+		throw error << "Missing <theme> tag!";
+
+	parseVariables(theme);
+	parseIncludes(theme);
+	parseViews(theme);
+	parseFeatures(theme);
+
+	mPaths.pop_back();
 }
 
 void ThemeData::parseFeatures(const pugi::xml_node& root)

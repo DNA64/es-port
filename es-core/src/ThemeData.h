@@ -83,6 +83,22 @@ struct ThemeSet
 	inline std::string getThemePath(const std::string& system) const { return path + "/" + system + "/theme.xml"; }
 };
 
+struct ThemeSubsetOption
+{
+	std::string name;
+	std::string displayName;
+};
+
+struct ThemeSubset
+{
+	std::string name;
+	std::string displayName;
+	std::vector<ThemeSubsetOption> options;
+	std::string selected;
+
+	std::string settingKey() const;
+};
+
 class ThemeData
 {
 public:
@@ -164,6 +180,8 @@ public:
 	// Returns the value of a theme variable, or empty string if not defined.
 	std::string getVariable(const std::string& name) const;
 
+	const std::vector<ThemeSubset>& getSubsets() const { return mSubsets; }
+
 	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window);
 
 	static const std::shared_ptr<ThemeData>& getDefault();
@@ -182,6 +200,8 @@ private:
 
 	void parseFeatures(const pugi::xml_node& themeRoot);
 	void parseIncludes(const pugi::xml_node& themeRoot);
+	void includeFile(const std::string& relPath);
+	void includeSubset(const pugi::xml_node& subsetNode);
 	void parseVariables(const pugi::xml_node& root);
 	void parseViews(const pugi::xml_node& themeRoot);
 	void parseView(const pugi::xml_node& viewNode, ThemeView& view);
@@ -191,6 +211,7 @@ private:
 
 	std::string resolvePlaceholders(const char* in);
 	std::map<std::string, std::string> mVariables;
+	std::vector<ThemeSubset> mSubsets;
 };
 
 #endif // ES_CORE_THEME_DATA_H

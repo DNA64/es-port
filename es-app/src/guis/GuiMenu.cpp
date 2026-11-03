@@ -398,6 +398,63 @@ void GuiMenu::openSoundSettings()
 
 }
 
+void GuiMenu::openThemeOptions(GuiComponent* parent)
+{
+	std::vector<ThemeSubset> subsets;
+	for(SystemData* system : SystemData::sSystemVector)
+		if(!system->getTheme()->getSubsets().empty())
+		{
+			subsets = system->getTheme()->getSubsets();
+			break;
+		}
+
+	if(subsets.empty())
+	{
+		mWindow->pushGui(new GuiMsgBox(mWindow, "THE CURRENT THEME HAS NO OPTIONS.", "OK", nullptr));
+		return;
+	}
+
+	auto s = new GuiSettings(mWindow, "THEME OPTIONS");
+	typedef OptionListComponent<std::string> SubsetList;
+	auto lists = std::make_shared<std::vector<std::shared_ptr<SubsetList>>>();
+
+	for(const ThemeSubset& subset : subsets)
+	{
+		const std::string label = Utils::String::toUpper(subset.displayName);
+		auto list = std::make_shared<SubsetList>(mWindow, label, false);
+		for(const ThemeSubsetOption& option : subset.options)
+			list->add(Utils::String::toUpper(option.displayName), option.name, option.name == subset.selected);
+		s->addWithLabel(label, list);
+		lists->push_back(list);
+	}
+
+	Window* window = mWindow;
+	s->addSaveFunc([subsets, lists, window, parent]
+	{
+		bool changed = false;
+		for(std::size_t i = 0; i < subsets.size(); ++i)
+		{
+			const std::string selected = (*lists)[i]->getSelected();
+			if(selected == subsets[i].selected)
+				continue;
+			Settings::getInstance()->setString(subsets[i].settingKey(), selected);
+			changed = true;
+		}
+
+		if(!changed)
+			return;
+
+		Settings::getInstance()->saveFile();
+		window->renderLoadingScreen("Loading...");
+		CollectionSystemManager::get()->updateSystemsList();
+		ViewController::get()->reloadAll(true);
+		GuiMenu::requestRebuild();
+		delete parent;
+	});
+
+	mWindow->pushGui(s);
+}
+
 void GuiMenu::openUISettings()
 {
 	auto s = new GuiSettings(mWindow, "UI SETTINGS");
@@ -510,23 +567,42 @@ void GuiMenu::openUISettings()
 		});
 	}
 
-	// color scheme
-	auto color_scheme = std::make_shared< OptionListComponent<std::string> >(mWindow, "COLOR SCHEME", false);
-	const bool lightScheme = Settings::getInstance()->getString("ColorScheme") == "light";
-	color_scheme->add("DARK", "dark", !lightScheme);
-	color_scheme->add("LIGHT", "light", lightScheme);
-	s->addWithLabel("COLOR SCHEME", color_scheme);
-	s->addSaveFunc([color_scheme, window]
-	{
-		if(color_scheme->getSelected() == Settings::getInstance()->getString("ColorScheme"))
-			return;
+	// the theme sets the scheme itself when it defines es_scheme, so the option would do nothing
+	bool themeSetsScheme = false;
+	for(SystemData* system : SystemData::sSystemVector)
+		if(!system->getTheme()->getVariable("es_scheme").empty())
+		{
+			themeSetsScheme = true;
+			break;
+		}
 
-		window->renderLoadingScreen("Loading...");
-		Settings::getInstance()->setString("ColorScheme", color_scheme->getSelected());
-		MenuColors::apply(MenuColors::schemeFromName(color_scheme->getSelected()));
-		ViewController::get()->reloadAll(true);
-		GuiMenu::requestRebuild();
-	});
+	if(!themeSetsScheme)
+	{
+		// color scheme
+		auto color_scheme = std::make_shared< OptionListComponent<std::string> >(mWindow, "COLOR SCHEME", false);
+		const bool lightScheme = Settings::getInstance()->getString("ColorScheme") == "light";
+		color_scheme->add("DARK", "dark", !lightScheme);
+		color_scheme->add("LIGHT", "light", lightScheme);
+		s->addWithLabel("COLOR SCHEME", color_scheme);
+		s->addSaveFunc([color_scheme, window]
+		{
+			if(color_scheme->getSelected() == Settings::getInstance()->getString("ColorScheme"))
+				return;
+
+			window->renderLoadingScreen("Loading...");
+			Settings::getInstance()->setString("ColorScheme", color_scheme->getSelected());
+			MenuColors::apply(MenuColors::schemeFromName(color_scheme->getSelected()));
+			ViewController::get()->reloadAll(true);
+			GuiMenu::requestRebuild();
+		});
+	}
+
+	// theme options (subsets declared by the theme)
+	ComponentListRow themeOptionsRow;
+	themeOptionsRow.addElement(std::make_shared<TextComponent>(mWindow, "THEME OPTIONS", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
+	themeOptionsRow.addElement(makeArrow(mWindow), false);
+	themeOptionsRow.makeAcceptInputHandler([this, s] { openThemeOptions(s); });
+	s->addRow(themeOptionsRow);
 
 	// GameList view style
 	auto gamelist_style = std::make_shared< OptionListComponent<std::string> >(mWindow, "GAMELIST VIEW STYLE", false);

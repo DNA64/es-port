@@ -8,6 +8,9 @@
   */
 #include "MenuColors.h"
 
+#include "Settings.h"
+#include <cstdlib>
+
 namespace MenuColors
 {
 	namespace
@@ -36,7 +39,22 @@ namespace MenuColors
 	unsigned int KeyHighlight = DarkPalette.keyHighlight;
 	unsigned int KeyHighlightText = DarkPalette.keyHighlightText;
 
-	namespace { Scheme current = Scheme::Dark; }
+	namespace
+	{
+		Scheme current = Scheme::Dark;
+
+		bool parseColor(const std::string& text, unsigned int& out)
+		{
+			if(text.size() != 6 && text.size() != 8)
+				return false;
+			char* end = nullptr;
+			const unsigned long value = std::strtoul(text.c_str(), &end, 16);
+			if(end == nullptr || *end != '\0')
+				return false;
+			out = text.size() == 6 ? static_cast<unsigned int>((value << 8) | 0xFF) : static_cast<unsigned int>(value);
+			return true;
+		}
+	}
 
 	bool isLight() { return current == Scheme::Light; }
 
@@ -63,5 +81,25 @@ namespace MenuColors
 		Key = palette.key;
 		KeyHighlight = palette.keyHighlight;
 		KeyHighlightText = palette.keyHighlightText;
+	}
+
+	void applyOverrides(const std::function<std::string(const std::string&)>& variable)
+	{
+		const std::string scheme = variable("es_scheme");
+		apply(scheme.empty() ? schemeFromName(Settings::getInstance()->getString("ColorScheme")) : schemeFromName(scheme));
+
+		struct Entry { const char* name; unsigned int* target; };
+		const Entry entries[] = {
+			{ "es_panelColor", &Panel }, { "es_fieldColor", &Field }, { "es_textColor", &Text }, { "es_titleColor", &Title },
+			{ "es_dimColor", &Dim }, { "es_separatorColor", &Separator }, { "es_selectorColor", &Selector },
+			{ "es_selectorEdgeColor", &SelectorEdge }, { "es_buttonFocusedColor", &ButtonFocused },
+			{ "es_disabledColor", &Disabled }, { "es_iconColor", &Icon }
+		};
+		for(const Entry& entry : entries)
+		{
+			unsigned int color = 0;
+			if(parseColor(variable(entry.name), color))
+				*entry.target = color;
+		}
 	}
 }

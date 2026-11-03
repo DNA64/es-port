@@ -10,6 +10,7 @@
 #ifndef ES_CORE_MENU_COLORS_H
 #define ES_CORE_MENU_COLORS_H
 
+#include <functional>
 #include <string>
 
 namespace MenuColors
@@ -34,6 +35,7 @@ namespace MenuColors
 	bool isLight();
 	Scheme schemeFromName(const std::string& name);
 	void apply(Scheme scheme);
+	void applyOverrides(const std::function<std::string(const std::string&)>& variable);
 }
 
 #endif // ES_CORE_MENU_COLORS_H

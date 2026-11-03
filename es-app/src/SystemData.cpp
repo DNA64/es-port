@@ -1,5 +1,7 @@
 #include "SystemData.h"
 
+#include "MenuColors.h"
+
 #include "utils/FileSystemUtil.h"
 #include "CollectionSystemManager.h"
 #include "FileFilterIndex.h"
@@ -598,6 +600,7 @@ void SystemData::loadTheme()
 		sysData.insert(std::pair<std::string, std::string>("system.fullName", getFullName()));
 
 		mTheme->loadFile(sysData, path);
+		MenuColors::applyOverrides([this](const std::string& name) { return mTheme->getVariable(name); });
 	} catch(ThemeException& e)
 	{
 		LOG(LogError) << e.what();

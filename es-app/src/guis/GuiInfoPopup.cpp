@@ -113,7 +113,7 @@ bool GuiInfoPopup::updateState()
 	mGrid->setOpacity((unsigned char)alpha);
 
 	// apply fade in effect to popup frame
-	mFrame->setEdgeColor(0xFFFFFF00 | (unsigned char)(alpha));
-	mFrame->setCenterColor(0xFFFFFF00 | (unsigned char)(alpha));
+	mFrame->setEdgeColor((MenuColors::Panel & 0xFFFFFF00) | (unsigned char)(alpha));
+	mFrame->setCenterColor((MenuColors::Panel & 0xFFFFFF00) | (unsigned char)(alpha));
 	return true;
 }

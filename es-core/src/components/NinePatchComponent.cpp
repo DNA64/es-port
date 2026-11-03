@@ -22,6 +22,9 @@ NinePatchComponent::~NinePatchComponent()
 
 void NinePatchComponent::updateColors()
 {
+	if(mVertices == NULL)
+		return;
+
 	const unsigned int edgeColor   = Renderer::convertColor(mEdgeColor);
 	const unsigned int centerColor = Renderer::convertColor(mCenterColor);
 

@@ -59,6 +59,7 @@ else
   echo "$games_count" > "$library_stamp.count"
   touch "$library_stamp"
 fi
+sh "$es_dir/es-systems.sh" /tmp/es-library "$es_dir/es_systems.cfg" "$es_dir/home/.emulationstation/es_systems.cfg"
 [ -f /media/data/emulationstation/audio/bgm_home.wav ] || sh "$es_dir/es-tools.sh" audio import >/dev/null 2>&1
 while true; do
   rm -f /tmp/es-quit /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown

@@ -56,14 +56,41 @@ namespace
 }
 
 DiskSpaceIndicator::DiskSpaceIndicator(Window* window, std::string mountPoint, const std::string& iconPath)
-	: GuiComponent(window), mMountPoint(std::move(mountPoint)), mIcon(window), mText(window, "", Font::get(fontSize()), TextColor)
+	: GuiComponent(window), mMountPoint(std::move(mountPoint)), mIconPath(iconPath), mIcon(window), mText(window, "", Font::get(fontSize()), TextColor)
+{
+	useDefaultLayout();
+}
+
+void DiskSpaceIndicator::useDefaultLayout()
 {
 	const float size = static_cast<float>(Renderer::getScreenHeight()) * IconSizeRatio;
 
-	mIcon.setImage(iconPath);
+	mThemed = false;
+	mIcon.setImage(mIconPath);
 	mIcon.setOrigin(0.5f, 0.5f);
 	mIcon.setResize(size, size);
+	mText.setColor(TextColor);
 	refresh();
+}
+
+bool DiskSpaceIndicator::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& textElement, const std::string& iconElement)
+{
+	const ThemeData::ThemeElement* textElem = theme->getElement(view, textElement, "text");
+	if(textElem == nullptr)
+		return false;
+
+	mThemed = true;
+	mText.applyTheme(theme, view, textElement, ThemeFlags::ALL ^ ThemeFlags::TEXT);
+	mThemedColor = textElem->has("color") ? textElem->get<unsigned int>("color") : TextColor;
+
+	mThemedIcon = theme->getElement(view, iconElement, "image") != nullptr;
+	if(mThemedIcon)
+	{
+		mIcon.setImage(mIconPath);
+		mIcon.applyTheme(theme, view, iconElement, ThemeFlags::ALL);
+	}
+	refresh();
+	return true;
 }
 
 void DiskSpaceIndicator::placeLeftOf(const DiskSpaceIndicator& neighbour)
@@ -74,16 +101,26 @@ void DiskSpaceIndicator::placeLeftOf(const DiskSpaceIndicator& neighbour)
 
 void DiskSpaceIndicator::refresh()
 {
+	const double bytes = freeBytes(mMountPoint);
+	const std::string label = freeSpaceLabel(bytes);
+	const bool low = bytes >= 0.0 && bytes < LowSpaceBytes;
+
+	if(mThemed)
+	{
+		mText.setText(label);
+		mText.setColor(low ? LowSpaceColor : mThemedColor);
+		mElapsedMs = 0;
+		return;
+	}
+
 	const float width = static_cast<float>(Renderer::getScreenWidth());
 	const float height = static_cast<float>(Renderer::getScreenHeight());
 	const float iconSize = height * IconSizeRatio;
 	const float right = mNeighbour ? mNeighbour->getLeftEdge() - GroupGap : width * (1.0f - RightMarginRatio);
-	const double bytes = freeBytes(mMountPoint);
-	const std::string label = freeSpaceLabel(bytes);
 	const float textWidth = mText.getFont()->sizeText(label).x();
 
 	mText.setText(label);
-	mText.setColor(bytes >= 0.0 && bytes < LowSpaceBytes ? LowSpaceColor : TextColor);
+	mText.setColor(low ? LowSpaceColor : TextColor);
 	mText.setSize(textWidth + 2.0f, 0.0f);
 	mText.setPosition(right - textWidth - 2.0f, height * CenterRatio - mText.getFont()->getHeight() / 2);
 	mIcon.setPosition(right - textWidth - IconGap - iconSize / 2, height * CenterRatio);
@@ -101,6 +138,7 @@ void DiskSpaceIndicator::update(int deltaTime)
 
 void DiskSpaceIndicator::render(const Transform4x4f& parentTrans)
 {
-	mIcon.render(parentTrans);
+	if(!mThemed || mThemedIcon)
+		mIcon.render(parentTrans);
 	mText.render(parentTrans);
 }

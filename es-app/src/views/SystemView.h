@@ -2,6 +2,7 @@
 #ifndef ES_APP_VIEWS_SYSTEM_VIEW_H
 #define ES_APP_VIEWS_SYSTEM_VIEW_H
 
+#include "components/HeaderStatus.h"
 #include "components/IList.h"
 #include "components/TextComponent.h"
 #include "resources/Font.h"
@@ -81,6 +82,7 @@ private:
 
 	SystemViewCarousel mCarousel;
 	TextComponent mSystemInfo;
+	HeaderStatus mHeaderStatus;
 	std::string mScrollSound;
 
 	// unit is list index

@@ -16,7 +16,8 @@ const int logoBuffersRight[] = { 1, 2, 5 };
 
 SystemView::SystemView(Window* window) : IList<SystemViewData, SystemData*>(window, LIST_SCROLL_STYLE_SLOW, LIST_ALWAYS_LOOP),
 										 mViewNeedsReload(true),
-										 mSystemInfo(window, "SYSTEM INFO", Font::get(FONT_SIZE_SMALL), 0x33333300, ALIGN_CENTER)
+										 mSystemInfo(window, "SYSTEM INFO", Font::get(FONT_SIZE_SMALL), 0x33333300, ALIGN_CENTER),
+										 mHeaderStatus(window)
 {
 	mCamOffset = 0;
 	mExtrasCamOffset = 0;
@@ -212,6 +213,7 @@ void SystemView::update(int deltaTime)
 {
 	listUpdate(deltaTime);
 	GuiComponent::update(deltaTime);
+	mHeaderStatus.update(deltaTime);
 }
 
 void SystemView::onCursorChanged(const CursorState& /*state*/)
@@ -381,6 +383,7 @@ void SystemView::render(const Transform4x4f& parentTrans)
 	}
 
 	renderExtras(trans, minMax.second, INT16_MAX);
+	mHeaderStatus.render(trans);
 }
 
 std::vector<HelpPrompt> SystemView::getHelpPrompts()
@@ -430,6 +433,8 @@ void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 	const ThemeData::ThemeElement* sysInfoElem = theme->getElement("system", "systemInfo", "text");
 	if (sysInfoElem)
 		mSystemInfo.applyTheme(theme, "system", "systemInfo", ThemeFlags::ALL);
+
+	mHeaderStatus.applyTheme(theme, "system", false);
 
 	mViewNeedsReload = false;
 }

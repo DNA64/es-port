@@ -27,7 +27,7 @@ namespace
 }
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGameListView(window, root),
-	mHeaderText(window), mHeaderImage(window), mBackground(window),
+	mHeaderText(window), mHeaderImage(window), mBackground(window), mHeaderStatus(window),
 	mSuspendPoints(SuspendPoints::fromEnvironment()), mPad(environmentPad())
 {
 	mHeaderText.setText("Logo Text");
@@ -46,6 +46,10 @@ ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGame
 
 	addChild(&mHeaderText);
 	addChild(&mBackground);
+
+	mHeaderStatus.setDefaultZIndex(70);
+	mHeaderStatus.setZIndex(70);
+	addChild(&mHeaderStatus);
 }
 
 void ISimpleGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
@@ -54,6 +58,7 @@ void ISimpleGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme
 	mBackground.applyTheme(theme, getName(), "background", ALL);
 	mHeaderImage.applyTheme(theme, getName(), "logo", ALL);
 	mHeaderText.applyTheme(theme, getName(), "logoText", ALL);
+	mHeaderStatus.applyTheme(theme, getName(), mDefaultHeaderStatus);
 
 	// Remove old theme extras
 	for (auto extra : mThemeExtras)

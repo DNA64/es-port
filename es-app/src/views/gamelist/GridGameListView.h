@@ -4,7 +4,6 @@
 
 #include "components/DateTimeComponent.h"
 #include "components/MenuIconBar.h"
-#include "components/DiskSpaceIndicator.h"
 #include "components/RatingComponent.h"
 #include "components/PagedTextComponent.h"
 #include "components/ScrollableContainer.h"
@@ -84,8 +83,6 @@ private:
 	PagedTextComponent mDescription;
 
 	MenuIconBar mIconBar;
-	DiskSpaceIndicator mDiskSpace;
-	DiskSpaceIndicator mNandSpace;
 	bool mHeaderFocus = false;
 	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
 };

@@ -12,7 +12,9 @@
 
 #include "GuiComponent.h"
 #include "components/ImageComponent.h"
+#include "ThemeData.h"
 #include "components/TextComponent.h"
+#include <memory>
 #include <string>
 
 class DiskSpaceIndicator : public GuiComponent
@@ -20,6 +22,8 @@ class DiskSpaceIndicator : public GuiComponent
 public:
 	DiskSpaceIndicator(Window* window, std::string mountPoint, const std::string& iconPath);
 
+	bool applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& textElement, const std::string& iconElement);
+	void useDefaultLayout();
 	void placeLeftOf(const DiskSpaceIndicator& neighbour);
 	float getLeftEdge() const { return mLeftEdge; }
 
@@ -30,6 +34,10 @@ private:
 	void refresh();
 
 	std::string mMountPoint;
+	std::string mIconPath;
+	bool mThemed = false;
+	bool mThemedIcon = false;
+	unsigned int mThemedColor = 0;
 	ImageComponent mIcon;
 	TextComponent mText;
 	const DiskSpaceIndicator* mNeighbour = nullptr;

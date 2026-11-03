@@ -33,7 +33,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window), mIconBar(window), mDiskSpace(window, "/media", ":/menu_disk.svg"), mNandSpace(window, "/var/lib", ":/menu_nand.svg")
+	mName(window), mIconBar(window)
 {
 	const float padding = 0.01f;
 
@@ -123,14 +123,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mIconBar.setDefaultZIndex(70);
 	mIconBar.setZIndex(70);
 	addChild(&mIconBar);
-	mDiskSpace.setDefaultZIndex(70);
-	mDiskSpace.setZIndex(70);
-	addChild(&mDiskSpace);
-
-	mNandSpace.placeLeftOf(mDiskSpace);
-	mNandSpace.setDefaultZIndex(70);
-	mNandSpace.setZIndex(70);
-	addChild(&mNandSpace);
+	mDefaultHeaderStatus = true;
 
 	initMDLabels();
 	initMDValues();

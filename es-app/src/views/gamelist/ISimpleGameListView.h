@@ -3,6 +3,7 @@
 #ifndef ES_APP_VIEWS_GAME_LIST_ISIMPLE_GAME_LIST_VIEW_H
 #define ES_APP_VIEWS_GAME_LIST_ISIMPLE_GAME_LIST_VIEW_H
 
+#include "components/HeaderStatus.h"
 #include "components/ImageComponent.h"
 #include "components/TextComponent.h"
 #include "guis/GuiSuspendPoints.h"
@@ -47,6 +48,8 @@ protected:
 	TextComponent mHeaderText;
 	ImageComponent mHeaderImage;
 	ImageComponent mBackground;
+	HeaderStatus mHeaderStatus;
+	bool mDefaultHeaderStatus = false;
 
 	std::vector<GuiComponent*> mThemeExtras;
 

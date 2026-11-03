@@ -252,15 +252,25 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 	}, (int)(infoStartOpacity * (goFast ? 10 : 150)));
 
 	unsigned int gameCount = getSelected()->getDisplayedGameCount();
+	unsigned int favoriteCount = 0;
+	const bool showFavorites = getSelected()->isGameSystem() && !getSelected()->isCollection();
+	if(showFavorites)
+		for(const FileData* game : getSelected()->getRootFolder()->getFilesRecursive(GAME))
+			if(game->metadata.get("favorite") == "true")
+				++favoriteCount;
 
 	// also change the text after we've fully faded out
-	setAnimation(infoFadeOut, 0, [this, gameCount] {
+	setAnimation(infoFadeOut, 0, [this, gameCount, favoriteCount, showFavorites] {
 		std::stringstream ss;
 
 		if (!getSelected()->isGameSystem())
 			ss << "CONFIGURATION";
 		else
-			ss << gameCount << " GAME" << (gameCount == 1 ? "" : "S") << " AVAILABLE";
+		{
+			ss << gameCount << " GAME" << (gameCount == 1 ? "" : "S");
+			if(showFavorites)
+				ss << " (" << favoriteCount << " FAVORITE" << (favoriteCount == 1 ? "" : "S") << ")";
+		}
 
 		mSystemInfo.setText(ss.str());
 	}, false, 1);

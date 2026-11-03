@@ -1,7 +1,32 @@
 # ES-RetroPie for the NES/SNES Classic
 
 Branch `classicmini`, based on `stable` (`a31c36a`, v2.12.0 merge); `upstream` is `RetroPie/EmulationStation`.
-It compiles for the console's CPU and libraries. It has **not been run on a console**.
+EmulationStation 2.12 as the front end of the NES/SNES Classic, driven by the games hakchi syncs, packaged as the
+`emulationstation_classicmini` hmod.
+
+## Install
+
+1. Install the **RetroArch (S)NESCE** hmod (the libretro cores and the `retroarch` launcher) and sync your games with
+   hakchi. The RetroArch build from KMFDManic may work as well; it has not been tested.
+2. Install `emulationstation_classicmini.hmod` with hakchi and sync. The first boot builds the library, which takes a
+   while on large collections.
+3. Optional: extra themes go on the SD card or USB stick, in `/media/data/emulationstation/themes`. The hmod only
+   ships the built-in default theme.
+
+Hold **Select** while the console boots to get the stock UI. If EmulationStation crashes twice in a row right after
+starting, the next boot goes to the stock UI by itself. Uninstalling the hmod removes EmulationStation, its settings
+and library cache from the NAND and keeps `favorites.txt`; nothing on the SD card or USB stick is touched.
+
+## Build the hmod
+
+```sh
+classicmini/build.sh
+cd classicmini/hmod
+sh stage.sh
+sh ../../vendor/hmod-build/docker-make.sh
+```
+
+`stage.sh` collects the binary, scripts and resources into `mod/`; the hmod lands in `out/`.
 
 ## Changes against `stable`
 

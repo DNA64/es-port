@@ -26,6 +26,16 @@
 	</view>
 
 	<view name="grid">
+		<sound name="launch">
+			<path>/media/data/emulationstation/audio/se_sys_click_game.wav</path>
+		</sound>
+		<sound name="back">
+			<path>/media/data/emulationstation/audio/se_sys_cancel.wav</path>
+		</sound>
+		<sound name="menuOpen">
+			<path>/media/data/emulationstation/audio/se_sys_click.wav</path>
+		</sound>
+
 		<image name="background">
 			<path>./assets/background_snes.svg</path>
 			<pos>0 0</pos>
@@ -48,6 +58,7 @@
 			<autoLayout>5 1</autoLayout>
 			<autoLayoutSelectedZoom>1.55</autoLayoutSelectedZoom>
 			<imageSource>image</imageSource>
+			<scrollSound>/media/data/emulationstation/audio/se_sys_cursor.wav</scrollSound>
 			<scrollDirection>horizontal</scrollDirection>
 			<centerSelection>true</centerSelection>
 			<scrollLoop>true</scrollLoop>

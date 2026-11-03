@@ -17,6 +17,11 @@
 source /etc/preinit
 script_init
 
+es_dir=/var/lib/hakchi/es
+usb_resources=/media/data/emulationstation/resources
+audio_dir=/media/data/emulationstation/audio
+audio_files="bgm_home.wav se_sys_cursor.wav se_sys_click.wav se_sys_click_short.wav se_sys_cancel.wav se_sys_click_game.wav se_sys_push.wav se_sys_attention.wav se_sys_lock.wav se_sys_unlock.wav se_sys_delete.wav"
+nand_keep="menu_display.svg menu_system.svg menu_network.svg menu_library.svg menu_help.svg menu_disk.svg folder.svg opensans_hebrew_condensed_light.ttf opensans_hebrew_condensed_regular.ttf frame.png scroll_gradient.png splash.svg arrow.svg option_arrow.svg button.png button_filled.png checkbox_checked.svg checkbox_unchecked.svg on.svg off.svg slider_knob.svg textinput_ninepatch.png textinput_ninepatch_active.png star_filled.svg star_unfilled.svg busy_0.svg busy_1.svg busy_2.svg busy_3.svg window_icon_256.png help"
 home_disabled="0x7FFF"
 home_default="0x0024"
 home_prev_file=/var/lib/hakchi/es/home_combination.prev
@@ -53,6 +58,22 @@ cfgEquals() {
   [ "$(getCfg "$1")" = "$2" ]
 }
 
+findCloverSounds() {
+  for dir in /usr/share/ui/shvc/resources/sounds/hvc /usr/share/clover-ui/shvc/resources/sounds/hvc; do
+    [ -f "$dir/bgm_home.wav" ] && { echo "$dir"; return 0; }
+  done
+  found=$(find /usr/share -name bgm_home.wav 2>/dev/null | head -n 1)
+  [ -n "$found" ] && dirname "$found"
+}
+
+isUsbWritable() {
+  [ -d /media/data ] && [ -w /media ]
+}
+
+hasUsbResources() {
+  [ -f "$usb_resources/fallback_ja.ttf" ] && [ -f "$usb_resources/menu_system.svg" ]
+}
+
 isJapaneseFamicom() {
   [ "$sftype" = "nes" ] && [ "$sfregion" = "jpn" ]
 }
@@ -70,8 +91,8 @@ esHasInternet() {
   return 1
 }
 
-diskUsage() {
-  df -h "$1" 2>/dev/null | tail -1 | awk '{ print $3 " / " $2 " (" $4 " free)" }'
+diskRow() {
+  df -h "$2" 2>/dev/null | tail -1 | awk -v label="$1" '{ gsub("%", "", $5); printf "%s\t%s / %s\t%s\n", label, $3, $2, $5 }'
 }
 
 case "$1" in
@@ -150,15 +171,15 @@ case "$1" in
     ;;
   sysinfo)
     [ -f /var/version ] && source /var/version
-    echo "Console: $sftype-$sfregion"
-    echo "hakchi: $hakchiVersion"
-    echo "Kernel: $kernelVersion"
-    echo "Boot: $bootVersion"
-    echo "NAND: $(diskUsage "$mountpoint/var/lib")"
-    echo "SD: $(diskUsage /media)"
+    printf "Console\t%s-%s\n" "$sftype" "$sfregion"
+    printf "hakchi\t%s\n" "$hakchiVersion"
+    printf "Kernel\t%s\n" "$kernelVersion"
+    printf "Boot\t%s\n" "$bootVersion"
+    diskRow "NAND storage" "$mountpoint/var/lib"
+    diskRow "SD card" /media
     saves="$(readlink -f /var/saves)"
-    [ -d "$saves" ] && echo "Saves: $(du -sh "$saves" 2>/dev/null | cut -f1)"
-    echo "Temperature: $(cat /sys/class/thermal/thermal_zone0/temp) C"
+    [ -d "$saves" ] && printf "Saves\t%s\n" "$(du -sh "$saves" 2>/dev/null | cut -f1)"
+    printf "Temperature\t%s C\n" "$(cat /sys/class/thermal/thermal_zone0/temp)"
     ;;
   savelog)
     log_dir=/media/data/log
@@ -176,6 +197,44 @@ case "$1" in
       toggle)
         if [ "$cfg_disable_armet" = "y" ]; then cfg_disable_armet='n'; else cfg_disable_armet='y'; fi
         save_config
+        ;;
+    esac
+    ;;
+  audio)
+    case "$2" in
+      state) printState test -f "$audio_dir/bgm_home.wav" ;;
+      import)
+        source_dir=$(findCloverSounds)
+        if [ -z "$source_dir" ]; then echo "The Clover sounds were not found."; exit 1; fi
+        isUsbWritable || { echo "No USB available."; exit 1; }
+        mkdir -p "$audio_dir" || exit 1
+        copied=0
+        for file in $audio_files; do
+          [ -f "$audio_dir/$file" ] && continue
+          if [ -f "$source_dir/$file" ] && cp "$source_dir/$file" "$audio_dir/$file"; then copied=$((copied + 1)); fi
+        done
+        echo "Imported $copied sound file(s) from $source_dir."
+        ;;
+    esac
+    ;;
+  usb)
+    case "$2" in
+      available) printState isUsbWritable ;;
+      state) printState hasUsbResources ;;
+      copy)
+        mkdir -p "$usb_resources" /media/data/emulationstation/themes || { echo "Could not create the folders on the USB."; exit 1; }
+        cp -a "$es_dir/resources/." "$usb_resources/" || { echo "Could not copy the resources to the USB."; exit 1; }
+        if ! diff -rq "$es_dir/resources" "$usb_resources" 2>/dev/null | grep -v '^Only in '"$usb_resources" | grep -q .; then
+          for file in "$es_dir"/resources/*; do
+            name=${file##*/}
+            case " $nand_keep " in *" $name "*) continue ;; esac
+            rm -rf "$file"
+          done
+          set -- "$es_dir"/resources/*
+          echo "Copied the resources to the USB and left $# in the NAND. EmulationStation will restart."
+        else
+          echo "The copy on the USB does not match, nothing was removed from the NAND."
+        fi
         ;;
     esac
     ;;

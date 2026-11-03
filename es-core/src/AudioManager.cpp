@@ -1,6 +1,7 @@
 #include "AudioManager.h"
 
 #include "Log.h"
+#include "MusicPlayer.h"
 #include "Settings.h"
 #include "Sound.h"
 #include <SDL.h>
@@ -12,10 +13,10 @@ std::shared_ptr<AudioManager> AudioManager::sInstance;
 
 void AudioManager::mixAudio(void* /*unused*/, Uint8 *stream, int len)
 {
-	bool stillPlaying = false;
-
 	//initialize the buffer to "silence"
 	SDL_memset(stream, 0, len);
+
+	bool stillPlaying = MusicPlayer::get().mix(stream, len);
 
 	//iterate through all our samples
 	std::vector<std::shared_ptr<Sound>>::const_iterator soundIt = sSoundVector.cbegin();
@@ -98,12 +99,17 @@ void AudioManager::init()
 	//Open the audio device and pause
 	if (SDL_OpenAudio(&sAudioFormat, NULL) < 0) {
 		LOG(LogError) << "AudioManager Error - Unable to open SDL audio: " << SDL_GetError() << std::endl;
+		return;
 	}
+
+	LOG(LogInfo) << "AudioManager: audio driver " << (SDL_GetCurrentAudioDriver() ? SDL_GetCurrentAudioDriver() : "none");
+	MusicPlayer::get().start();
 }
 
 void AudioManager::deinit()
 {
 	//stop all playback
+	MusicPlayer::get().stop();
 	stop();
 	//completely tear down SDL audio. else SDL hogs audio resources and emulators might fail to start...
 	SDL_CloseAudio();

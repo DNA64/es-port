@@ -28,5 +28,21 @@ to its font.
 (<https://curl.se/docs/caextract.html>), licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
 It is unmodified; the console has no certificate store, so the scrapers use it to verify HTTPS.
 
+## MP3 decoding
+
+`es-core/src/minimp3/` is minimp3 by lieff (<https://github.com/lieff/minimp3>), released under CC0 1.0; the
+licence text sits next to the headers.
+
+## Menu audio and covers
+
+The menu sound effects and the default background music are imported on the console from the firmware's own
+files at first run and are not shipped in this repository. Cover images are user data kept on the console in
+`/media/data/emulationstation/covers`; this repository ships only the alias table that maps console game codes to
+cover names, and a script to shrink covers.
+
+## DefKorns logo
+
+`resources/defkorns_logo.png` is the DefKorns logo, used on the About screen.
+
 "Super Nintendo Entertainment System" and the logo are trademarks of Nintendo. This project is not affiliated with
 or endorsed by Nintendo.

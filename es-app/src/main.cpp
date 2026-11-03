@@ -2,6 +2,7 @@
 //http://www.aloshi.com
 
 #include "guis/GuiDetectDevice.h"
+#include "AudioManager.h"
 #include "guis/GuiMsgBox.h"
 #include "utils/FileSystemUtil.h"
 #include "utils/ProfilingUtil.h"
@@ -474,6 +475,8 @@ int main(int argc, char* argv[])
 			LOG(LogError) << "Window failed to initialize!";
 			return 1;
 		}
+
+		AudioManager::getInstance();
 
 		if (splashScreen)
 		{

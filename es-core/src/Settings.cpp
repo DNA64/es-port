@@ -72,6 +72,8 @@ void Settings::setDefaults()
 	mBoolMap["VSync"] = true;
 
 	mBoolMap["EnableSounds"] = true;
+	mBoolMap["MusicEnabled"] = true;
+	mIntMap["MusicVolume"] = 50;
 	mBoolMap["ShowHelpPrompts"] = true;
 	mBoolMap["DoublePressRemovesFromFavs"] = false;
 	mBoolMap["ScrapeRatings"] = false;

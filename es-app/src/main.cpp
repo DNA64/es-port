@@ -517,6 +517,7 @@ int main(int argc, char* argv[])
 		}
 
 		// we can't handle es_systems.cfg file problems inside ES itself, so display the error message then quit
+		LOG(LogWarning) << "Startup dialog: " << errorMsg;
 		window.pushGui(new GuiMsgBox(&window,
 			errorMsg,
 			"QUIT", [] {
@@ -548,6 +549,9 @@ int main(int argc, char* argv[])
 		{
 			ViewController::get()->goToStart();
 		}else{
+			LOG(LogWarning) << "Startup dialog: controller configuration, input config file present: "
+				<< Utils::FileSystem::exists(InputManager::getConfigPath())
+				<< ", configured devices: " << InputManager::getInstance()->getNumConfiguredDevices();
 			window.pushGui(new GuiDetectDevice(&window, true, [] { ViewController::get()->goToStart(); }));
 		}
 	}

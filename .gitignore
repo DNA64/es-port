@@ -47,3 +47,6 @@ CPackSourceConfig.cmake
 # Classic Mini cross-build
 /classicmini/.work/
 /classicmini/out/
+
+# downloaded by classicmini/build.sh
+classicmini/device/resources/cacert.pem

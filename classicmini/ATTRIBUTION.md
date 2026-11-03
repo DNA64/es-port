@@ -25,8 +25,10 @@ to its font.
 ## CA certificates
 
 `device/resources/cacert.pem` is the Mozilla CA certificate bundle as extracted by the curl project
-(<https://curl.se/docs/caextract.html>), licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
-It is unmodified; the console has no certificate store, so the scrapers use it to verify HTTPS.
+(<https://curl.se/docs/caextract.html>, licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/)).
+It is not stored in the repository: the hmod build downloads it from <https://curl.se/ca/cacert.pem>, and for a
+manual deploy it has to be downloaded to that path first. The console has no certificate store, so the scrapers use
+it to verify HTTPS.
 
 ## MP3 decoding
 

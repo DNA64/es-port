@@ -542,6 +542,18 @@ int main(int argc, char* argv[])
 
 	InputManager::getInstance()->init();
 
+	if(errorMsg == NULL && Utils::FileSystem::exists(InputManager::getConfigPath()))
+	{
+		const Uint32 deadline = SDL_GetTicks() + 3000;
+		while(InputManager::getInstance()->getNumConfiguredDevices() == 0 && !SDL_TICKS_PASSED(SDL_GetTicks(), deadline))
+		{
+			SDL_Event event;
+			while(SDL_PollEvent(&event))
+				InputManager::getInstance()->parseEvent(event, &window);
+			SDL_Delay(50);
+		}
+	}
+
 	//choose which GUI to open depending on if an input configuration already exists
 	if(errorMsg == NULL)
 	{

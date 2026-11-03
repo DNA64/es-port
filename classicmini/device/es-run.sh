@@ -25,9 +25,27 @@ drawSplash(){
   decodepng "$es_dir/resources/$1.png" > /dev/fb0
 }
 
+watchPowerSwitch(){
+  exec 3< /dev/input/event2 || return
+  while ev=$(dd bs=16 count=1 <&3 2>/dev/null | od -A n -t x1 -w16); do
+    [ -n "$ev" ] || return
+    case $ev in
+      *" 01 00 74 00 00 00 00 00")
+        touch /tmp/es-stopping
+        killall emulationstation 2>/dev/null
+        usleep 300000
+        drawSplash shutdown
+        poweroff
+        return ;;
+    esac
+  done
+}
+
 restore_ui=1
-trap '[ "$restore_ui" = 1 ] && [ ! -f /tmp/es-stopping ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
+trap '[ -n "$power_pid" ] && [ ! -f /tmp/es-stopping ] && kill "$power_pid" 2>/dev/null; [ "$restore_ui" = 1 ] && [ ! -f /tmp/es-stopping ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
 uistop
+watchPowerSwitch &
+power_pid=$!
 library_stamp=$es_dir/library.stamp
 games_dir=$(findGameStorage)
 games_count=$(find "$games_dir" -name '*.desktop' | wc -l)

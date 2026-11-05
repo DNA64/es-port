@@ -523,6 +523,8 @@ void ViewController::preload()
 
 void ViewController::reloadGameListView(IGameListView* view, bool reloadTheme)
 {
+	mWindow->renderLoadingScreen("Loading...");
+
 	for(auto it = mGameListViews.cbegin(); it != mGameListViews.cend(); it++)
 	{
 		if(it->second.get() == view)
@@ -568,8 +570,10 @@ void ViewController::reloadAll(bool themeChanged)
 	mGameListViews.clear();
 
 	// load themes, create gamelistviews and reset filters
+	size_t reloaded = 0;
 	for(auto it = cursorMap.cbegin(); it != cursorMap.cend(); it++)
 	{
+		mWindow->renderLoadingScreen("Loading...", static_cast<float>(reloaded++) / static_cast<float>(cursorMap.size() + 1));
 		it->first->loadTheme();
 		it->first->getIndex()->resetFilters();
 		getGameListView(it->first)->setCursor(it->second);

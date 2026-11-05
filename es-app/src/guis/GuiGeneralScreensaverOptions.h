@@ -11,7 +11,6 @@ public:
 	virtual ~GuiGeneralScreensaverOptions();
 
 private:
-	void openVideoScreensaverOptions();
 	void openSlideshowScreensaverOptions();
 };
 

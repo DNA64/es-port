@@ -335,6 +335,12 @@ void Settings::processBackwardCompatibility()
 		}
 	}
 
+	{
+		auto it = mStringMap.find("ScreenSaverBehavior");
+		if (it != mStringMap.end() && it->second == "random video")
+			it->second = "dim";
+	}
+
 	{ // ScreenSaverSlideShow Image -> Media
 		renameSetting<std::map<std::string, int>>(mIntMap, std::string("ScreenSaverSwapImageTimeout"), std::string("ScreenSaverSwapMediaTimeout"));
 		renameSetting<std::map<std::string, bool>>(mBoolMap, std::string("SlideshowScreenSaverCustomImageSource"), std::string("SlideshowScreenSaverCustomMediaSource"));

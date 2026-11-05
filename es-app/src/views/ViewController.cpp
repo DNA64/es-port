@@ -342,8 +342,6 @@ ViewController::GameListViewType ViewController::getGameListViewType()
 		selectedViewType = DETAILED;
 	if (viewPreference.compare("grid") == 0)
 		selectedViewType = GRID;
-	if (viewPreference.compare("video") == 0)
-		selectedViewType = VIDEO;
 
 	return selectedViewType;
 }
@@ -359,8 +357,6 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 	//if we didn't, make it, remember it, and return it
 	std::shared_ptr<IGameListView> view;
 
-	bool themeHasVideoView = system->getTheme()->hasView("video");
-
 	//decide type
 	GameListViewType selectedViewType = getGameListViewType();
 
@@ -369,15 +365,10 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 		std::vector<FileData*> files = system->getRootFolder()->getFilesRecursive(GAME | FOLDER);
 		for (auto it = files.cbegin(); it != files.cend(); it++)
 		{
-			if (themeHasVideoView && !(*it)->getVideoPath().empty())
-			{
-				selectedViewType = VIDEO;
-				break;
-			}
-			else if (!(*it)->getThumbnailPath().empty())
+			if (!(*it)->getThumbnailPath().empty())
 			{
 				selectedViewType = DETAILED;
-				// Don't break out in case any subsequent files have video
+				break;
 			}
 		}
 	}

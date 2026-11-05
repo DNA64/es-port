@@ -375,11 +375,6 @@ void GuiMenu::openSoundSettings()
 			Settings::getInstance()->setBool("EnableSounds", sounds_enabled->getState());
 		});
 
-		auto video_audio = std::make_shared<SwitchComponent>(mWindow);
-		video_audio->setState(Settings::getInstance()->getBool("VideoAudio"));
-		s->addWithLabel("ENABLE VIDEO AUDIO", video_audio);
-		s->addSaveFunc([video_audio] { Settings::getInstance()->setBool("VideoAudio", video_audio->getState()); });
-
 #ifdef _OMX_
 		// OMX player Audio Device
 		auto omx_audio_dev = std::make_shared< OptionListComponent<std::string> >(mWindow, "OMX PLAYER AUDIO DEVICE", false);
@@ -622,7 +617,6 @@ void GuiMenu::openUISettings()
 	styles.push_back("automatic");
 	styles.push_back("basic");
 	styles.push_back("detailed");
-	styles.push_back("video");
 	styles.push_back("grid");
 
 	for (auto it = styles.cbegin(); it != styles.cend(); it++)

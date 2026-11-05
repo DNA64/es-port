@@ -23,6 +23,8 @@ public:
 private:
 	void openGamelistFilter();
 	void openSuspendPoints();
+	void toggleFavorite();
+	void pickRandomGame();
 	bool launchSystemScreenSaver();
 	void openMetaDataEd();
 	void startEditMode();

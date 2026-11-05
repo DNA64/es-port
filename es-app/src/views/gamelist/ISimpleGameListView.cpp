@@ -10,14 +10,15 @@
 #include "Sound.h"
 #include "SystemData.h"
 #include "Window.h"
+#include "InputManager.h"
 #include <cstdlib>
 
 namespace
 {
-	GuiSuspendPoints::Pad environmentPad()
+	bool environmentIsNes()
 	{
 		const char* pad = std::getenv("ES_PAD");
-		return pad != nullptr && std::string(pad) == "nes" ? GuiSuspendPoints::Pad::Nes : GuiSuspendPoints::Pad::Snes;
+		return pad != nullptr && std::string(pad) == "nes";
 	}
 
 	std::string gameCode(const FileData* game)
@@ -26,9 +27,14 @@ namespace
 	}
 }
 
+bool ISimpleGameListView::hasExtraButtons() const
+{
+	return !environmentIsNes() || InputManager::getInstance()->hasJoystickOtherThan("Nintendo Clovercon");
+}
+
 ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mHeaderStatus(window),
-	mSuspendPoints(SuspendPoints::fromEnvironment()), mPad(environmentPad())
+	mSuspendPoints(SuspendPoints::fromEnvironment())
 {
 	mHeaderText.setText("Logo Text");
 	mHeaderText.setSize(mSize.x(), 0);
@@ -270,7 +276,7 @@ bool ISimpleGameListView::openSuspendPoints()
 	if(game == nullptr || game->getType() != GAME)
 		return false;
 
-	auto* panel = new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
+	auto* panel = new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints,
 		[this, game](int slot) {
 			mPendingResume = slot;
 			launch(game);

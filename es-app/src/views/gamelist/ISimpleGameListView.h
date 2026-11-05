@@ -39,6 +39,7 @@ public:
 	virtual bool supportsSuspendPoints() const override { return true; }
 
 protected:
+	bool hasExtraButtons() const;
 	static const int DESCRIPTION_SCROLL_DELAY = 5 * 1000; // five secs
 
 	virtual std::string getQuickSystemSelectRightButton() = 0;
@@ -66,7 +67,6 @@ protected:
 
 	SuspendPoints mSuspendPoints;
 	SuspendPoint mFloating;
-	GuiSuspendPoints::Pad mPad;
 	int mPendingResume = 0;
 };
 

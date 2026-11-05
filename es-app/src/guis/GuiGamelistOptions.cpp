@@ -33,6 +33,23 @@ GuiGamelistOptions::GuiGamelistOptions(Window* window, SystemData* system) : Gui
 		mMenu.addRow(row);
 	}
 
+	if(!mFromPlaceholder && file->getType() == GAME && UIModeController::getInstance()->isUIModeFull() && !CollectionSystemManager::get()->isEditing())
+	{
+		const bool favorite = file->getSourceFileData()->metadata.get("favorite") == "true";
+		row.elements.clear();
+		row.addElement(std::make_shared<TextComponent>(mWindow, favorite ? "REMOVE FROM FAVORITES" : "ADD TO FAVORITES", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
+		row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::toggleFavorite, this));
+		mMenu.addRow(row);
+	}
+
+	if(!mFromPlaceholder && mSystem->isGameSystem())
+	{
+		row.elements.clear();
+		row.addElement(std::make_shared<TextComponent>(mWindow, "RANDOM GAME", Font::get(FONT_SIZE_MENU), MenuColors::Text), true);
+		row.makeAcceptInputHandler(std::bind(&GuiGamelistOptions::pickRandomGame, this));
+		mMenu.addRow(row);
+	}
+
 	if (!mFromPlaceholder) {
 		row.elements.clear();
 
@@ -198,6 +215,22 @@ void GuiGamelistOptions::openSuspendPoints()
 	IGameListView* gamelist = getGamelist();
 	delete this;
 	gamelist->openSuspendPoints();
+}
+
+void GuiGamelistOptions::pickRandomGame()
+{
+	IGameListView* gamelist = getGamelist();
+	FileData* randomGame = gamelist->getCursor()->getSystem()->getRandomGame();
+	delete this;
+	if(randomGame)
+		gamelist->setCursor(randomGame);
+}
+
+void GuiGamelistOptions::toggleFavorite()
+{
+	FileData* game = getGamelist()->getCursor();
+	delete this;
+	CollectionSystemManager::get()->toggleGameInCollection(game, false);
 }
 
 bool GuiGamelistOptions::launchSystemScreenSaver()

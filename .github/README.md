@@ -63,7 +63,7 @@ edited or added. Updating the hmod keeps your edits too.
 | --- | --- |
 | Systems | left/right choose, A open, X random game, Start menu |
 | Games | left/right browse, A play, B back to systems, Y sort, down suspend points, up the header menu |
-| Suspend points | left/right slot, A resume (Start on NES), Y save (A on NES, hold to overwrite), down lock, Select delete, B back |
+| Suspend points | left/right slot, Start resume, A save (hold to overwrite), down lock, Select delete, B back |
 
 The header icons open the menu: Display, System, Network, Library and Help. UI Settings has the theme, the games view
 style and the screensaver.

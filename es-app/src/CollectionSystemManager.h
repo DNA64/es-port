@@ -102,7 +102,7 @@ public:
 	void exitEditMode(bool quiet = false);
 	inline bool isEditing() { return mIsEditingCustom; };
 	inline std::string getEditingCollection() { return mEditingCollection; };
-	bool toggleGameInCollection(FileData* file);
+	bool toggleGameInCollection(FileData* file, bool confirmRemoval = true);
 
 	SystemData* getSystemToView(SystemData* sys);
 	void updateCollectionFolderMetadata(SystemData* sys);

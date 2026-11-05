@@ -509,7 +509,7 @@ int CollectionSystemManager::getPressCountInDuration() {
 }
 
 // adds or removes a game from a specific collection
-bool CollectionSystemManager::toggleGameInCollection(FileData* file)
+bool CollectionSystemManager::toggleGameInCollection(FileData* file, bool confirmRemoval)
 {
 	if (file->getType() == GAME)
 	{
@@ -535,7 +535,7 @@ bool CollectionSystemManager::toggleGameInCollection(FileData* file)
 			SystemData* systemViewToUpdate = getSystemToView(sysData);
 
 			if (found) {
-				if (needDoublePress(getPressCountInDuration())) {
+				if (confirmRemoval && needDoublePress(getPressCountInDuration())) {
 					return true;
 				}
 				adding = false;
@@ -583,7 +583,7 @@ bool CollectionSystemManager::toggleGameInCollection(FileData* file)
 			}
 			else
 			{
-				if (needDoublePress(getPressCountInDuration())) {
+				if (confirmRemoval && needDoublePress(getPressCountInDuration())) {
 					return true;
 				}
 				adding = false;

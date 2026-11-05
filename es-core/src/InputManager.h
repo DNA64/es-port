@@ -52,6 +52,7 @@ public:
 	int getAxisCountByDevice(int deviceId);
 	int getButtonCountByDevice(int deviceId);
 	int getNumConfiguredDevices();
+	bool hasJoystickOtherThan(const std::string& namePrefix);
 
 	std::string getDeviceGUIDString(int deviceId);
 

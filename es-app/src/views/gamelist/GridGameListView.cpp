@@ -644,7 +644,10 @@ std::vector<HelpPrompt> GridGameListView::getHelpPrompts()
 		prompts.push_back(HelpPrompt("b", "go to last saved game"));
 	else
 		prompts.push_back(HelpPrompt("b", mCursorStack.empty() ? "systems" : "back"));
-	prompts.push_back(HelpPrompt("y", "sort"));
+	if(hasExtraButtons())
+		prompts.push_back(HelpPrompt("y", "sort"));
+	else
+		prompts.push_back(HelpPrompt("select", "options"));
 	return prompts;
 }
 

@@ -40,9 +40,7 @@ private:
 class GuiSuspendPoints : public GuiComponent
 {
 public:
-	enum class Pad { Snes, Nes };
-
-	GuiSuspendPoints(Window* window, std::string title, std::string code, SuspendPoints points, Pad pad,
+	GuiSuspendPoints(Window* window, std::string title, std::string code, SuspendPoints points,
 		std::function<void(int)> onResume, std::function<void()> onChanged);
 
 	void loadTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view);
@@ -74,7 +72,6 @@ private:
 	std::string mTitle;
 	std::string mCode;
 	SuspendPoints mPoints;
-	Pad mPad;
 	std::function<void(int)> mOnResume;
 	std::function<void()> mOnChanged;
 

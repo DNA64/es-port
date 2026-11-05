@@ -469,6 +469,16 @@ bool InputManager::initialized() const
 	return mKeyboardInputConfig != NULL;
 }
 
+bool InputManager::hasJoystickOtherThan(const std::string& namePrefix)
+{
+	for(auto it = mInputConfigs.cbegin(); it != mInputConfigs.cend(); it++)
+	{
+		if(it->second->getDeviceName().compare(0, namePrefix.size(), namePrefix) != 0)
+			return true;
+	}
+	return false;
+}
+
 int InputManager::getNumConfiguredDevices()
 {
 	int num = 0;

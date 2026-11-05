@@ -81,9 +81,9 @@ void SuspendBox::render(const Transform4x4f& trans)
 		mPatch.render(trans);
 }
 
-GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::string code, SuspendPoints points, Pad pad,
+GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::string code, SuspendPoints points,
 	std::function<void(int)> onResume, std::function<void()> onChanged)
-	: GuiComponent(window), mTitle(std::move(title)), mCode(std::move(code)), mPoints(std::move(points)), mPad(pad),
+	: GuiComponent(window), mTitle(std::move(title)), mCode(std::move(code)), mPoints(std::move(points)),
 	  mOnResume(std::move(onResume)), mOnChanged(std::move(onChanged)),
 	  mPanel(window, ":/suspend_card.png", CardCorner), mCell(window, ":/suspend_card.png", CardCorner),
 	  mCellSelected(window, ":/suspend_card_sel.png", CardCorner),
@@ -243,7 +243,7 @@ void GuiSuspendPoints::close()
 
 bool GuiSuspendPoints::isSaveKey(InputConfig* config, const Input& input) const
 {
-	return config->isMappedTo(mPad == Pad::Snes ? "y" : "a", input);
+	return config->isMappedTo("a", input);
 }
 
 void GuiSuspendPoints::saveSelected(SuspendPoints::SaveMode mode)
@@ -310,7 +310,7 @@ bool GuiSuspendPoints::input(InputConfig* config, Input input)
 		mSelected = std::min(SuspendPoints::MaxSlots, mSelected + 1);
 		UiSound::play("se_sys_cursor.wav");
 	}
-	else if(config->isMappedTo("start", input) || (mPad == Pad::Snes && config->isMappedTo("a", input)))
+	else if(config->isMappedTo("start", input))
 	{
 		if(selectedPoint().valid)
 		{
@@ -428,9 +428,9 @@ std::vector<HelpPrompt> GuiSuspendPoints::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
 	prompts.push_back(HelpPrompt("left/right", "slot"));
-	prompts.push_back(HelpPrompt(mPad == Pad::Snes ? "a" : "start", "resume"));
+	prompts.push_back(HelpPrompt("start", "resume"));
 	if(mFloating.valid)
-		prompts.push_back(HelpPrompt(mPad == Pad::Snes ? "y" : "a", "save (hold to overwrite)"));
+		prompts.push_back(HelpPrompt("a", "save (hold to overwrite)"));
 	prompts.push_back(HelpPrompt("down", "lock"));
 	prompts.push_back(HelpPrompt("select", "delete"));
 	prompts.push_back(HelpPrompt("b", "back"));

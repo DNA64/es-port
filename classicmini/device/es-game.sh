@@ -34,13 +34,19 @@ if [ -n "$code" ]; then
   done
   rm -rf "$out"
   mkdir -p "$profile/$code" "$out/rollback"
+  suspend_dir=$profile/$code/suspendpoint$resume
   cmd="$cmd --save-data-backing-file $profile/$code/cartridge.sram --title-code $code --video-mode keep-aspect-ratio"
   cmd="$cmd --save-time-path $out/state.time --save-screenshot-on-quit $out/state.png"
-  cmd="$cmd --rollback-mode record --rollback-output-dir $out/rollback/"
-  if [ -n "$resume" ]; then
-    suspend_dir=$profile/$code/suspendpoint$resume
-    cmd="$cmd --load-time-path $suspend_dir//state.time --rollback-input-dir $suspend_dir/rollback/"
-  fi
+  case "$cmd" in
+    *kachikachi*)
+      cmd="$cmd --save-on-quit $out/state"
+      [ -n "$resume" ] && cmd="$cmd --load-state-file $suspend_dir/state --load-time-path $suspend_dir/state.time"
+      ;;
+    *)
+      cmd="$cmd --rollback-mode record --rollback-output-dir $out/rollback/"
+      [ -n "$resume" ] && cmd="$cmd --load-time-path $suspend_dir//state.time --rollback-input-dir $suspend_dir/rollback/"
+      ;;
+  esac
 fi
 
 mkdir -p "$shim"

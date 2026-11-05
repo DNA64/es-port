@@ -47,6 +47,8 @@ class MetaDataList
 public:
 	static MetaDataList createFromXML(MetaDataListType type, pugi::xml_node& node, const std::string& relativeTo);
 	void appendToXML(pugi::xml_node& parent, bool ignoreDefaults, const std::string& relativeTo) const;
+	void mergeFromXML(pugi::xml_node& node, const std::string& relativeTo);
+	void appendDiffToXML(pugi::xml_node& parent, const MetaDataList& base, const std::string& relativeTo) const;
 
 	MetaDataList(MetaDataListType type);
 

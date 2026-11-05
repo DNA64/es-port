@@ -508,6 +508,14 @@ std::string SystemData::getGamelistPath(bool forWrite) const
 	return "/etc/emulationstation/gamelists/" + mName + "/gamelist.xml";
 }
 
+std::string SystemData::getOverlayGamelistPath() const
+{
+	const std::string root = Utils::FileSystem::isDirectory("/media/data")
+		? "/media/data/emulationstation"
+		: Utils::FileSystem::getHomePath() + "/.emulationstation";
+	return root + "/user_gamelists/" + mName + "/gamelist.xml";
+}
+
 std::string SystemData::getThemePath() const
 {
 	// where we check for themes, in order:
@@ -617,8 +625,5 @@ void SystemData::writeMetaData() {
 }
 
 void SystemData::onMetaDataSavePoint() {
-	if(Settings::getInstance()->getString("SaveGamelistsMode") != "always")
-		return;
-
 	writeMetaData();
 }

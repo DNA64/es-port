@@ -111,6 +111,67 @@ FileData* findOrCreateFile(SystemData* system, const std::string& path, FileType
 	return NULL;
 }
 
+static void applyOverlay(SystemData* system)
+{
+	const std::string overlayPath = system->getOverlayGamelistPath();
+	if(!Utils::FileSystem::exists(overlayPath))
+		return;
+
+	pugi::xml_document doc;
+	const pugi::xml_parse_result result = doc.load_file(overlayPath.c_str());
+	if(!result)
+	{
+		LOG(LogError) << "Error parsing XML file \"" << overlayPath << "\": " << result.description();
+		return;
+	}
+
+	pugi::xml_node root = doc.child("gameList");
+	if(!root)
+		return;
+
+	std::unordered_map<std::string, FileData*> byPath;
+	for(FileData* file : system->getRootFolder()->getFilesRecursive(GAME | FOLDER))
+		byPath.emplace(file->getPath(), file);
+
+	const std::string relativeTo = system->getStartPath();
+	for(const char* tag : { "game", "folder" })
+	{
+		for(pugi::xml_node node = root.child(tag); node; node = node.next_sibling(tag))
+		{
+			const std::string path = Utils::FileSystem::resolveRelativePath(node.child("path").text().get(), relativeTo, false, true);
+			const auto found = byPath.find(path);
+			if(found == byPath.cend())
+				continue;
+
+			found->second->metadata.mergeFromXML(node, relativeTo);
+			found->second->metadata.resetChangedFlag();
+		}
+	}
+}
+
+static std::unordered_map<std::string, MetaDataList> loadBaseMetadata(SystemData* system)
+{
+	std::unordered_map<std::string, MetaDataList> base;
+
+	const std::string basePath = system->getGamelistPath(false);
+	if(!Utils::FileSystem::exists(basePath))
+		return base;
+
+	pugi::xml_document doc;
+	if(!doc.load_file(basePath.c_str()))
+		return base;
+
+	pugi::xml_node root = doc.child("gameList");
+	const std::string relativeTo = system->getStartPath();
+	for(pugi::xml_node node = root.child("game"); node; node = node.next_sibling("game"))
+	{
+		const std::string path = Utils::FileSystem::resolveRelativePath(node.child("path").text().get(), relativeTo, false, true);
+		base.emplace(path, MetaDataList::createFromXML(GAME_METADATA, node, relativeTo));
+	}
+
+	return base;
+}
+
 void parseGamelist(SystemData* system)
 {
 	bool trustGamelist = Settings::getInstance()->getBool("ParseGamelistOnly");
@@ -183,17 +244,30 @@ void parseGamelist(SystemData* system)
 			}
 		}
 	}
+
+	applyOverlay(system);
 }
 
-void addFileDataNode(pugi::xml_node& parent, const FileData* file, const char* tag, SystemData* system)
+void addFileDataNode(pugi::xml_node& parent, const FileData* file, const char* tag, SystemData* system, const MetaDataList* base = nullptr)
 {
 	//create game and add to parent node
 	pugi::xml_node newNode = parent.append_child(tag);
 
 	//write metadata
-	file->metadata.appendToXML(newNode, true, system->getStartPath());
+	if(base)
+	{
+		file->metadata.appendDiffToXML(newNode, *base, system->getStartPath());
+		if(!newNode.first_child())
+		{
+			parent.remove_child(newNode);
+			return;
+		}
+	}
+	else
+		file->metadata.appendToXML(newNode, true, system->getStartPath());
 
-	if(newNode.children().begin() == newNode.child("name") //first element is name
+	if(!base
+		&& newNode.children().begin() == newNode.child("name") //first element is name
 		&& ++newNode.children().begin() == newNode.children().end() //theres only one element
 		&& newNode.child("name").text().get() == file->getDisplayName()) //the name is the default
 	{
@@ -221,7 +295,8 @@ void updateGamelist(SystemData* system)
 
 	pugi::xml_document doc;
 	pugi::xml_node root;
-	std::string xmlReadPath = system->getGamelistPath(false);
+	const std::string xmlReadPath = system->getOverlayGamelistPath();
+	const auto baseMetadata = loadBaseMetadata(system);
 
 	std::string relativeTo = system->getStartPath();
 
@@ -327,7 +402,8 @@ void updateGamelist(SystemData* system)
 				for(std::vector<FileData*>::const_iterator cfit = changes.cbegin(); cfit != changes.cend(); ++cfit)
 				{
 					// it was either removed or never existed to begin with; either way, we can add it now
-					addFileDataNode(root, *cfit, tag, system);
+					const auto base = (i == 0) ? baseMetadata.find((*cfit)->getPath()) : baseMetadata.cend();
+					addFileDataNode(root, *cfit, tag, system, base != baseMetadata.cend() ? &base->second : nullptr);
 					++numUpdated;
 				}
 			}
@@ -337,7 +413,7 @@ void updateGamelist(SystemData* system)
 
 		if (numUpdated > 0) {
 			//make sure the folders leading up to this path exist (or the write will fail)
-			std::string xmlWritePath(system->getGamelistPath(true));
+			const std::string& xmlWritePath = xmlReadPath;
 			Utils::FileSystem::createDirectory(Utils::FileSystem::getParent(xmlWritePath));
 
 			LOG(LogInfo) << "Added/Updated " << numUpdated << " entities in '" << xmlReadPath << "'";

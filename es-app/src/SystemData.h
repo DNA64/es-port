@@ -43,6 +43,7 @@ public:
 	inline const std::shared_ptr<ThemeData>& getTheme() const { return mTheme; }
 
 	std::string getGamelistPath(bool forWrite) const;
+	std::string getOverlayGamelistPath() const;
 	bool hasGamelist() const;
 	std::string getThemePath() const;
 

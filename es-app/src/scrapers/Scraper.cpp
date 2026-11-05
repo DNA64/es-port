@@ -335,7 +335,9 @@ std::string getSaveAsPath(const ScraperSearchParams& params, const std::string& 
 	const std::string subdirectory = params.system->getName();
 	const std::string name = Utils::FileSystem::getStem(params.game->getPath()) + "-" + suffix;
 
-	std::string path = Utils::FileSystem::getHomePath() + "/.emulationstation/downloaded_images/";
+	std::string path = Utils::FileSystem::isDirectory("/media/data")
+		? "/media/data/emulationstation/downloaded_images/"
+		: Utils::FileSystem::getHomePath() + "/.emulationstation/downloaded_images/";
 
 	if(!Utils::FileSystem::exists(path))
 		Utils::FileSystem::createDirectory(path);

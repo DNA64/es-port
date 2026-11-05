@@ -23,4 +23,7 @@ docker run --rm -v "$repo:/src:ro" "$image" sh -c '
   set -e
   g++ -std=c++14 -Wall -Wextra -Werror -I/src/es-app/src \
     /src/classicmini/tests/suspend_points_test.cpp /src/es-app/src/SuspendPoints.cpp -o /tmp/suspend_points_test
-  /tmp/suspend_points_test'
+  /tmp/suspend_points_test
+  g++ -std=c++14 -Wall -Wextra -Werror -I/src/es-app/src -I/src/es-core/src -I/src/external/pugixml/src -c     /src/classicmini/tests/metadata_overlay_test.cpp -o /tmp/metadata_overlay_test.o
+  g++ -std=c++14 -w -I/src/es-app/src -I/src/es-core/src -I/src/external/pugixml/src     /tmp/metadata_overlay_test.o /src/es-app/src/MetaData.cpp /src/external/pugixml/src/pugixml.cpp     /src/es-core/src/utils/FileSystemUtil.cpp /src/es-core/src/utils/TimeUtil.cpp /src/es-core/src/utils/StringUtil.cpp     /src/es-core/src/Log.cpp -o /tmp/metadata_overlay_test
+  /tmp/metadata_overlay_test'

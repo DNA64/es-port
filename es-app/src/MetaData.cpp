@@ -24,7 +24,8 @@ MetaDataDecl gameDecls[] = {
 	{"hidden",      MD_BOOL,                "false",            false,      "hidden",               "enter hidden off/on" },
 	{"kidgame",     MD_BOOL,                "false",            false,      "kidgame",              "enter kidgame off/on" },
 	{"playcount",   MD_INT,                 "0",                true,       "play count",           "enter number of times played"},
-	{"lastplayed",  MD_TIME,                "0",                true,       "last played",          "enter last played date"}
+	{"lastplayed",  MD_TIME,                "0",                true,       "last played",          "enter last played date"},
+	{"code",        MD_STRING,              "",                 true,       "code",                 "enter game code"}
 };
 const std::vector<MetaDataDecl> gameMDD(gameDecls, gameDecls + sizeof(gameDecls) / sizeof(gameDecls[0]));
 
@@ -123,6 +124,37 @@ void MetaDataList::appendToXML(pugi::xml_node& parent, bool ignoreDefaults, cons
 
 			parent.append_child(mapIter->first.c_str()).text().set(value.c_str());
 		}
+	}
+}
+
+void MetaDataList::mergeFromXML(pugi::xml_node& node, const std::string& relativeTo)
+{
+	for(const auto& decl : getMDD())
+	{
+		pugi::xml_node md = node.child(decl.key.c_str());
+		if(!md)
+			continue;
+
+		std::string value = md.text().get();
+		if(decl.type == MD_PATH)
+			value = Utils::FileSystem::resolveRelativePath(value, relativeTo, true, true);
+		set(decl.key, value);
+	}
+}
+
+void MetaDataList::appendDiffToXML(pugi::xml_node& parent, const MetaDataList& base, const std::string& relativeTo) const
+{
+	for(const auto& decl : getMDD())
+	{
+		const auto mine = mMap.find(decl.key);
+		const auto theirs = base.mMap.find(decl.key);
+		if(mine == mMap.cend() || (theirs != base.mMap.cend() && theirs->second == mine->second))
+			continue;
+
+		std::string value = mine->second;
+		if(decl.type == MD_PATH)
+			value = Utils::FileSystem::createRelativePath(value, relativeTo, true, true);
+		parent.append_child(decl.key.c_str()).text().set(value.c_str());
 	}
 }
 

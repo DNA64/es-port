@@ -370,6 +370,20 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 	//decide type
 	GameListViewType selectedViewType = getGameListViewType();
 
+	if (selectedViewType == AUTOMATIC && system->getTheme())
+	{
+		const std::string& themed = system->getTheme()->getDefaultView();
+		if (system->getTheme()->hasView(themed))
+		{
+			if (themed == "grid")
+				selectedViewType = GRID;
+			else if (themed == "detailed")
+				selectedViewType = DETAILED;
+			else if (themed == "basic")
+				selectedViewType = BASIC;
+		}
+	}
+
 	if (selectedViewType == AUTOMATIC)
 	{
 		std::vector<FileData*> files = system->getRootFolder()->getFilesRecursive(GAME | FOLDER);

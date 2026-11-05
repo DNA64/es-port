@@ -75,6 +75,15 @@ void PagedTextComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, con
 {
 	GuiComponent::applyTheme(theme, view, element, properties);
 	mText.applyTheme(theme, view, element, properties ^ (ThemeFlags::POSITION | ThemeFlags::SIZE | ThemeFlags::ORIGIN | ThemeFlags::ROTATION));
+
+	mClipTop = mClipBottom = -1.0f;
+	if (const ThemeData::ThemeElement* elem = theme->getElement(view, element, "text"))
+	{
+		if (elem->has("clipTop"))
+			mClipTop = elem->get<float>("clipTop");
+		if (elem->has("clipBottom"))
+			mClipBottom = elem->get<float>("clipBottom");
+	}
 	layout();
 }
 
@@ -113,9 +122,18 @@ void PagedTextComponent::render(const Transform4x4f& parentTrans)
 
 	const float scaleX = trans.r0().x();
 	const float scaleY = trans.r1().y();
-	const Vector2i position(static_cast<int>(Math::round(trans.translation()[0])), static_cast<int>(Math::round(trans.translation()[1])));
-	const Vector2i size(static_cast<int>(Math::round(mBox.x() * scaleX)),
+	Vector2i position(static_cast<int>(Math::round(trans.translation()[0])), static_cast<int>(Math::round(trans.translation()[1])));
+	Vector2i size(static_cast<int>(Math::round(mBox.x() * scaleX)),
 		static_cast<int>(Math::round(static_cast<float>(mVisibleLines) * mLineHeight * scaleY)));
+
+	if (scrolls() && mClipTop >= 0.0f && mClipBottom > mClipTop)
+	{
+		const float screenHeight = static_cast<float>(Renderer::getScreenHeight());
+		const int top = static_cast<int>(Math::round(mClipTop * screenHeight));
+		const int bottom = static_cast<int>(Math::round(mClipBottom * screenHeight));
+		position.y() = top;
+		size.y() = bottom - top;
+	}
 
 	Renderer::pushClipRect(position, size);
 	mText.render(textTrans);

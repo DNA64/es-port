@@ -173,6 +173,7 @@ public:
 	};
 
 	bool hasView(const std::string& view);
+	const std::string& getDefaultView() const { return mDefaultView; }
 
 	// If expectedType is an empty string, will do no type checking.
 	const ThemeElement* getElement(const std::string& view, const std::string& element, const std::string& expectedType) const;
@@ -196,6 +197,7 @@ private:
 
 	std::deque<std::string> mPaths;
 	float mVersion;
+	std::string mDefaultView;
 	Vector2f mResolution;
 
 	void parseFeatures(const pugi::xml_node& themeRoot);

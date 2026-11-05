@@ -51,6 +51,8 @@ private:
 	Vector2f mIndicatorPosition;
 	Vector2f mIndicatorSize;
 	bool mIndicatorThemed = false;
+	float mClipTop = -1.0f;
+	float mClipBottom = -1.0f;
 	float mLineHeight = 0.0f;
 	int mVisibleLines = 1;
 	int mHoldMs = 0;

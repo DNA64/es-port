@@ -74,6 +74,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "forceUppercase", BOOLEAN },
 		{ "lineSpacing", FLOAT },
 		{ "fitMinScale", FLOAT },
+		{ "clipTop", FLOAT },
+		{ "clipBottom", FLOAT },
 		{ "suffix", STRING },
 		{ "fields", STRING },
 		{ "separator", STRING },
@@ -275,6 +277,8 @@ void ThemeData::loadFile(std::map<std::string, std::string> sysDataMap, const st
 
 	if(mVersion < MINIMUM_THEME_FORMAT_VERSION)
 		throw error << "Theme uses format version " << mVersion << ". Minimum supported version is " << MINIMUM_THEME_FORMAT_VERSION << ".";
+
+	mDefaultView = root.child("defaultView").text().as_string("");
 
 	// parse resolution
 	std::string resolution = root.child("resolution").text().as_string("");

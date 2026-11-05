@@ -35,7 +35,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window), mCode(window), mIconBar(window)
+	mName(window), mCode(window), mInfo(window), mIconBar(window)
 {
 	const float padding = 0.01f;
 
@@ -97,6 +97,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mCode.setSize(mSize.x() * 0.49f, 0.0f);
 	mCode.setDefaultZIndex(40);
 	addChild(&mCode);
+
+	mInfo.setDefaultZIndex(40);
+	mInfo.setVisible(false);
+	addChild(&mInfo);
 
 	mDescription.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
 	mDescription.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescription.getPosition().y());
@@ -303,6 +307,16 @@ void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 	}
 
 	mCode.applyTheme(theme, getName(), "md_code", ALL ^ TEXT);
+
+	const ThemeData::ThemeElement* info = theme->getElement(getName(), "md_info", "text");
+	mInfo.setVisible(info != nullptr);
+	if(info)
+	{
+		mInfo.applyTheme(theme, getName(), "md_info", ALL ^ TEXT);
+		mInfoLine.load(*info);
+		if(mGrid.size() > 0 && !mGrid.isScrolling())
+			mInfo.setText(mInfoLine.build(*mGrid.getSelected()));
+	}
 	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
 	mDivider.applyTheme(theme, getName(), "md_divider", ALL);
 	mDescription.clearIndicatorBox();
@@ -421,7 +435,8 @@ void GridGameListView::applyDescriptionLayout(bool hasDescription)
 	keepLayoutFonts(theme);
 
 	const std::pair<GuiComponent*, const char*> elements[] = {
-		{ &mName, "md_name" }, { &mDeveloper, "md_developer" }, { &mGenre, "md_genre" } };
+		{ &mName, "md_name" }, { &mDeveloper, "md_developer" }, { &mGenre, "md_genre" },
+		{ &mCode, "md_code" }, { &mInfo, "md_info" } };
 	for(const auto& element : elements)
 	{
 		element.first->applyTheme(theme, getName(), element.second, ThemeFlags::ALL ^ ThemeFlags::TEXT);
@@ -470,6 +485,7 @@ void GridGameListView::updateInfoPanel()
 		mPlayers.setValue(file->metadata.get("players"));
 		mName.setValue(file->metadata.get("name"));
 		mCode.setText(file->getType() == GAME ? file->metadata.get("code") : std::string());
+		mInfo.setText(file->getType() == GAME ? mInfoLine.build(*file) : std::string());
 
 		if(file->getType() == GAME)
 		{
@@ -485,6 +501,7 @@ void GridGameListView::updateInfoPanel()
 	comps.push_back(&mDivider);
 	comps.push_back(&mName);
 	comps.push_back(&mCode);
+	comps.push_back(&mInfo);
 	comps.push_back(&mMarquee);
 	comps.push_back(mVideo);
 	comps.push_back(&mImage);

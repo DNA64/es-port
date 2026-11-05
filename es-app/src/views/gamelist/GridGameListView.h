@@ -12,6 +12,7 @@
 #include "components/VideoComponent.h"
 #include "guis/GuiSuspendPoints.h"
 #include "views/gamelist/ISimpleGameListView.h"
+#include "views/gamelist/InfoLine.h"
 #include "SuspendPoints.h"
 #include <memory>
 
@@ -77,6 +78,8 @@ private:
 	TextComponent mPlayCount;
 	MarqueeTextComponent mName;
 	TextComponent mCode;
+	TextComponent mInfo;
+	InfoLine mInfoLine;
 	std::unique_ptr<FileData> mPlaceholder;
 
 	std::vector<TextComponent*> getMDLabels();

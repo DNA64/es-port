@@ -13,6 +13,8 @@
 #include "GuiComponent.h"
 #include "components/ImageComponent.h"
 #include "components/NinePatchComponent.h"
+#include "math/Vector2f.h"
+#include "ThemeData.h"
 #include <memory>
 #include <vector>
 
@@ -26,6 +28,7 @@ public:
 	int selected() const { return mSelected; }
 	void setSelected(int index);
 	void setFrameVisible(bool visible) { mFrameVisible = visible; }
+	void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view);
 
 	void render(const Transform4x4f& parentTrans) override;
 
@@ -36,6 +39,9 @@ private:
 	NinePatchComponent mFrame;
 	int mSelected = 0;
 	bool mFrameVisible = false;
+	bool mThemed = false;
+	Vector2f mBoxPos;
+	Vector2f mBoxSize;
 };
 
 #endif // ES_APP_COMPONENTS_MENU_ICON_BAR_H

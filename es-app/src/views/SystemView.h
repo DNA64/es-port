@@ -4,6 +4,7 @@
 
 #include "components/HeaderStatus.h"
 #include "components/IList.h"
+#include "components/MenuIconBar.h"
 #include "components/TextComponent.h"
 #include "resources/Font.h"
 #include "GuiComponent.h"
@@ -41,6 +42,7 @@ struct SystemViewCarousel
 	unsigned int colorEnd;
 	bool colorGradientHorizontal;
 	int maxLogoCount; // number of logos shown on the carousel
+	int scrollDuration;
 	Vector2f logoSize;
 	float zIndex;
 };
@@ -70,6 +72,8 @@ protected:
 
 private:
 	void populate();
+	void setHeaderFocus(bool focus);
+	void openHeaderMenu();
 	void getViewElements(const std::shared_ptr<ThemeData>& theme);
 	void getDefaultElements(void);
 	void getCarouselFromTheme(const ThemeData::ThemeElement* elem);
@@ -83,6 +87,9 @@ private:
 	SystemViewCarousel mCarousel;
 	TextComponent mSystemInfo;
 	HeaderStatus mHeaderStatus;
+	MenuIconBar mIconBar;
+	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
+	bool mHeaderFocus = false;
 	std::string mScrollSound;
 
 	// unit is list index

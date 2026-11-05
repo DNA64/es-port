@@ -48,6 +48,14 @@ GuiMenu::GuiMenu(Window* window, int category, std::function<void(int)> onClose)
 	showCategory(mFullUI ? category : System);
 }
 
+void GuiMenu::useTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view)
+{
+	mTheme = theme;
+	mView = view;
+	if (mTheme)
+		mBar.applyTheme(mTheme, mView);
+}
+
 GuiMenu::~GuiMenu()
 {
 	if (mOnClose)
@@ -65,8 +73,12 @@ void GuiMenu::update(int deltaTime)
 	const int category = mCategory;
 	std::function<void(int)> onClose = std::move(mOnClose);
 	mOnClose = nullptr;
+	const std::shared_ptr<ThemeData> theme = mTheme;
+	const std::string view = mView;
 	delete this;
-	window->pushGui(new GuiMenu(window, category, std::move(onClose)));
+	GuiMenu* menu = new GuiMenu(window, category, std::move(onClose));
+	menu->useTheme(theme, view);
+	window->pushGui(menu);
 }
 
 void GuiMenu::showCategory(int category)

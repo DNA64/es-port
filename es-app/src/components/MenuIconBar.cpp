@@ -17,11 +17,11 @@ namespace
 	constexpr float IconStepRatio = 0.118f;
 	constexpr float IconCenterRatio = 0.075f;
 	constexpr float FirstCenterRatio = 0.398f;
-	constexpr float FrameBleed = 12.0f;
-	constexpr int FrameCorner = 30;
+	constexpr float FrameBleed = 4.0f;
+	constexpr int FrameCorner = 10;
 }
 
-MenuIconBar::MenuIconBar(Window* window) : GuiComponent(window), mFrame(window, ":/suspend_frame_sel.png")
+MenuIconBar::MenuIconBar(Window* window) : GuiComponent(window), mFrame(window, ":/menu_selected.png")
 {
 	mFrame.setCornerSize(FrameCorner, FrameCorner);
 	for (const char* path : IconPaths)
@@ -39,14 +39,29 @@ void MenuIconBar::setSelected(int index)
 	layout();
 }
 
+void MenuIconBar::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view)
+{
+	const ThemeData::ThemeElement* elem = theme->getElement(view, "menuIcons", "container");
+	mThemed = elem != nullptr && elem->has("pos") && elem->has("size");
+	if (mThemed)
+	{
+		const Vector2f screen(static_cast<float>(Renderer::getScreenWidth()), static_cast<float>(Renderer::getScreenHeight()));
+		mBoxPos = elem->get<Vector2f>("pos") * screen;
+		mBoxSize = elem->get<Vector2f>("size") * screen;
+	}
+	layout();
+}
+
 void MenuIconBar::layout()
 {
 	const float width = static_cast<float>(Renderer::getScreenWidth());
 	const float height = static_cast<float>(Renderer::getScreenHeight());
-	const float size = height * IconSizeRatio;
-	const float step = height * IconStepRatio;
-	const float left = width * FirstCenterRatio - step / 2;
-	const float centerY = height * IconCenterRatio;
+	const float count = static_cast<float>(mIcons.size());
+	const float size = mThemed ? mBoxSize.y() : height * IconSizeRatio;
+	const float step = mThemed ? mBoxSize.x() / count : height * IconStepRatio;
+	const float left = mThemed ? mBoxPos.x() : width * FirstCenterRatio - step / 2;
+	const float centerY = mThemed ? mBoxPos.y() + mBoxSize.y() / 2 : height * IconCenterRatio;
+	const float bleed = mThemed ? 0.0f : FrameBleed;
 
 	for (std::size_t index = 0; index < mIcons.size(); ++index)
 	{
@@ -54,17 +69,17 @@ void MenuIconBar::layout()
 		mIcons[index]->setPosition(left + step * (static_cast<float>(index) + 0.5f), centerY);
 	}
 
-	const float boxWidth = step * 0.9f;
-	const float boxHeight = step * 0.8f;
+	const float boxWidth = mThemed ? size * 1.43f : step * 0.9f;
+	const float boxHeight = mThemed ? size * 1.28f : step * 0.8f;
 	const float centerX = left + step * (static_cast<float>(mSelected) + 0.5f);
-	mFrame.setSize(boxWidth + 2 * FrameBleed, boxHeight + 2 * FrameBleed);
-	mFrame.setPosition(centerX - boxWidth / 2 - FrameBleed, centerY - boxHeight / 2 - FrameBleed);
+	mFrame.setSize(boxWidth + 2 * bleed, boxHeight + 2 * bleed);
+	mFrame.setPosition(centerX - boxWidth / 2 - bleed, centerY - boxHeight / 2 - bleed);
 }
 
 void MenuIconBar::render(const Transform4x4f& parentTrans)
 {
-	for (const auto& icon : mIcons)
-		icon->render(parentTrans);
 	if (mFrameVisible)
 		mFrame.render(parentTrans);
+	for (const auto& icon : mIcons)
+		icon->render(parentTrans);
 }

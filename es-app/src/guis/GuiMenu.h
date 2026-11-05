@@ -16,6 +16,7 @@ class GuiMenu : public GuiComponent
 {
 public:
 	GuiMenu(Window* window, int category = 0, std::function<void(int)> onClose = nullptr);
+	void useTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view);
 	~GuiMenu() override;
 
 	static void requestRebuild() { sRebuildPending = true; }
@@ -56,6 +57,8 @@ private:
 	MenuComponent mMenu;
 	TextComponent mVersion;
 	MenuIconBar mBar;
+	std::shared_ptr<ThemeData> mTheme;
+	std::string mView;
 	std::function<void(int)> mOnClose;
 	int mCategory = Display;
 	bool mFullUI = true;

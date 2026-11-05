@@ -1,6 +1,7 @@
 #include "views/SystemView.h"
 
 #include "animations/LambdaAnimation.h"
+#include "guis/GuiMenu.h"
 #include "guis/GuiMsgBox.h"
 #include "views/UIModeController.h"
 #include "views/ViewController.h"
@@ -9,6 +10,7 @@
 #include "Settings.h"
 #include "SystemData.h"
 #include "Window.h"
+#include <algorithm>
 
 // buffer values for scrolling velocity (left, stopped, right)
 const int logoBuffersLeft[] = { -5, -2, -1 };
@@ -17,7 +19,8 @@ const int logoBuffersRight[] = { 1, 2, 5 };
 SystemView::SystemView(Window* window) : IList<SystemViewData, SystemData*>(window, LIST_SCROLL_STYLE_SLOW, LIST_ALWAYS_LOOP),
 										 mViewNeedsReload(true),
 										 mSystemInfo(window, "SYSTEM INFO", Font::get(FONT_SIZE_SMALL), 0x33333300, ALIGN_CENTER),
-										 mHeaderStatus(window)
+										 mHeaderStatus(window),
+										 mIconBar(window)
 {
 	mCamOffset = 0;
 	mExtrasCamOffset = 0;
@@ -136,10 +139,57 @@ void SystemView::goToSystem(SystemData* system, bool animate)
 		finishAnimation(0);
 }
 
+void SystemView::setHeaderFocus(bool focus)
+{
+	mHeaderFocus = focus;
+	mIconBar.setFrameVisible(focus);
+	updateHelpPrompts();
+}
+
+void SystemView::openHeaderMenu()
+{
+	mIconBar.setFrameVisible(false);
+	const std::weak_ptr<bool> alive = mAlive;
+	GuiMenu* menu = new GuiMenu(mWindow, mIconBar.selected(), [this, alive](int category) {
+		if(alive.expired())
+			return;
+		mIconBar.setVisible(true);
+		mIconBar.setSelected(category);
+		setHeaderFocus(true);
+	});
+	menu->useTheme(mEntries.at(mCursor).object->getTheme(), "system");
+	mIconBar.setVisible(false);
+	mWindow->pushGui(menu);
+}
+
 bool SystemView::input(InputConfig* config, Input input)
 {
+	if(mHeaderFocus)
+	{
+		if(input.value != 0)
+		{
+			const int last = MenuIconBar::Count - 1;
+			if(config->isMappedLike("left", input))
+				mIconBar.setSelected(std::max(0, mIconBar.selected() - 1));
+			else if(config->isMappedLike("right", input))
+				mIconBar.setSelected(std::min(last, mIconBar.selected() + 1));
+			else if(config->isMappedTo("a", input))
+				openHeaderMenu();
+			else if(config->isMappedTo("b", input) || config->isMappedLike("down", input))
+				setHeaderFocus(false);
+		}
+		return true;
+	}
+
 	if(input.value != 0)
 	{
+		if((mCarousel.type == HORIZONTAL || mCarousel.type == HORIZONTAL_WHEEL) && config->isMappedLike("up", input) &&
+			UIModeController::getInstance()->isUIModeFull())
+		{
+			setHeaderFocus(true);
+			return true;
+		}
+
 		if(config->getDeviceId() == DEVICE_KEYBOARD && input.value && input.id == SDLK_r && SDL_GetModState() & KMOD_LCTRL && Settings::getInstance()->getBool("Debug"))
 		{
 			LOG(LogInfo) << " Reloading all";
@@ -318,7 +368,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 			if(t > 0.5f)
 				this->mExtrasCamOffset = endPos;
 
-		}, 500);
+		}, mCarousel.scrollDuration);
 	} else if (transition_style == "slide") {
 		// slide
 		anim = new LambdaAnimation(
@@ -333,7 +383,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 			this->mCamOffset = move_carousel ? f : endPos;
 			this->mExtrasCamOffset = endPos;
-		}, 500);
+		}, mCarousel.scrollDuration);
 	} else {
 		// instant
 		anim = new LambdaAnimation(
@@ -384,11 +434,19 @@ void SystemView::render(const Transform4x4f& parentTrans)
 
 	renderExtras(trans, minMax.second, INT16_MAX);
 	mHeaderStatus.render(trans);
+	mIconBar.render(trans);
 }
 
 std::vector<HelpPrompt> SystemView::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
+	if (mHeaderFocus)
+	{
+		prompts.push_back(HelpPrompt("left/right", "category"));
+		prompts.push_back(HelpPrompt("a", "select"));
+		prompts.push_back(HelpPrompt("b", "back"));
+		return prompts;
+	}
 	if (mCarousel.type == VERTICAL || mCarousel.type == VERTICAL_WHEEL)
 		prompts.push_back(HelpPrompt("up/down", "choose"));
 	else
@@ -435,6 +493,7 @@ void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 		mSystemInfo.applyTheme(theme, "system", "systemInfo", ThemeFlags::ALL);
 
 	mHeaderStatus.applyTheme(theme, "system", false);
+	mIconBar.applyTheme(theme, "system");
 
 	mViewNeedsReload = false;
 }
@@ -629,6 +688,7 @@ void  SystemView::getDefaultElements(void)
 	mCarousel.logoSize.x() = 0.25f * mSize.x();
 	mCarousel.logoSize.y() = 0.155f * mSize.y();
 	mCarousel.maxLogoCount = 3;
+	mCarousel.scrollDuration = 500;
 	mCarousel.zIndex = 40;
 
 	// System Info Bar
@@ -674,6 +734,9 @@ void SystemView::getCarouselFromTheme(const ThemeData::ThemeElement* elem)
 		mCarousel.logoScale = elem->get<float>("logoScale");
 	if (elem->has("logoSize"))
 		mCarousel.logoSize = elem->get<Vector2f>("logoSize") * mSize;
+	if (elem->has("scrollDuration"))
+		mCarousel.scrollDuration = std::max(1, (int)Math::round(elem->get<float>("scrollDuration")));
+
 	if (elem->has("maxLogoCount"))
 		mCarousel.maxLogoCount = (int)Math::round(elem->get<float>("maxLogoCount"));
 	if (elem->has("zIndex"))

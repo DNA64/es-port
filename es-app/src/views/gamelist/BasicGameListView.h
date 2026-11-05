@@ -2,6 +2,7 @@
 #ifndef ES_APP_VIEWS_GAME_LIST_BASIC_GAME_LIST_VIEW_H
 #define ES_APP_VIEWS_GAME_LIST_BASIC_GAME_LIST_VIEW_H
 
+#include "components/MenuIconBar.h"
 #include "components/TextListComponent.h"
 #include "views/gamelist/ISimpleGameListView.h"
 
@@ -22,6 +23,7 @@ public:
 
 	virtual const char* getName() const override { return "basic"; }
 
+	virtual bool input(InputConfig* config, Input input) override;
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 	virtual void launch(FileData* game) override;
 
@@ -34,7 +36,13 @@ protected:
 	virtual void remove(FileData* game, bool deleteFile, bool refreshView=true) override;
 	virtual void addPlaceholder();
 
+	void setHeaderFocus(bool focus);
+	void openHeaderMenu();
+
 	TextListComponent<FileData*> mList;
+	MenuIconBar mIconBar;
+	bool mHeaderFocus = false;
+	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_BASIC_GAME_LIST_VIEW_H

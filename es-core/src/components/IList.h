@@ -127,6 +127,8 @@ public:
 		onCursorChanged(CURSOR_STOPPED);
 	}
 
+	inline int getCursorIndex() const { return mCursor; }
+
 	inline const std::string& getSelectedName()
 	{
 		assert(size() > 0);

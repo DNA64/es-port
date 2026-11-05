@@ -1,5 +1,6 @@
 #include "views/gamelist/BasicGameListView.h"
 
+#include "guis/GuiMenu.h"
 #include "utils/FileSystemUtil.h"
 #include "views/UIModeController.h"
 #include "views/ViewController.h"
@@ -8,7 +9,7 @@
 #include "SystemData.h"
 
 BasicGameListView::BasicGameListView(Window* window, FileData* root)
-	: ISimpleGameListView(window, root), mList(window)
+	: ISimpleGameListView(window, root), mList(window), mIconBar(window)
 {
 	mList.setSize(mSize.x(), mSize.y() * 0.8f);
 	mList.setPosition(0, mSize.y() * 0.2f);
@@ -19,6 +20,10 @@ BasicGameListView::BasicGameListView(Window* window, FileData* root)
 	mList.setMarkerCallback([this](FileData* file) { return isFloating(file); });
 	addChild(&mList);
 
+	mIconBar.setDefaultZIndex(70);
+	mIconBar.setZIndex(70);
+	addChild(&mIconBar);
+
 	populateList(root->getChildrenListToDisplay());
 }
 
@@ -27,6 +32,7 @@ void BasicGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 	ISimpleGameListView::onThemeChanged(theme);
 	using namespace ThemeFlags;
 	mList.applyTheme(theme, getName(), "gamelist", ALL);
+	mIconBar.applyTheme(theme, getName());
 
 	sortChildren();
 }
@@ -211,8 +217,68 @@ void BasicGameListView::remove(FileData *game, bool deleteFile, bool refreshView
 		onFileChanged(parent, FILE_REMOVED);     // update the view, with game removed
 }
 
+bool BasicGameListView::input(InputConfig* config, Input input)
+{
+	if(mHeaderFocus)
+	{
+		if(input.value != 0)
+		{
+			const int last = MenuIconBar::Count - 1;
+			if(config->isMappedLike("left", input))
+				mIconBar.setSelected(std::max(0, mIconBar.selected() - 1));
+			else if(config->isMappedLike("right", input))
+				mIconBar.setSelected(std::min(last, mIconBar.selected() + 1));
+			else if(config->isMappedTo("a", input))
+				openHeaderMenu();
+			else if(config->isMappedTo("b", input) || config->isMappedLike("down", input))
+				setHeaderFocus(false);
+		}
+		return true;
+	}
+
+	if(input.value != 0 && config->isMappedLike("up", input) && mList.getCursorIndex() == 0 && mIconBar.shown() && UIModeController::getInstance()->isUIModeFull())
+	{
+		setHeaderFocus(true);
+		return true;
+	}
+
+	return ISimpleGameListView::input(config, input);
+}
+
+void BasicGameListView::setHeaderFocus(bool focus)
+{
+	mHeaderFocus = focus && mIconBar.shown();
+	mIconBar.setFrameVisible(focus);
+	updateHelpPrompts();
+}
+
+void BasicGameListView::openHeaderMenu()
+{
+	mIconBar.setFrameVisible(false);
+	const std::weak_ptr<bool> alive = mAlive;
+	GuiMenu* menu = new GuiMenu(mWindow, mIconBar.selected(), [this, alive](int category) {
+		if(alive.expired())
+			return;
+		mIconBar.setVisible(true);
+		mIconBar.setSelected(category);
+		setHeaderFocus(true);
+	});
+	menu->useTheme(getTheme(), getName());
+	mIconBar.setVisible(false);
+	mWindow->pushGui(menu);
+}
+
 std::vector<HelpPrompt> BasicGameListView::getHelpPrompts()
 {
+	if(mHeaderFocus)
+	{
+		std::vector<HelpPrompt> headerPrompts;
+		headerPrompts.push_back(HelpPrompt("left/right", "category"));
+		headerPrompts.push_back(HelpPrompt("a", "open"));
+		headerPrompts.push_back(HelpPrompt("b", "back"));
+		return headerPrompts;
+	}
+
 	std::vector<HelpPrompt> prompts;
 
 	if(Settings::getInstance()->getBool("QuickSystemSelect"))

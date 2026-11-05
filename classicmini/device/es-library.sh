@@ -247,6 +247,16 @@ readGames() {
   END { walk(root, 0) }'
 }
 
+default_covers=" "
+small_covers=$(find "$store/.storage" -maxdepth 2 -name '*.png' ! -name '*_small.png' -size -8k 2>/dev/null)
+while IFS= read -r png; do
+  [ -n "$png" ] && [ "$(chdRead "$png" 16 8)" = 0000008c000000cc ] || continue
+  png=${png##*/}
+  default_covers="$default_covers${png%.png} "
+done <<EOF
+$small_covers
+EOF
+
 parts=$(mktemp -d)
 rm -rf "$out"
 mkdir -p "$out"
@@ -270,6 +280,7 @@ readGames | while IFS=$us read -r menu code exe ext icon name desc year players 
   small=$game_dir/${code}_small.png
   [ -f "$small" ] || small=$icon
   [ -n "$cover" ] && small=$cover
+  case $default_covers in *" $code "*) [ -z "$cover" ] && { icon=; small=; } ;; esac
 
   {
     echo "  <game>"

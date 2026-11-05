@@ -21,7 +21,7 @@ merge); `upstream` is `RetroPie/EmulationStation`.
   and description. Favorites, last played and all-games collections, sorting, and themes (see below).
 - **Covers.** Matched from `/media/data/emulationstation/covers` by game code, alias or name. A reduced copy with
   the same file name in `covers_small` is preferred when it exists, which keeps the grid smooth on the console.
-  `classicmini/tools/prepare_covers.py` shrinks a folder of covers to a given width (512 by default). The built-in scrapers work
+  [`classicmini/tools/prepare_covers.py`](../classicmini/tools/prepare_covers.py) shrinks a folder of covers to a given width (512 by default). The built-in scrapers work
   over HTTPS with a bundled CA bundle.
 - **Suspend points.** Press down on a game to open its suspend point list: four slots with a screenshot and play time,
   save the last session into a slot, resume from one, lock or delete it. They use the same folders as Clover-UI,
@@ -66,7 +66,7 @@ style and the screensaver.
 
 ## Themes
 
-A theme is an ordinary EmulationStation theme (see `THEMES.md`) with a few additions that this port reads:
+A theme is an ordinary EmulationStation theme (see [`THEMES.md`](../THEMES.md)) with a few additions that this port reads:
 
 - `imagegrid`: `scrollDuration` (ms) and `adjacentGap` (fraction of the screen width between the selected cover and
   its neighbors). `carousel`: `scrollDuration`.
@@ -99,7 +99,7 @@ image (GCC 4.9.4 / glibc 2.21 for Cortex-A7, the console's SDL2 2.0.4, FreeType,
 ES image adds CMake 3.27, static FreeImage, RapidJSON and link stubs for `libGLESv2`; nothing is taken from a console.
 `ES_TOOLCHAIN_IMAGE` selects another tag (default `classicmini-es-toolchain:local`).
 
-`classicmini/scripts/build-es.sh` runs inside the container with the repository mounted: it fetches the `pugixml` submodule,
+[`classicmini/scripts/build-es.sh`](../classicmini/scripts/build-es.sh) runs inside the container with the repository mounted: it fetches the `pugixml` submodule,
 configures with `-DGLES=ON`, builds and strips. The build tree stays in `classicmini/out/.build` so rebuilds are
 incremental. ES's CMake writes the `emulationstation` binary into the repository root; it is ignored by git.
 
@@ -118,5 +118,5 @@ needs in `es-app` and `es-core`.
 
 ## Credits
 
-See `classicmini/ATTRIBUTION.md` for the fonts, the CA bundle and the other third-party pieces. EmulationStation is by Alec Lofquist
-and the RetroPie project, under the MIT license (`LICENSE.md`).
+See [`classicmini/ATTRIBUTION.md`](../classicmini/ATTRIBUTION.md) for the fonts, the CA bundle and the other third-party pieces. EmulationStation is by Alec Lofquist
+and the RetroPie project, under the MIT license ([`LICENSE.md`](../LICENSE.md)).

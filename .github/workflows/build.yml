@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches: [classicmini]
+    paths:
+      - classicmini/**
+      - es-app/**
+      - es-core/**
+      - resources/**
+      - CMakeLists.txt
+      - .github/workflows/build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hmod:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Build EmulationStation
+        run: sh classicmini/build.sh
+
+      - name: Build the hmod
+        working-directory: classicmini/hmod
+        run: |
+          sh stage.sh
+          sh ../../vendor/hmod-build/docker-make.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: emulationstation_classicmini
+          path: classicmini/hmod/out/*.hmod

@@ -1,6 +1,6 @@
 # runs on the staged files before each commit; set up with "pre-commit install"
 # only the NES/SNES Classic port is checked: the rest of the tree is EmulationStation itself
-files: ^(classicmini/|\.pre-commit-config\.yaml$|\.shellcheckrc$|\.gitattributes$|\.markdownlint\.yaml$)
+files: ^(classicmini/|\.github/README\.md$|\.github/workflows/build\.yml$|\.pre-commit-config\.yaml$|\.shellcheckrc$|\.gitattributes$|\.markdownlint\.yaml$)
 exclude: ^(classicmini/out/|classicmini/device/theme/.*\.svg$|.*OFL.*\.txt$)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

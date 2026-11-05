@@ -6,6 +6,8 @@ MOD_DEPS     := mod/usr/share/emulationstation/emulationstation
 
 all: hmod
 
+SOURCE_DATE_EPOCH ?= $(shell date +%s)
+
 HMOD_BUILD_DIR ?= ../../vendor/hmod-build
 include $(HMOD_BUILD_DIR)/hmod.mk
 

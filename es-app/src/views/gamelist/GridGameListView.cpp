@@ -469,7 +469,7 @@ void GridGameListView::updateInfoPanel()
 		mGenre.setValue(file->metadata.get("genre"));
 		mPlayers.setValue(file->metadata.get("players"));
 		mName.setValue(file->metadata.get("name"));
-		mCode.setText(file->metadata.get("code"));
+		mCode.setText(file->getType() == GAME ? file->metadata.get("code") : std::string());
 
 		if(file->getType() == GAME)
 		{
@@ -513,8 +513,8 @@ void GridGameListView::updateInfoPanel()
 void GridGameListView::addPlaceholder()
 {
 	// empty grid - add a placeholder
-	FileData* placeholder = new FileData(PLACEHOLDER, "<No Entries Found>", this->mRoot->getSystem()->getSystemEnvData(), this->mRoot->getSystem());
-	mGrid.add(placeholder->getName(), "", placeholder);
+	mPlaceholder.reset(new FileData(PLACEHOLDER, "<No Entries Found>", this->mRoot->getSystem()->getSystemEnvData(), this->mRoot->getSystem()));
+	mGrid.add(mPlaceholder->getName(), "", mPlaceholder.get());
 }
 
 void GridGameListView::launch(FileData* game)

@@ -62,6 +62,8 @@ SystemData::~SystemData()
 
 	delete mRootFolder;
 	delete mFilterIndex;
+	if(!mIsCollectionSystem)
+		delete mEnvData;
 }
 
 void SystemData::setIsGameSystemStatus()

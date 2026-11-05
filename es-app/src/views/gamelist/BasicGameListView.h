@@ -42,6 +42,7 @@ protected:
 	TextListComponent<FileData*> mList;
 	MenuIconBar mIconBar;
 	bool mHeaderFocus = false;
+	std::unique_ptr<FileData> mPlaceholder;
 	std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);
 };
 

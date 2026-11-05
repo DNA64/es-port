@@ -22,7 +22,10 @@ case "$1" in
     [ -f "$es_dir/no_boot" ] && exit 0
     [ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && exit 0
     for _ in $(seq 1 5); do
-      "$es_dir/padstate" select && exit 0
+      pad_status=0
+      "$es_dir/padstate" select || pad_status=$?
+      [ "$pad_status" -eq 0 ] && exit 0
+      [ "$pad_status" -eq 1 ] && break
       usleep 200000
     done
     touch "$autotest"
@@ -34,6 +37,8 @@ case "$1" in
   ;;
   stop)
     [ -z "$(pidof clover-mcp)" ] || exit 0
+    es_run_pid=$(cat /run/es-run.pid 2>/dev/null)
+    { [ -n "$es_run_pid" ] && grep -q es-run.sh "/proc/$es_run_pid/cmdline" 2>/dev/null; } || [ -n "$(pidof emulationstation)" ] || exit 0
     touch /tmp/es-stopping
     start-stop-daemon -K -q -p /run/es-run.pid
     killall emulationstation 2>/dev/null

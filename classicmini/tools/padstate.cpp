@@ -105,12 +105,14 @@ int main(int argc, char* argv[])
 	}
 
 	bool everyWantedDown = !wanted.empty();
+	bool found = false;
 	for (const std::string& path : deviceNodes())
 	{
 		const Device device(path);
 		if (!device.isOpen() || device.name().find(match) == std::string::npos)
 			continue;
 
+		found = true;
 		const auto keys = device.keys();
 		if (dump)
 		{
@@ -132,5 +134,7 @@ int main(int argc, char* argv[])
 			return 0;
 		everyWantedDown = !wanted.empty();
 	}
-	return dump ? 0 : 1;
+	if (dump)
+		return 0;
+	return found ? 1 : 2;
 }

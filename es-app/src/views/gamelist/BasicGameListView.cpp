@@ -121,8 +121,8 @@ int BasicGameListView::getViewportTop()
 void BasicGameListView::addPlaceholder()
 {
 	// empty list - add a placeholder
-	FileData* placeholder = new FileData(PLACEHOLDER, "<No Entries Found>", this->mRoot->getSystem()->getSystemEnvData(), this->mRoot->getSystem());
-	mList.add(placeholder->getName(), placeholder, (placeholder->getType() == PLACEHOLDER));
+	mPlaceholder.reset(new FileData(PLACEHOLDER, "<No Entries Found>", this->mRoot->getSystem()->getSystemEnvData(), this->mRoot->getSystem()));
+	mList.add(mPlaceholder->getName(), mPlaceholder.get(), (mPlaceholder->getType() == PLACEHOLDER));
 }
 
 std::string BasicGameListView::getQuickSystemSelectRightButton()

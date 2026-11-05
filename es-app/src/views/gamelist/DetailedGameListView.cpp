@@ -6,7 +6,7 @@
 
 DetailedGameListView::DetailedGameListView(Window* window, FileData* root) :
 	BasicGameListView(window, root),
-	mDescContainer(window, DESCRIPTION_SCROLL_DELAY), mDescription(window),
+	mDescription(window),
 	mThumbnail(window),
 	mMarquee(window),
 	mImage(window),
@@ -97,15 +97,11 @@ DetailedGameListView::DetailedGameListView(Window* window, FileData* root) :
 	mName.setHorizontalAlignment(ALIGN_CENTER);
 	addChild(&mName);
 
-	mDescContainer.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
-	mDescContainer.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescContainer.getPosition().y());
-	mDescContainer.setAutoScroll(true);
-	mDescContainer.setDefaultZIndex(40);
-	addChild(&mDescContainer);
-
+	mDescription.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
+	mDescription.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescription.getPosition().y());
+	mDescription.setDefaultZIndex(40);
 	mDescription.setFont(Font::get(FONT_SIZE_SMALL));
-	mDescription.setSize(mDescContainer.getSize().x(), 0);
-	mDescContainer.addChild(&mDescription);
+	addChild(&mDescription);
 
 
 	initMDLabels();
@@ -174,9 +170,14 @@ void DetailedGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& them
 			mInfo.setText(buildInfo(mList.getSelected()));
 	}
 
-	mDescContainer.applyTheme(theme, getName(), "md_description", POSITION | ThemeFlags::SIZE | Z_INDEX | VISIBLE);
-	mDescription.setSize(mDescContainer.getSize().x(), 0);
-	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (POSITION | ThemeFlags::SIZE | ThemeFlags::ORIGIN | TEXT | ROTATION));
+	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
+	mDescription.clearIndicatorBox();
+	if(const ThemeData::ThemeElement* bar = theme->getElement(getName(), "md_scrollbar", "image"))
+		if(bar->has("pos") && bar->has("size"))
+		{
+			const Vector2f screen(static_cast<float>(Renderer::getScreenWidth()), static_cast<float>(Renderer::getScreenHeight()));
+			mDescription.setIndicatorBox(bar->get<Vector2f>("pos") * screen, bar->get<Vector2f>("size") * screen);
+		}
 
 	sortChildren();
 }
@@ -242,8 +243,8 @@ void DetailedGameListView::initMDValues()
 			bottom = testBot;
 	}
 
-	mDescContainer.setPosition(mDescContainer.getPosition().x(), bottom + mSize.y() * 0.01f);
-	mDescContainer.setSize(mDescContainer.getSize().x(), mSize.y() - mDescContainer.getPosition().y());
+	mDescription.setPosition(mDescription.getPosition().x(), bottom + mSize.y() * 0.01f);
+	mDescription.setSize(mDescription.getSize().x(), mSize.y() - mDescription.getPosition().y());
 }
 
 void DetailedGameListView::updateInfoPanel()
@@ -261,7 +262,6 @@ void DetailedGameListView::updateInfoPanel()
 		mImage.setImageAsync(file->getImagePath());
 		mMarquee.setImageAsync(file->getMarqueePath());
 		mDescription.setText(file->metadata.get("desc"));
-		mDescContainer.reset();
 
 		mRating.setValue(file->metadata.get("rating"));
 		mReleaseDate.setValue(file->metadata.get("releasedate"));
@@ -270,7 +270,7 @@ void DetailedGameListView::updateInfoPanel()
 		mGenre.setValue(file->metadata.get("genre"));
 		mPlayers.setValue(file->metadata.get("players"));
 		mName.setValue(file->metadata.get("name"));
-		mCode.setText(file->metadata.get("code"));
+		mCode.setText(file->getType() == GAME ? file->metadata.get("code") : std::string());
 		mInfo.setText(buildInfo(file));
 
 		if(file->getType() == GAME)
@@ -371,6 +371,6 @@ std::vector<GuiComponent*> DetailedGameListView::getMDValues()
 }
 
 void DetailedGameListView::onFocusLost() {
-	mDescContainer.reset();
+	mDescription.restart();
 	mList.stopScrolling(true);
 }

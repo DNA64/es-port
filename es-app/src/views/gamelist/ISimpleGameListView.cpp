@@ -52,6 +52,15 @@ ISimpleGameListView::ISimpleGameListView(Window* window, FileData* root) : IGame
 	addChild(&mHeaderStatus);
 }
 
+ISimpleGameListView::~ISimpleGameListView()
+{
+	for (auto extra : mThemeExtras)
+	{
+		removeChild(extra);
+		delete extra;
+	}
+}
+
 void ISimpleGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 {
 	using namespace ThemeFlags;

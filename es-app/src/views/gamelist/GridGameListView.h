@@ -77,6 +77,7 @@ private:
 	TextComponent mPlayCount;
 	MarqueeTextComponent mName;
 	TextComponent mCode;
+	std::unique_ptr<FileData> mPlaceholder;
 
 	std::vector<TextComponent*> getMDLabels();
 	std::vector<GuiComponent*> getMDValues();

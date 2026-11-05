@@ -56,9 +56,9 @@ int quitES(QuitMode mode)
 	quitMode = mode;
 	touch("/tmp/es-quit");
 
-	SDL_Event *quit = new SDL_Event();
-	quit->type = SDL_QUIT;
-	SDL_PushEvent(quit);
+	SDL_Event quit{};
+	quit.type = SDL_QUIT;
+	SDL_PushEvent(&quit);
 	return 0;
 }
 

@@ -17,6 +17,7 @@
 #include "Settings.h"
 #include "SystemData.h"
 #include "Window.h"
+#include <algorithm>
 
 ViewController* ViewController::sInstance = NULL;
 
@@ -343,7 +344,16 @@ ViewController::GameListViewType ViewController::getGameListViewType()
 	if (viewPreference.compare("grid") == 0)
 		selectedViewType = GRID;
 
+	if (selectedViewType == GRID && !themeHasGridView())
+		selectedViewType = DETAILED;
+
 	return selectedViewType;
+}
+
+bool ViewController::themeHasGridView()
+{
+	return std::any_of(SystemData::sSystemVector.cbegin(), SystemData::sSystemVector.cend(),
+		[](const SystemData* system) { return system->getTheme() && system->getTheme()->hasView("grid"); });
 }
 
 std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* system)
@@ -490,26 +500,18 @@ void ViewController::render(const Transform4x4f& parentTrans)
 	}
 }
 
-void ViewController::preload()
+void ViewController::preloadNext()
 {
-	int i = 1;
-	int max = SystemData::sSystemVector.size() + 1;
+	const std::vector<SystemData*>& systems = SystemData::sSystemVector;
+	if (mPreloadIndex >= systems.size())
+		return;
 
-	bool splash = Settings::getInstance()->getBool("SplashScreen");
-	if (splash)
-		mWindow->renderLoadingScreen("Preloading UI", (float)i / (float)max);
+	SystemData* system = systems[mPreloadIndex++];
+	if (mGameListViews.find(system) != mGameListViews.cend())
+		return;
 
-	for(auto it = SystemData::sSystemVector.cbegin(); it != SystemData::sSystemVector.cend(); it++)
-	{
-		if (splash)
-		{
-			i++;
-			mWindow->renderLoadingScreen("Preloading UI", (float)i / (float)max);
-		}
-
-		(*it)->getIndex()->resetFilters();
-		getGameListView(*it);
-	}
+	system->getIndex()->resetFilters();
+	getGameListView(system);
 }
 
 void ViewController::reloadGameListView(IGameListView* view, bool reloadTheme)
@@ -559,6 +561,11 @@ void ViewController::reloadAll(bool themeChanged)
 		viewportTopMap[it->first] = it->second->getViewportTop();
 	}
 	mGameListViews.clear();
+	mPreloadIndex = 0;
+
+	for(SystemData* system : SystemData::sSystemVector)
+		if(cursorMap.find(system) == cursorMap.cend())
+			system->loadTheme();
 
 	// load themes, create gamelistviews and reset filters
 	size_t reloaded = 0;

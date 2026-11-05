@@ -20,9 +20,7 @@ public:
 
 	virtual ~ViewController();
 
-	// Try to completely populate the GameListView map.
-	// Caches things so there's no pauses during transitions.
-	void preload();
+	void preloadNext();
 
 	// If a basic view detected a metadata change, it can request to recreate
 	// the current gamelist view (as it may change to be detailed).
@@ -66,6 +64,7 @@ public:
 	};
 
 	ViewController::GameListViewType getGameListViewType();
+	static bool themeHasGridView();
 
 	struct State
 	{
@@ -97,6 +96,7 @@ private:
 	std::shared_ptr<GuiComponent> mCurrentView;
 	std::map< SystemData*, std::shared_ptr<IGameListView> > mGameListViews;
 	std::shared_ptr<SystemView> mSystemListView;
+	std::size_t mPreloadIndex = 0;
 
 	Transform4x4f mCamera;
 	float mFadeOpacity;

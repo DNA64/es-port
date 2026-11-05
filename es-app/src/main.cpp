@@ -521,9 +521,9 @@ int main(int argc, char* argv[])
 		window.pushGui(new GuiMsgBox(&window,
 			errorMsg,
 			"QUIT", [] {
-				SDL_Event* quit = new SDL_Event();
-				quit->type = SDL_QUIT;
-				SDL_PushEvent(quit);
+				SDL_Event quit{};
+				quit.type = SDL_QUIT;
+				SDL_PushEvent(&quit);
 			}));
 	}
 
@@ -532,10 +532,6 @@ int main(int argc, char* argv[])
 	{
 		return run_scraper_cmdline();
 	}
-
-	// preload what we can right away instead of waiting for the user to select it
-	// this makes for no delays when accessing content, but a longer startup time
-	ViewController::get()->preload();
 
 	if(splashScreen)
 		window.renderLoadingScreen("Done.");
@@ -582,14 +578,17 @@ int main(int argc, char* argv[])
 	const std::vector<ScriptedPress> script = parseScript(std::getenv("ES_INJECT"));
 	std::size_t scriptNext = 0;
 	const int scriptStart = SDL_GetTicks();
+	bool firstFrameShown = false;
 
 	while(running)
 	{
 		SDL_Event event;
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 
+		bool hadInput = false;
 		if(ps_standby ? SDL_WaitEventTimeout(&event, PowerSaver::getTimeout()) : SDL_PollEvent(&event))
 		{
+			hadInput = true;
 			do
 			{
 				InputManager::getInstance()->parseEvent(event, &window);
@@ -631,6 +630,11 @@ int main(int argc, char* argv[])
 		window.update(deltaTime);
 		window.render();
 		Renderer::swapBuffers();
+
+		if(!firstFrameShown)
+			firstFrameShown = true;
+		else if(!hadInput)
+			ViewController::get()->preloadNext();
 
 		while(scriptNext < script.size() && curTime - scriptStart >= script[scriptNext].atMs)
 			pushPress(script[scriptNext++]);

@@ -54,6 +54,7 @@ private:
 	float mLineHeight = 0.0f;
 	int mVisibleLines = 1;
 	int mHoldMs = 0;
+	int mStepMs = 0;
 	float mOffset = 0.0f;
 };
 

@@ -10,12 +10,14 @@
 #include "Sound.h"
 #include <memory>
 
+class Font;
 class TextCache;
 
 struct TextListData
 {
 	unsigned int colorId;
 	std::shared_ptr<TextCache> textCache;
+	std::shared_ptr<Font> fitFont;
 };
 
 //A graphical list. Supports multiple colors for rows and scrolling.
@@ -70,6 +72,13 @@ public:
 			it->data.textCache.reset();
 	}
 
+	inline void setFitMinScale(float scale)
+	{
+		mFitMinScale = scale;
+		for(auto it = mEntries.begin(); it != mEntries.end(); it++)
+			it->data.textCache.reset();
+	}
+
 	inline void setUppercase(bool uppercase)
 	{
 		mUppercase = uppercase;
@@ -103,6 +112,7 @@ private:
 
 	std::shared_ptr<Font> mFont;
 	bool mUppercase;
+	float mFitMinScale;
 	float mLineSpacing;
 	float mSelectorHeight;
 	float mSelectorOffsetY;
@@ -137,6 +147,7 @@ TextListComponent<T>::TextListComponent(Window* window) :
 
 	mFont = Font::get(FONT_SIZE_MEDIUM);
 	mUppercase = false;
+	mFitMinScale = 1.0f;
 	mLineSpacing = 1.5f;
 	mSelectorHeight = mFont->getSize() * mLineSpacing;
 	mSelectorOffsetY = 0;
@@ -211,7 +222,22 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			color = mColors[entry.data.colorId];
 
 		if(!entry.data.textCache)
-			entry.data.textCache = std::unique_ptr<TextCache>(font->buildTextCache(mUppercase ? Utils::String::toUpper(entry.name) : entry.name, 0, 0, 0x000000FF));
+		{
+			const std::string label = mUppercase ? Utils::String::toUpper(entry.name) : entry.name;
+			entry.data.fitFont.reset();
+			if(mFitMinScale < 1.0f)
+			{
+				const float room = mSize.x() - mHorizontalMargin * 2;
+				std::shared_ptr<Font> candidate = font;
+				for(float scale = 0.95f; candidate->sizeText(label).x() > room && scale >= mFitMinScale - 0.001f; scale -= 0.05f)
+				{
+					candidate = Font::get((int)(font->getSize() * scale), font->getPath());
+					entry.data.fitFont = candidate;
+				}
+			}
+			entry.data.textCache = std::unique_ptr<TextCache>((entry.data.fitFont ? entry.data.fitFont : font)->buildTextCache(label, 0, 0, 0x000000FF));
+		}
+		const std::shared_ptr<Font>& entryFont = entry.data.fitFont ? entry.data.fitFont : font;
 
 		entry.data.textCache->setColor(color);
 
@@ -266,7 +292,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			mFavoriteIcon.render(iconTrans);
 		}
 
-		Vector3f textOffset = offset + Vector3f(leadingWidth, 0, 0);
+		Vector3f textOffset = offset + Vector3f(leadingWidth, (font->getHeight(1.0f) - entryFont->getHeight(1.0f)) * 0.5f, 0);
 
 		// render text
 		Transform4x4f drawTrans = trans;
@@ -278,7 +304,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			drawTrans.translate(textOffset);
 
 		Renderer::setMatrix(drawTrans);
-		font->renderTextCache(entry.data.textCache.get());
+		entryFont->renderTextCache(entry.data.textCache.get());
 
 		// render currently selected item text again if
 		// marquee is scrolled far enough for it to repeat
@@ -301,7 +327,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			drawTrans = trans;
 			drawTrans.translate(textOffset - Vector3f((float)mMarqueeOffset2, 0, 0));
 			Renderer::setMatrix(drawTrans);
-			font->renderTextCache(entry.data.textCache.get());
+			entryFont->renderTextCache(entry.data.textCache.get());
 		}
 
 		y += entrySize;
@@ -394,14 +420,15 @@ void TextListComponent<T>::update(int deltaTime)
 
 		// if we're not scrolling and this object's text goes outside our size, marquee it!
 		auto name = mEntries.at((unsigned int)mCursor).name;
-		const float textLength = mFont->sizeText(mUppercase ? Utils::String::toUpper(name) : name).x();
+		const std::shared_ptr<Font>& markFont = mEntries.at((unsigned int)mCursor).data.fitFont ? mEntries.at((unsigned int)mCursor).data.fitFont : mFont;
+		const float textLength = markFont->sizeText(mUppercase ? Utils::String::toUpper(name) : name).x();
 		const float limit      = mSize.x() - mHorizontalMargin * 2;
 
 		if(textLength > limit)
 		{
 			// loop
 			// pixels per second ( based on nes-mini font at 1920x1080 to produce a speed of 200 )
-			const float speed        = mFont->sizeText("ABCDEFGHIJKLMNOPQRSTUVWXYZ").x() * 0.247f;
+			const float speed        = markFont->sizeText("ABCDEFGHIJKLMNOPQRSTUVWXYZ").x() * 0.247f;
 			const float delay        = 3000;
 			const float scrollLength = textLength;
 			const float returnLength = speed * 1.5f;
@@ -510,6 +537,9 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 
 	if(properties & FORCE_UPPERCASE && elem->has("forceUppercase"))
 		setUppercase(elem->get<bool>("forceUppercase"));
+
+	if(elem->has("fitMinScale"))
+		setFitMinScale(elem->get<float>("fitMinScale"));
 
 	if(properties & LINE_SPACING)
 	{

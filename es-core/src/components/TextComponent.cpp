@@ -7,7 +7,7 @@
 TextComponent::TextComponent(Window* window) : GuiComponent(window),
 	mFont(Font::get(FONT_SIZE_MEDIUM)), mUppercase(false), mColor(0x000000FF), mAutoCalcExtent(true, true),
 	mHorizontalAlignment(ALIGN_LEFT), mVerticalAlignment(ALIGN_CENTER), mLineSpacing(1.5f), mBgColor(0),
-	mRenderBackground(false)
+	mRenderBackground(false), mFitMinScale(1.0f)
 {
 }
 
@@ -15,7 +15,7 @@ TextComponent::TextComponent(Window* window, const std::string& text, const std:
 	Vector3f pos, Vector2f size, unsigned int bgcolor) : GuiComponent(window),
 	mFont(NULL), mUppercase(false), mColor(0x000000FF), mAutoCalcExtent(true, true),
 	mHorizontalAlignment(align), mVerticalAlignment(ALIGN_CENTER), mLineSpacing(1.5f), mBgColor(0),
-	mRenderBackground(false)
+	mRenderBackground(false), mFitMinScale(1.0f)
 {
 	setFont(font);
 	setColor(color);
@@ -155,13 +155,21 @@ void TextComponent::render(const Transform4x4f& parentTrans)
 				break;
 			}
 		}
-		mFont->renderTextCache(mTextCache.get());
+		(mFitFont ? mFitFont : mFont)->renderTextCache(mTextCache.get());
 	}
+}
+
+std::string TextComponent::displayText() const
+{
+	std::string text = mText;
+	if(!text.empty())
+		text += (text == "1" && !mSuffixOne.empty()) ? mSuffixOne : mSuffix;
+	return mUppercase ? Utils::String::toUpper(text) : text;
 }
 
 std::string TextComponent::calculateExtent(bool allow_wrapping)
 {
-	std::string text = mUppercase ? Utils::String::toUpper(mText) : mText;
+	std::string text = displayText();
 	if(mAutoCalcExtent.x())
 	{
 		mSize = mFont->sizeText(text, mLineSpacing);
@@ -190,8 +198,20 @@ void TextComponent::onTextChanged()
 	}
 
 	std::shared_ptr<Font> f = mFont;
-	std::string text = calculateExtent(mSize.y() > f->getHeight(mLineSpacing));
-	const bool oneLiner = mSize.y() > 0 && mSize.y() <= f->getHeight(mLineSpacing);
+	mFitFont.reset();
+	const bool fitting = mFitMinScale < 1.0f && mSize.x() > 0;
+	if(fitting)
+	{
+		std::string line = displayText();
+		line = line.substr(0, line.find('\n'));
+		for(float scale = 0.95f; f->sizeText(line).x() > mSize.x() && scale >= mFitMinScale - 0.001f; scale -= 0.05f)
+		{
+			f = Font::get((int)(mFont->getSize() * scale), mFont->getPath());
+			mFitFont = f;
+		}
+	}
+	std::string text = calculateExtent(!fitting && mSize.y() > f->getHeight(mLineSpacing));
+	const bool oneLiner = fitting || (mSize.y() > 0 && mSize.y() <= f->getHeight(mLineSpacing));
 
 	if(oneLiner)
 	{
@@ -296,4 +316,12 @@ void TextComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const st
 		setLineSpacing(elem->get<float>("lineSpacing"));
 
 	setFont(Font::getFromTheme(elem, properties, mFont));
+
+	if(elem->has("suffix"))
+		mSuffix = elem->get<std::string>("suffix");
+	if(elem->has("suffixOne"))
+		mSuffixOne = elem->get<std::string>("suffixOne");
+	if(elem->has("fitMinScale"))
+		mFitMinScale = elem->get<float>("fitMinScale");
+	onTextChanged();
 }

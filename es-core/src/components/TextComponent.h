@@ -51,6 +51,7 @@ protected:
 
 private:
 	std::string calculateExtent(bool allow_wrapping);
+	std::string displayText() const;
 
 	void onColorChanged();
 
@@ -66,6 +67,10 @@ private:
 	Alignment mHorizontalAlignment;
 	Alignment mVerticalAlignment;
 	float mLineSpacing;
+	std::shared_ptr<Font> mFitFont;
+	float mFitMinScale;
+	std::string mSuffix;
+	std::string mSuffixOne;
 };
 
 #endif // ES_CORE_COMPONENTS_TEXT_COMPONENT_H

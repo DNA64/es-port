@@ -81,6 +81,15 @@ private:
 	std::vector<GuiComponent*> getMDValues();
 
 	PagedTextComponent mDescription;
+	ImageComponent mDivider;
+	ImageComponent mArrowLeft;
+	ImageComponent mArrowRight;
+	int mDescriptionLayout = -1;
+	std::vector<std::shared_ptr<Font>> mLayoutFonts;
+
+	void applyDescriptionLayout(bool hasDescription);
+	void keepLayoutFonts(const std::shared_ptr<ThemeData>& theme);
+	void updateArrows();
 
 	MenuIconBar mIconBar;
 	bool mHeaderFocus = false;

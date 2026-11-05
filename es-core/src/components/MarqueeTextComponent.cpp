@@ -11,11 +11,11 @@
 #include "renderers/Renderer.h"
 #include "ThemeData.h"
 #include <algorithm>
+#include <cmath>
 
 namespace
 {
 	constexpr int WaitMs = 1500;
-	constexpr int HoldMs = 2000;
 	constexpr float ScrollPixelsPerSecond = 45.0f;
 }
 
@@ -54,7 +54,7 @@ void MarqueeTextComponent::update(int deltaTime)
 	GuiComponent::update(deltaTime);
 
 	const float overflow = mText.getSize().x() - mBox.x();
-	const float travel = overflow + mText.getSize().y();
+	const float period = mText.getSize().x() + mText.getSize().y() * 2.0f;
 	if (overflow <= 0.0f)
 	{
 		restart();
@@ -72,16 +72,7 @@ void MarqueeTextComponent::update(int deltaTime)
 		}
 		break;
 	case Phase::Scrolling:
-		mOffset = std::min(travel, ScrollPixelsPerSecond * static_cast<float>(mPhaseMs) / 1000.0f);
-		if (mOffset >= travel)
-		{
-			mPhase = Phase::Holding;
-			mPhaseMs = 0;
-		}
-		break;
-	case Phase::Holding:
-		if (mPhaseMs >= HoldMs)
-			restart();
+		mOffset = std::fmod(ScrollPixelsPerSecond * static_cast<float>(mPhaseMs) / 1000.0f, period);
 		break;
 	}
 }
@@ -93,12 +84,16 @@ void MarqueeTextComponent::render(const Transform4x4f& parentTrans)
 
 	const Transform4x4f trans = parentTrans * getTransform();
 	const Vector2f textSize = mText.getSize();
+	const float period = textSize.x() + textSize.y() * 2.0f;
 
 	Transform4x4f textTrans = trans;
 	textTrans.translate(Vector3f(-mOffset, (mBox.y() - textSize.y()) / 2.0f, 0.0f));
 
 	if (textSize.x() <= mBox.x())
 	{
+		const float spare = mBox.x() - textSize.x();
+		const Alignment alignment = mText.getHorizontalAlignment();
+		textTrans.translate(Vector3f(alignment == ALIGN_CENTER ? spare / 2.0f : alignment == ALIGN_RIGHT ? spare : 0.0f, 0.0f, 0.0f));
 		mText.render(textTrans);
 		return;
 	}
@@ -110,5 +105,8 @@ void MarqueeTextComponent::render(const Transform4x4f& parentTrans)
 
 	Renderer::pushClipRect(position, size);
 	mText.render(textTrans);
+	Transform4x4f secondTrans = textTrans;
+	secondTrans.translate(Vector3f(period, 0.0f, 0.0f));
+	mText.render(secondTrans);
 	Renderer::popClipRect();
 }

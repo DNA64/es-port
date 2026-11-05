@@ -27,6 +27,8 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mVideo(nullptr),
 	mVideoPlaying(false),
 	mDescription(window),
+	mDivider(window),
+	mArrowLeft(window), mArrowRight(window),
 
 	mLblRating(window), mLblReleaseDate(window), mLblDeveloper(window), mLblPublisher(window),
 	mLblGenre(window), mLblPlayers(window), mLblLastPlayed(window), mLblPlayCount(window),
@@ -94,6 +96,14 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mDescription.setFont(Font::get(FONT_SIZE_SMALL));
 	addChild(&mDescription);
 
+	mDivider.setDefaultZIndex(40);
+	addChild(&mDivider);
+
+	mArrowLeft.setDefaultZIndex(30);
+	mArrowRight.setDefaultZIndex(30);
+	addChild(&mArrowLeft);
+	addChild(&mArrowRight);
+
 	// Image
 	// Default to off the screen
 	mImage.setOrigin(0.5f, 0.5f);
@@ -139,7 +149,7 @@ GridGameListView::~GridGameListView()
 
 FileData* GridGameListView::getCursor()
 {
-	return mGrid.getSelected();
+	return mGrid.size() == 0 ? nullptr : mGrid.getSelected();
 }
 
 void GridGameListView::setCursor(FileData* file, bool refreshListCursorPos)
@@ -234,11 +244,20 @@ void GridGameListView::populateList(const std::vector<FileData*>& files)
 	{
 		addPlaceholder();
 	}
+	updateArrows();
+}
+
+void GridGameListView::updateArrows()
+{
+	const bool scrollable = mGrid.size() > static_cast<size_t>(mGrid.visibleCount());
+	mArrowLeft.setVisible(scrollable);
+	mArrowRight.setVisible(scrollable);
 }
 
 void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 {
 	ISimpleGameListView::onThemeChanged(theme);
+	mIconBar.applyTheme(theme, getName());
 
 	using namespace ThemeFlags;
 
@@ -276,6 +295,18 @@ void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 	}
 
 	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
+	mDivider.applyTheme(theme, getName(), "md_divider", ALL);
+	mDescription.clearIndicatorBox();
+	if(const ThemeData::ThemeElement* bar = theme->getElement(getName(), "md_scrollbar", "image"))
+		if(bar->has("pos") && bar->has("size"))
+		{
+			const Vector2f screen(static_cast<float>(Renderer::getScreenWidth()), static_cast<float>(Renderer::getScreenHeight()));
+			mDescription.setIndicatorBox(bar->get<Vector2f>("pos") * screen, bar->get<Vector2f>("size") * screen);
+		}
+	mArrowLeft.applyTheme(theme, getName(), "md_arrow_left", ALL);
+	mArrowRight.applyTheme(theme, getName(), "md_arrow_right", ALL);
+	mDescriptionLayout = -1;
+	mLayoutFonts.clear();
 
 	// Repopulate list in case new theme is displaying a different image.  Preserve selection.
 	FileData* file = mGrid.getSelected();
@@ -350,6 +381,47 @@ void GridGameListView::initMDValues()
 	mDescription.setSize(mDescription.getSize().x(), mSize.y() - mDescription.getPosition().y());
 }
 
+void GridGameListView::keepLayoutFonts(const std::shared_ptr<ThemeData>& theme)
+{
+	if(!mLayoutFonts.empty())
+		return;
+
+	const float screenHeight = static_cast<float>(Renderer::getScreenHeight());
+	for(const char* name : { "md_name", "md_developer", "md_genre" })
+	{
+		const ThemeData::ThemeElement* base = theme->getElement(getName(), name, "text");
+		const ThemeData::ThemeElement* alternate = theme->getElement(getName(), std::string(name) + "_nodesc", "text");
+		if(!base || !base->has("fontSize"))
+			continue;
+
+		const std::string path = base->has("fontPath") ? base->get<std::string>("fontPath") : Font::getDefaultPath();
+		mLayoutFonts.push_back(Font::get(static_cast<int>(screenHeight * base->get<float>("fontSize")), path));
+		if(alternate && alternate->has("fontSize"))
+			mLayoutFonts.push_back(Font::get(static_cast<int>(screenHeight * alternate->get<float>("fontSize")),
+				alternate->has("fontPath") ? alternate->get<std::string>("fontPath") : path));
+	}
+}
+
+void GridGameListView::applyDescriptionLayout(bool hasDescription)
+{
+	const int state = hasDescription ? 1 : 0;
+	const std::shared_ptr<ThemeData>& theme = getTheme();
+	if(state == mDescriptionLayout || !theme)
+		return;
+	mDescriptionLayout = state;
+	keepLayoutFonts(theme);
+
+	const std::pair<GuiComponent*, const char*> elements[] = {
+		{ &mName, "md_name" }, { &mDeveloper, "md_developer" }, { &mGenre, "md_genre" } };
+	for(const auto& element : elements)
+	{
+		element.first->applyTheme(theme, getName(), element.second, ThemeFlags::ALL ^ ThemeFlags::TEXT);
+		const std::string alternate = std::string(element.second) + "_nodesc";
+		if(!hasDescription && theme->getElement(getName(), alternate, "text"))
+			element.first->applyTheme(theme, getName(), alternate, ThemeFlags::ALL ^ ThemeFlags::TEXT);
+	}
+}
+
 void GridGameListView::updateInfoPanel()
 {
 	FileData* file = (mGrid.size() == 0 || mGrid.isScrolling()) ? NULL : mGrid.getSelected();
@@ -377,6 +449,9 @@ void GridGameListView::updateInfoPanel()
 		mImage.setImageAsync(file->getImagePath());
 
 		mDescription.setText(file->metadata.get("desc"));
+		const bool hasDescription = !file->metadata.get("desc").empty();
+		mDivider.setVisible(hasDescription);
+		applyDescriptionLayout(hasDescription);
 
 		mRating.setValue(file->metadata.get("rating"));
 		mReleaseDate.setValue(file->metadata.get("releasedate"));
@@ -397,6 +472,7 @@ void GridGameListView::updateInfoPanel()
 
 	std::vector<GuiComponent*> comps = getMDValues();
 	comps.push_back(&mDescription);
+	comps.push_back(&mDivider);
 	comps.push_back(&mName);
 	comps.push_back(&mMarquee);
 	comps.push_back(mVideo);
@@ -585,12 +661,16 @@ void GridGameListView::openHeaderMenu()
 {
 	mIconBar.setFrameVisible(false);
 	const std::weak_ptr<bool> alive = mAlive;
-	mWindow->pushGui(new GuiMenu(mWindow, mIconBar.selected(), [this, alive](int category) {
+	GuiMenu* menu = new GuiMenu(mWindow, mIconBar.selected(), [this, alive](int category) {
 		if(alive.expired())
 			return;
+		mIconBar.setVisible(true);
 		mIconBar.setSelected(category);
 		setHeaderFocus(true);
-	}));
+	});
+	menu->useTheme(getTheme(), getName());
+	mIconBar.setVisible(false);
+	mWindow->pushGui(menu);
 }
 
 void GridGameListView::onFloatingChanged()

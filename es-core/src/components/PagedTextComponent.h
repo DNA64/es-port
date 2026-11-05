@@ -31,13 +31,26 @@ public:
 	void update(int deltaTime) override;
 	void render(const Transform4x4f& parentTrans) override;
 
+	void setIndicatorBox(const Vector2f& position, const Vector2f& size)
+	{
+		mIndicatorPosition = position;
+		mIndicatorSize = size;
+		mIndicatorThemed = true;
+	}
+
+	void clearIndicatorBox() { mIndicatorThemed = false; }
+
 private:
 	void layout();
 	bool scrolls() const;
 	float cycleHeight() const;
+	void renderScrollIndicator(const Transform4x4f& trans);
 
 	TextComponent mText;
 	Vector2f mBox;
+	Vector2f mIndicatorPosition;
+	Vector2f mIndicatorSize;
+	bool mIndicatorThemed = false;
 	float mLineHeight = 0.0f;
 	int mVisibleLines = 1;
 	int mHoldMs = 0;

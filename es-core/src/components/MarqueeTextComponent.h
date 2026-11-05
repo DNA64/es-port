@@ -31,7 +31,7 @@ public:
 	void render(const Transform4x4f& parentTrans) override;
 
 private:
-	enum class Phase { Waiting, Scrolling, Holding };
+	enum class Phase { Waiting, Scrolling };
 
 	void restart();
 

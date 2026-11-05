@@ -17,6 +17,10 @@ namespace
 	constexpr int StartHoldMs = 2500;
 	constexpr float LinesPerSecond = 0.9f;
 	constexpr float LineSpacing = 1.25f;
+	constexpr float IndicatorGap = 12.0f;
+	constexpr float IndicatorPixel = 3.0f;
+	constexpr unsigned int IndicatorColor = 0x2A4690FF;
+	constexpr unsigned int IndicatorTrack = 0x2A469033;
 }
 
 PagedTextComponent::PagedTextComponent(Window* window)
@@ -58,7 +62,7 @@ void PagedTextComponent::restart()
 
 bool PagedTextComponent::scrolls() const
 {
-	return mLineHeight > 0.0f && mText.getSize().y() > static_cast<float>(mVisibleLines) * mLineHeight + 1.0f;
+	return mLineHeight > 0.0f && !mText.getValue().empty() && mText.getSize().y() > static_cast<float>(mVisibleLines) * mLineHeight + 1.0f;
 }
 
 float PagedTextComponent::cycleHeight() const
@@ -117,4 +121,39 @@ void PagedTextComponent::render(const Transform4x4f& parentTrans)
 		mText.render(wrapTrans);
 	}
 	Renderer::popClipRect();
+
+	if (scrolls())
+		renderScrollIndicator(trans);
+}
+
+void PagedTextComponent::renderScrollIndicator(const Transform4x4f& trans)
+{
+	const float pixel = IndicatorPixel;
+	const float height = mIndicatorThemed ? mIndicatorSize.y() : static_cast<float>(mVisibleLines) * mLineHeight;
+	const float top = mIndicatorThemed ? mIndicatorPosition.y() - getPosition().y() : 0.0f;
+	const float x = mIndicatorThemed ? mIndicatorPosition.x() - getPosition().x() + (mIndicatorSize.x() - pixel * 5.0f) / 2.0f : mBox.x() + IndicatorGap;
+	const float arrowHeight = pixel * 3.0f;
+	const float trackTop = arrowHeight + pixel * 2.0f;
+	const float trackHeight = height - 2.0f * trackTop;
+	if (trackHeight <= pixel * 4.0f)
+		return;
+
+	Renderer::setMatrix(trans);
+
+	for (int row = 0; row < 3; ++row)
+	{
+		const float width = pixel * static_cast<float>(2 * row + 1);
+		const float left = x + pixel * static_cast<float>(2 - row);
+		Renderer::drawRect(left, top + pixel * static_cast<float>(row), width, pixel, IndicatorColor, IndicatorColor);
+		Renderer::drawRect(left, top + height - pixel * static_cast<float>(row + 1), width, pixel, IndicatorColor, IndicatorColor);
+	}
+
+	const float trackX = x + pixel;
+	Renderer::drawRect(trackX, top + trackTop, pixel * 3.0f, trackHeight, IndicatorTrack, IndicatorTrack);
+
+	const float visibleHeight = static_cast<float>(mVisibleLines) * mLineHeight;
+	const float thumbHeight = std::max(pixel * 4.0f, trackHeight * std::min(1.0f, visibleHeight / cycleHeight()));
+	const float progress = std::min(1.0f, mOffset / cycleHeight());
+	const float thumbTop = trackTop + (trackHeight - thumbHeight) * progress;
+	Renderer::drawRect(trackX, top + thumbTop, pixel * 3.0f, thumbHeight, IndicatorColor, IndicatorColor);
 }

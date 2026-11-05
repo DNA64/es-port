@@ -25,6 +25,7 @@ public:
 	void setText(const std::string& text);
 	void setColor(unsigned int color);
 	void setHorizontalAlignment(Alignment align);
+	Alignment getHorizontalAlignment() const { return mHorizontalAlignment; }
 	void setVerticalAlignment(Alignment align);
 	void setLineSpacing(float spacing);
 	void setBackgroundColor(unsigned int color);

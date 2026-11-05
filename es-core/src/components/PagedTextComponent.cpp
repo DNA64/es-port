@@ -17,7 +17,6 @@ namespace
 	constexpr int StartHoldMs = 2500;
 	constexpr int StepMs = 33;
 	constexpr float LineSpacing = 1.25f;
-	constexpr float IndicatorGap = 12.0f;
 	constexpr float IndicatorPixel = 3.0f;
 	constexpr unsigned int IndicatorColor = 0x2A4690FF;
 	constexpr unsigned int IndicatorTrack = 0x2A469033;
@@ -146,16 +145,16 @@ void PagedTextComponent::render(const Transform4x4f& parentTrans)
 	}
 	Renderer::popClipRect();
 
-	if (scrolls())
+	if (scrolls() && mIndicatorThemed)
 		renderScrollIndicator(trans);
 }
 
 void PagedTextComponent::renderScrollIndicator(const Transform4x4f& trans)
 {
 	const float pixel = IndicatorPixel;
-	const float height = mIndicatorThemed ? mIndicatorSize.y() : static_cast<float>(mVisibleLines) * mLineHeight;
-	const float top = mIndicatorThemed ? mIndicatorPosition.y() - getPosition().y() : 0.0f;
-	const float x = mIndicatorThemed ? mIndicatorPosition.x() - getPosition().x() + (mIndicatorSize.x() - pixel * 5.0f) / 2.0f : mBox.x() + IndicatorGap;
+	const float height = mIndicatorSize.y();
+	const float top = mIndicatorPosition.y() - getPosition().y();
+	const float x = mIndicatorPosition.x() - getPosition().x() + (mIndicatorSize.x() - pixel * 5.0f) / 2.0f;
 	const float arrowHeight = pixel * 3.0f;
 	const float trackTop = arrowHeight + pixel * 2.0f;
 	const float trackHeight = height - 2.0f * trackTop;

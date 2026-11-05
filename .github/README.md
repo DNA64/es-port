@@ -41,17 +41,21 @@ needs more than the console's 256 MB of memory.
 
 1. Install the **RetroArch (S)NESCE** hmod (the libretro cores and the `retroarch` launcher) and sync your games with
    hakchi. The RetroArch build from KMFDManic may work as well; it has not been tested.
-2. Install `emulationstation_classicmini.hmod` with hakchi and sync. The first boot builds the library, which takes a
+2. Put an SD card or USB stick in the console. The hmod needs one: it installs its default theme,
+   [es-theme-simple](https://github.com/RetroPie/es-theme-simple), to `/media/data/emulationstation/themes/simple` and
+   stops without installing anything when there is none. hakchi may still report the install as done; the reason is in
+   its log.
+3. Install `emulationstation_classicmini.hmod` with hakchi and sync. The first boot builds the library, which takes a
    while on large collections.
-3. Optional: extra themes go on the SD card or USB stick, in `/media/data/emulationstation/themes`. The hmod only
-   ships the built-in default theme. The Cross Stitch theme is a separate repository
+4. Optional: extra themes go in the same `themes` folder. The Cross Stitch theme is a separate repository
    (`es-theme-cross-stitch`).
 
 It is developed and tested on a SNES Classic. The NES Classic has the same hardware and the code handles both pads, but
 it has seen much less testing.
 
 Uninstalling the hmod removes EmulationStation, its settings and library cache from the NAND and keeps `favorites.txt`.
-Nothing on the SD card or USB stick is touched.
+On the SD card or USB stick it removes the files of the default theme that you did not change and keeps the ones you
+edited or added. Updating the hmod keeps your edits too.
 
 ## Using it
 
@@ -70,7 +74,8 @@ A theme is an ordinary EmulationStation theme (see [`THEMES.md`](../THEMES.md)) 
 
 - `imagegrid`: `scrollDuration` (ms) and `adjacentGap` (fraction of the screen width between the selected cover and
   its neighbors). `carousel`: `scrollDuration`.
-- `menuIcons` container: where the header icon bar goes, in the systems and the games views.
+- `menuIcons` container: where the header icon bar goes, in the systems and the games views. The bar is only drawn
+  when the theme defines this container; without it there are no icons and the menu opens with Start.
 - Games view: `md_divider`, `md_arrow_left`, `md_arrow_right` and `md_scrollbar` images. The arrows only show when the
   list has more games than fit. A game without description uses the `md_name_nodesc`, `md_developer_nodesc` and
   `md_genre_nodesc` layouts and hides the divider.

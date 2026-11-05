@@ -324,6 +324,20 @@ void Window::renderLoadingScreen(std::string text, float percent, unsigned char 
 #endif
 }
 
+void Window::renderFullScreenImage(const std::string& path)
+{
+	const Transform4x4f trans = Transform4x4f::Identity();
+	Renderer::setMatrix(trans);
+	Renderer::drawRect(0.0f, 0.0f, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x17171AFF, 0x17171AFF);
+
+	ImageComponent image(this, true);
+	image.setResize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+	image.setImage(path);
+	image.render(trans);
+
+	Renderer::swapBuffers();
+}
+
 void Window::renderHelpPromptsEarly()
 {
 	mHelp->render(Transform4x4f::Identity());

@@ -46,6 +46,11 @@ void touch(const std::string& filename);
 
 QuitMode quitMode = QuitMode::QUIT;
 
+QuitMode getQuitMode()
+{
+	return quitMode;
+}
+
 int quitES(QuitMode mode)
 {
 	quitMode = mode;

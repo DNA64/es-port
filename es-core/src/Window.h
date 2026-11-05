@@ -65,6 +65,7 @@ public:
 	void setAllowSleep(bool sleep);
 
 	void renderLoadingScreen(std::string text, float percent = -1, unsigned char opacity = 255);
+	void renderFullScreenImage(const std::string& path);
 
 	void renderHelpPromptsEarly(); // used to render HelpPrompts before a fade
 	void setHelpPrompts(const std::vector<HelpPrompt>& prompts, const HelpStyle& style);

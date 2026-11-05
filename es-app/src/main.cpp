@@ -666,6 +666,18 @@ int main(int argc, char* argv[])
 		Log::flush();
 	}
 
+	switch(getQuitMode())
+	{
+	case QuitMode::REBOOT:
+		window.renderFullScreenImage(":/restart.png");
+		break;
+	case QuitMode::SHUTDOWN:
+		window.renderFullScreenImage(":/shutdown.png");
+		break;
+	default:
+		break;
+	}
+
 	while(window.peekGui() != ViewController::get())
 		delete window.peekGui();
 

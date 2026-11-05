@@ -19,6 +19,7 @@ enum QuitMode
 
 int runSystemCommand(const std::string& cmd_utf8); // run a utf-8 encoded in the shell (requires wstring conversion on Windows)
 int quitES(QuitMode mode = QuitMode::QUIT);
+QuitMode getQuitMode();
 void processQuitMode();
 
 #endif // ES_CORE_PLATFORM_H

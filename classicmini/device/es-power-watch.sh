@@ -13,7 +13,7 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-es_dir=/var/lib/hakchi/es
+es_dir=/var/lib/hakchi/emulationstation
 
 drawSplash(){
   decodepng "$es_dir/resources/$1.png" > /dev/fb0

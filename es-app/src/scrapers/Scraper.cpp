@@ -444,7 +444,7 @@ void saveScrapeToDesktop(const FileData* game, const MetaDataList& result)
 		command += "ES_OVERWRITE=1 ";
 
 	if(!command.empty())
-		runSystemCommand(command + "sh /var/lib/hakchi/es/es-save-desktop.sh " + shellQuote(Utils::FileSystem::getStem(path)));
+		runSystemCommand(command + "sh /var/lib/hakchi/emulationstation/es-save-desktop.sh " + shellQuote(Utils::FileSystem::getStem(path)));
 }
 
 namespace

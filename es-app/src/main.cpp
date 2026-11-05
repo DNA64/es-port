@@ -368,7 +368,7 @@ namespace
 	void logCrash(int signal, siginfo_t* info, void* context)
 	{
 		const ucontext_t* uc = static_cast<const ucontext_t*>(context);
-		const int fd = open("/var/lib/hakchi/es/crash.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		const int fd = open("/var/lib/hakchi/emulationstation/crash.log", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if(fd >= 0)
 		{
 			char line[160];

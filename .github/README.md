@@ -41,10 +41,10 @@ needs more than the console's 256 MB of memory.
 
 1. Install the **RetroArch (S)NESCE** hmod (the libretro cores and the `retroarch` launcher) and sync your games with
    hakchi. The RetroArch build from KMFDManic may work as well; it has not been tested.
-2. Put an SD card or USB stick in the console. The hmod needs one: it installs its default theme,
-   [es-theme-simple](https://github.com/RetroPie/es-theme-simple), to `/media/data/emulationstation/themes/simple` and
-   stops without installing anything when there is none. hakchi may still report the install as done; the reason is in
-   its log.
+2. Put an SD card or USB stick in the console. The hmod needs one: while it installs it mounts the card itself and
+   puts its default theme, [es-theme-simple](https://github.com/RetroPie/es-theme-simple), in
+   `/media/data/emulationstation/themes/simple`, and it stops without installing anything when there is none. hakchi
+   may still report the install as done; the reason is in its log.
 3. Install `emulationstation_classicmini.hmod` with hakchi and sync. The first boot builds the library, which takes a
    while on large collections.
 4. Optional: extra themes go in the same `themes` folder. The Cross Stitch theme is a separate repository
@@ -54,8 +54,8 @@ It is developed and tested on a SNES Classic. The NES Classic has the same hardw
 it has seen much less testing.
 
 Uninstalling the hmod removes EmulationStation, its settings and library cache from the NAND and keeps `favorites.txt`.
-On the SD card or USB stick it removes the files of the default theme that you did not change and keeps the ones you
-edited or added. Updating the hmod keeps your edits too.
+Uninstalling also mounts the card and removes the files of the default theme that you did not change; the ones you
+edited or added stay. Installing or updating again keeps your edits too.
 
 ## Using it
 

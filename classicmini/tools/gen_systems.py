@@ -114,7 +114,7 @@ def main():
         lines += [
             "  <system>", "    <name>%s</name>" % slug, "    <fullname>%s</fullname>" % full.replace("&", "&amp;"),
             "    <path>/tmp/es-library/%s</path>" % slug, "    <extension>.desktop</extension>",
-            "    <command>/var/lib/hakchi/es/es-launch.sh %ROM%</command>", "    <platform>%s</platform>" % platform,
+            "    <command>/var/lib/hakchi/emulationstation/es-launch.sh %ROM%</command>", "    <platform>%s</platform>" % platform,
             "    <theme>%s</theme>" % slug, "  </system>"]
         folder = os.path.join(theme_dir, slug)
         os.makedirs(folder, exist_ok=True)

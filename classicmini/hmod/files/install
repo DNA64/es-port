@@ -13,34 +13,48 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-es_dir=/var/lib/hakchi/es
+#
 es_payload=$transferpath/usr/share/emulationstation
-sd_themes=$mountpoint/media/data/emulationstation/themes
+theme_tar=$es_payload/defaults/theme_simple.tar
+es_dir=$installpath/emulationstation
+media_mnt=/tmp/es_media
+media_root=
+media_mounted=
 
-if ! grep -q "^/dev/\(mmcblk\|sd\)[^ ]* $mountpoint/media " /proc/mounts || [ ! -w "$mountpoint/media" ]; then
+if mountpoint -q "$mountpoint/media" && [ -w "$mountpoint/media" ]; then
+  media_root=$mountpoint/media
+else
+  mkdir -p "$media_mnt"
+  for candidate in /dev/sda1 /dev/sda /dev/mmcblk0p1 /dev/mmcblk0; do
+    [ -b "$candidate" ] || continue
+    if mount -o rw,nosuid,nodev,noatime "$candidate" "$media_mnt" 2>/dev/null; then
+      if [ -d "$media_mnt/$modname" ]; then
+        media_root=$media_mnt
+        media_mounted=1
+        break
+      fi
+      umount "$media_mnt" 2>/dev/null
+    fi
+  done
+fi
+if [ -z "$media_root" ]; then
+  rmdir "$media_mnt" 2>/dev/null
   echo "EmulationStation needs an SD card or USB stick for its theme. Insert one and install again; nothing was installed."
   return 1
 fi
-mkdir -p "$sd_themes" || { echo "Could not create $sd_themes; nothing was installed."; return 1; }
 
-mkdir -p "$es_dir/home/.emulationstation"
-for item in "$es_payload"/*; do
-  [ "${item##*/}" = defaults ] || { cp -a "$item" "$es_dir/" && rm -rf "$item"; }
-done
-for cfg in es_settings.cfg es_input.cfg; do
-  [ -f "$es_dir/home/.emulationstation/$cfg" ] || cp "$es_payload/defaults/$cfg" "$es_dir/home/.emulationstation/"
-done
-theme_src=$temppath/es_theme_simple
-rm -rf "$theme_src"
-mkdir -p "$theme_src"
-tar -xf "$es_payload/defaults/theme_simple.tar" -C "$theme_src"
-theme_dst=$sd_themes/simple
-theme_manifest=$es_dir/theme_simple.md5
+theme_dst=${media_root:?}/data/emulationstation/themes/simple
+theme_manifest=$theme_dst/.es-port.md5
+theme_src=/tmp/es_theme_simple
+rm -rf "${theme_src:?}"
+mkdir -p "$theme_src" "${theme_dst%/*}"
+tar -xf "$theme_tar" -C "$theme_src"
 if [ -d "$theme_dst" ]; then
   if [ -f "$theme_manifest" ]; then
     (cd "$theme_dst" && md5sum -c "$theme_manifest" 2>/dev/null | sed -n 's/: OK$//p') | while read -r file; do
-      rm -f "$theme_dst/$file"
+      rm -f "${theme_dst:?}/${file:?}"
     done
+    rm -f "$theme_manifest"
     find "$theme_dst" -depth -mindepth 1 -type d -exec rmdir {} + 2>/dev/null
   fi
   (cd "$theme_src" && find . -type f) | while read -r file; do
@@ -52,10 +66,21 @@ else
   cp -a "$theme_src" "$theme_dst"
 fi
 (cd "$theme_src" && find . -type f -exec md5sum {} +) > "$theme_manifest"
-rm -rf "$theme_src"
+rm -rf "${theme_src:?}"
+rm -f "${theme_tar:?}"
+sync
+if [ -n "$media_mounted" ]; then
+  umount "$media_mnt" 2>/dev/null
+  rmdir "$media_mnt" 2>/dev/null
+fi
+
+mkdir -p "$es_dir"
+for item in "$es_payload"/*; do
+  cp -a "$item" "$es_dir/" && rm -rf "${item:?}"
+done
 chmod 755 "$es_dir/emulationstation" "$es_dir/padstate" "$es_dir"/*.sh
-rm -rf "$es_dir/library" "$es_dir/library.stamp" "$es_dir/library.stamp.count"
-rm -f "$es_dir/boot_failures" "$es_dir/no_boot"
-[ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && rm -f "$es_dir/boot_default"
-rm -rf "$es_payload"
+rm -rf "${es_dir:?}/library" "${es_dir:?}/library.stamp" "${es_dir:?}/library.stamp.count"
+rm -f "${es_dir:?}/boot_failures" "${es_dir:?}/no_boot"
+[ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && rm -f "${es_dir:?}/boot_default"
+rm -rf "${es_payload:?}"
 return 0

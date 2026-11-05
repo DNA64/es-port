@@ -14,7 +14,7 @@
 
 namespace
 {
-	constexpr const char* Script = "/var/lib/hakchi/es/es-tools.sh";
+	constexpr const char* Script = "/var/lib/hakchi/emulationstation/es-tools.sh";
 
 	std::string shellQuote(const std::string& value)
 	{

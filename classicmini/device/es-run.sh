@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-es_dir=/var/lib/hakchi/es
+es_dir=/var/lib/hakchi/emulationstation
 source /etc/preinit
 script_init
 
@@ -36,6 +36,10 @@ uistop
 stopPowerWatch
 setsid sh "$es_dir/es-power-watch.sh" &
 echo $! > /run/es-power.pid
+mkdir -p "$es_dir/home/.emulationstation"
+for cfg in es_settings.cfg es_input.cfg; do
+  [ -f "$es_dir/home/.emulationstation/$cfg" ] || cp "$es_dir/defaults/$cfg" "$es_dir/home/.emulationstation/"
+done
 library_stamp=$es_dir/library.stamp
 games_dir=$(findGameStorage)
 games_count=$(find "$games_dir" -name '*.desktop' | wc -l)

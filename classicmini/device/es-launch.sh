@@ -14,4 +14,4 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-exec sh /var/lib/hakchi/es/es-game.sh "$1" "${ES_RESUME:-}"
+exec sh /var/lib/hakchi/emulationstation/es-game.sh "$1" "${ES_RESUME:-}"

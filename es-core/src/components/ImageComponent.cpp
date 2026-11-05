@@ -168,9 +168,9 @@ void ImageComponent::setImage(const std::shared_ptr<TextureResource>& texture)
 	resize();
 }
 
-void ImageComponent::setImageAsync(std::string path, bool tile)
+void ImageComponent::setImageAsync(std::string path, bool tile, bool always)
 {
-	if (!Settings::getInstance()->getBool("AsyncFileIO"))
+	if (!always && !Settings::getInstance()->getBool("AsyncFileIO"))
 	{
 		setImage(path, tile);
 		return;
@@ -389,6 +389,12 @@ void ImageComponent::render(const Transform4x4f& parentTrans)
 {
 	if (!isVisible())
 		return;
+
+	if(mAsyncPending && mTexture && mTexture->updateTextureSize())
+	{
+		mAsyncPending = false;
+		resize();
+	}
 
 	Transform4x4f trans = parentTrans * getTransform();
 	Renderer::setMatrix(trans);

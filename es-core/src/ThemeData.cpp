@@ -38,6 +38,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "padding", RESOLUTION_RECT },
 		{ "autoLayout", NORMALIZED_PAIR },
 		{ "autoLayoutSelectedZoom", FLOAT },
+		{ "adjacentGap", FLOAT },
 		{ "gameImage", PATH },
 		{ "folderImage", PATH },
 		{ "imageSource", STRING },
@@ -45,6 +46,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "centerSelection", BOOLEAN },
 		{ "scrollLoop", BOOLEAN },
 		{ "animate", BOOLEAN },
+		{ "scrollDuration", FLOAT },
 		{ "zIndex", FLOAT },
 		{ "scrollSound", PATH } } },
 	{ "gridtile", {
@@ -175,6 +177,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "logoSize", NORMALIZED_PAIR },
 		{ "logoAlignment", STRING },
 		{ "maxLogoCount", FLOAT },
+		{ "scrollDuration", FLOAT },
 		{ "zIndex", FLOAT },
 		{ "scrollSound", PATH } } }
 };

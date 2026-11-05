@@ -24,7 +24,7 @@ public:
 	void setImage(const std::shared_ptr<TextureResource>& texture);
 
 	//Loads the image asynchronously in a background thread. The image will fade in when ready.
-	void setImageAsync(std::string path, bool tile = false);
+	void setImageAsync(std::string path, bool tile = false, bool always = false);
 
 	void onSizeChanged() override;
 	void setOpacity(unsigned char opacity) override;

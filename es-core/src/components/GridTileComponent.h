@@ -4,6 +4,7 @@
 
 #include "NinePatchComponent.h"
 #include "ImageComponent.h"
+#include "resources/TextureResource.h"
 
 struct GridTileProperties
 {
@@ -50,6 +51,7 @@ public:
 
 private:
 	void resize();
+	void applyCurrentProperties();
 	void calcCurrentProperties();
 	void setSelectedZoom(float percent);
 
@@ -60,6 +62,7 @@ private:
 
 	GridTileProperties mDefaultProperties;
 	GridTileProperties mSelectedProperties;
+	std::vector<std::shared_ptr<TextureResource>> mBackgroundTextures;
 	GridTileProperties mCurrentProperties;
 
 	float mShiftX = 0.0f;

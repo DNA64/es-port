@@ -48,6 +48,13 @@ protected:
 	using IList<ImageGridData, T>::mWindow;
 
 public:
+	int visibleCount() const
+	{
+		const bool vertical = mScrollDirection == SCROLL_VERTICALLY;
+		const int scrollable = std::max(1, (vertical ? mGridDimension.y() : mGridDimension.x()) - 2 * EXTRAITEMS);
+		return scrollable * (vertical ? mGridDimension.x() : mGridDimension.y());
+	}
+
 	using IList<ImageGridData, T>::size;
 	using IList<ImageGridData, T>::isScrolling;
 	using IList<ImageGridData, T>::stopScrolling;
@@ -107,6 +114,9 @@ private:
 
 	float mCamera;
 	float mCameraDirection;
+	bool mCameraMoving = false;
+	float mAdjacentGap = 10.0f;
+	int mScrollDuration = 250;
 
 	// MISCELLANEOUS
 	bool mAnimate;
@@ -208,7 +218,7 @@ void ImageGridComponent<T>::update(int deltaTime)
 template<typename T>
 void ImageGridComponent<T>::applyNeighborShift(float cameraOffsetX)
 {
-	constexpr float adjacentGap = 10.0f;
+	const float adjacentGap = mAdjacentGap;
 
 	const float grow = (mAutoLayoutZoom - 1.0f) * mTileSize.x() / 2.0f;
 	const float shift = isVertical() || mAutoLayout.x() == 0 ? 0.0f : std::max(0.0f, grow - std::max(0.0f, mMargin.x() - adjacentGap));
@@ -321,6 +331,12 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 			if (elem->has("scrollLoop"))
 				mScrollLoop = (elem->get<bool>("scrollLoop"));
 		}
+
+		if (elem->has("adjacentGap"))
+			mAdjacentGap = elem->get<float>("adjacentGap") * static_cast<float>(Renderer::getScreenWidth());
+
+		if (elem->has("scrollDuration"))
+			mScrollDuration = std::max(1, static_cast<int>(elem->get<float>("scrollDuration")));
 
 		if (elem->has("animate"))
 			mAnimate = (elem->get<bool>("animate"));
@@ -436,9 +452,11 @@ void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
 	float startPos = 0;
 	float endPos = 1;
 
+	float residual = 0;
 	if (((GuiComponent*)this)->isAnimationPlaying(2))
 	{
-		startPos = 0;
+		if (mCameraMoving)
+			residual = (mCamera - 1.0f) * mCameraDirection;
 		((GuiComponent*)this)->cancelAnimation(2);
 		updateTiles(false, false);
 	}
@@ -506,7 +524,8 @@ void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
 	mLastCursor = mCursor;
 
 	mCameraDirection = direction ? -1.0f : 1.0f;
-	mCamera = 0;
+	startPos = residual * mCameraDirection;
+	mCamera = startPos;
 
 	if (lastCursor < 0 || !mAnimate)
 	{
@@ -522,6 +541,9 @@ void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
 		mCursorChangedCallback(state);
 
 	bool moveCamera = (oldStart != mStartPosition);
+	mCameraMoving = moveCamera;
+	if (!moveCamera)
+		mCamera = 0;
 
 	auto func = [this, startPos, endPos, moveCamera](float t)
 	{
@@ -535,8 +557,9 @@ void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
 		mCamera = t;
 	};
 
-	((GuiComponent*)this)->setAnimation(new LambdaAnimation(func, 250), 0, [this] {
+	((GuiComponent*)this)->setAnimation(new LambdaAnimation(func, mScrollDuration), 0, [this] {
 		mCamera = 0;
+		mCameraMoving = false;
 		updateTiles(false);
 	}, false, 2);
 }

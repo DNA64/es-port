@@ -123,6 +123,9 @@ const Vector2f& NinePatchComponent::getCornerSize() const
 
 void NinePatchComponent::setCornerSize(int sizeX, int sizeY)
 {
+	if(mVertices != NULL && mCornerSize.x() == sizeX && mCornerSize.y() == sizeY)
+		return;
+
 	mCornerSize = Vector2f(sizeX, sizeY);
 	buildVertices();
 }
@@ -133,25 +136,36 @@ void NinePatchComponent::fitTo(Vector2f size, Vector3f position, Vector2f paddin
 	position[0] -= padding.x() / 2;
 	position[1] -= padding.y() / 2;
 
-	setSize(size + mCornerSize * 2);
+	const Vector2f target = size + mCornerSize * 2;
+	if(target.x() != mSize.x() || target.y() != mSize.y() || mVertices == NULL)
+		setSize(target);
 	setPosition(position.x() + Math::lerp(-mCornerSize.x(), mCornerSize.x(), mOrigin.x()),
 				position.y() + Math::lerp(-mCornerSize.y(), mCornerSize.y(), mOrigin.y()));
 }
 
 void NinePatchComponent::setImagePath(const std::string& path)
 {
+	if(path == mPath && mVertices != NULL)
+		return;
+
 	mPath = path;
 	buildVertices();
 }
 
 void NinePatchComponent::setEdgeColor(unsigned int edgeColor)
 {
+	if(edgeColor == mEdgeColor)
+		return;
+
 	mEdgeColor = edgeColor;
 	updateColors();
 }
 
 void NinePatchComponent::setCenterColor(unsigned int centerColor)
 {
+	if(centerColor == mCenterColor)
+		return;
+
 	mCenterColor = centerColor;
 	updateColors();
 }

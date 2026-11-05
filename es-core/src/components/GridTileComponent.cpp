@@ -71,6 +71,11 @@ void GridTileComponent::update(int deltaTime)
 {
 	GuiComponent::update(deltaTime);
 
+	applyCurrentProperties();
+}
+
+void GridTileComponent::applyCurrentProperties()
+{
 	calcCurrentProperties();
 
 	mBackground.setImagePath(mCurrentProperties.mBackgroundImage);
@@ -155,6 +160,13 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 
 	if (elem)
 		applyThemeToProperties(elem, &mSelectedProperties);
+
+	applyCurrentProperties();
+
+	mBackgroundTextures.clear();
+	for (const std::string& path : { mDefaultProperties.mBackgroundImage, mSelectedProperties.mBackgroundImage })
+		if (!path.empty())
+			mBackgroundTextures.push_back(TextureResource::get(path));
 }
 
 // Made this a static function because the ImageGridComponent need to know the default tile size
@@ -183,7 +195,7 @@ void GridTileComponent::reset()
 
 void GridTileComponent::setImage(const std::string& path)
 {
-	mImage->setImage(path);
+	mImage->setImageAsync(path, false, true);
 
 	// Resize now to prevent flickering images when scrolling
 	resize();

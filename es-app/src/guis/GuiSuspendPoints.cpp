@@ -51,23 +51,48 @@ namespace
 	}
 }
 
+SuspendBox::SuspendBox(Window* window, const std::string& defaultPath, int corner)
+	: mPatch(window, defaultPath), mImage(window)
+{
+	mPatch.setCornerSize(corner, corner);
+}
+
+void SuspendBox::load(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element)
+{
+	const ThemeData::ThemeElement* image = theme->getElement(view, element, "image");
+	mFullImage = image != nullptr && image->has("path");
+	if(mFullImage)
+		mImage.setImage(image->get<std::string>("path"));
+	else
+		mPatch.applyTheme(theme, view, element, ThemeFlags::PATH);
+}
+
+void SuspendBox::setSize(float width, float height)
+{
+	mPatch.setSize(width, height);
+	mImage.setResize(width, height);
+}
+
+void SuspendBox::render(const Transform4x4f& trans)
+{
+	if(mFullImage)
+		mImage.render(trans);
+	else
+		mPatch.render(trans);
+}
+
 GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::string code, SuspendPoints points, Pad pad,
 	std::function<void(int)> onResume, std::function<void()> onChanged)
 	: GuiComponent(window), mTitle(std::move(title)), mCode(std::move(code)), mPoints(std::move(points)), mPad(pad),
 	  mOnResume(std::move(onResume)), mOnChanged(std::move(onChanged)),
-	  mPanel(window, ":/suspend_card.png"), mCell(window, ":/suspend_card.png"),
-	  mCellSelected(window, ":/suspend_card_sel.png"),
-	  mFrame(window, ":/suspend_frame.png"), mFrameSelected(window, ":/suspend_frame_sel.png"),
+	  mPanel(window, ":/suspend_card.png", CardCorner), mCell(window, ":/suspend_card.png", CardCorner),
+	  mCellSelected(window, ":/suspend_card_sel.png", CardCorner),
+	  mFrame(window, ":/suspend_frame.png", CardCorner), mFrameSelected(window, ":/suspend_frame_sel.png", CardCorner),
 	  mHeading(window, "", Font::get(FONT_SIZE_MEDIUM), TextColor),
 	  mNotice(window, "", Font::get(FONT_SIZE_SMALL), MutedColor, ALIGN_RIGHT),
 	  mLock(window)
 {
 	mLock.setImage(":/suspend_lock.png");
-	mPanel.setCornerSize(CardCorner, CardCorner);
-	mCell.setCornerSize(CardCorner, CardCorner);
-	mCellSelected.setCornerSize(CardCorner, CardCorner);
-	mFrame.setCornerSize(CardCorner, CardCorner);
-	mFrameSelected.setCornerSize(CardCorner, CardCorner);
 	for(int slot = 0; slot < SuspendPoints::MaxSlots; ++slot)
 	{
 		mShots.emplace_back(new ImageComponent(window));
@@ -78,30 +103,105 @@ GuiSuspendPoints::GuiSuspendPoints(Window* window, std::string title, std::strin
 	refresh();
 }
 
+void GuiSuspendPoints::loadTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view)
+{
+	constexpr unsigned int textProperties = ThemeFlags::COLOR | ThemeFlags::FONT_PATH | ThemeFlags::FONT_SIZE;
+	const float width = static_cast<float>(Renderer::getScreenWidth());
+	const float height = static_cast<float>(Renderer::getScreenHeight());
+
+	const auto rectOf = [&](const char* name, const char* type) {
+		const ThemeData::ThemeElement* elem = theme->getElement(view, name, type);
+		if(elem == nullptr || !elem->has("pos") || !elem->has("size"))
+			return Rect();
+		const Vector2f pos = elem->get<Vector2f>("pos");
+		const Vector2f size = elem->get<Vector2f>("size");
+		return Rect(pos.x() * width, pos.y() * height, size.x() * width, size.y() * height, true);
+	};
+	const auto boxRect = [&](const char* name) -> Rect {
+		const ThemeData::ThemeElement* elem = theme->getElement(view, name, "");
+		return elem != nullptr && elem->type == "image" ? rectOf(name, "image") : rectOf(name, "ninepatch");
+	};
+
+	mPanel.load(theme, view, "suspend_panel");
+	mCell.load(theme, view, "suspend_cell");
+	mCellSelected.load(theme, view, "suspend_cell_selected");
+	mFrame.load(theme, view, "suspend_frame");
+	mFrameSelected.load(theme, view, "suspend_frame_selected");
+	mPanelTheme = boxRect("suspend_panel");
+	mCellTheme = boxRect("suspend_cell");
+	mShotTheme = rectOf("suspend_shot", "image");
+	mLabelTheme = rectOf("suspend_label", "text");
+	mFrameTheme = boxRect("suspend_frame");
+	mFrameSelectedTheme = boxRect("suspend_frame_selected");
+	mLockTheme = rectOf("suspend_lock", "image");
+	mGaugeTheme = rectOf("suspend_gauge", "image");
+	mNextTheme = rectOf("suspend_cell_next", "image");
+	mGaugeColor = GaugeColor;
+	if(const ThemeData::ThemeElement* gauge = theme->getElement(view, "suspend_gauge", "image"))
+		if(gauge->has("color"))
+			mGaugeColor = gauge->get<unsigned int>("color");
+
+	layout();
+
+	mHeading.applyTheme(theme, view, "suspend_title", textProperties | ThemeFlags::POSITION | ThemeFlags::SIZE);
+	mNotice.applyTheme(theme, view, "suspend_notice", textProperties | ThemeFlags::POSITION | ThemeFlags::SIZE);
+	for(auto& label : mLabels)
+		label->applyTheme(theme, view, "suspend_label", textProperties);
+}
+
 void GuiSuspendPoints::layout()
 {
 	const float width = static_cast<float>(Renderer::getScreenWidth());
 	const float height = static_cast<float>(Renderer::getScreenHeight());
+	const float count = static_cast<float>(mShots.size());
 
 	setSize(width, height);
 	mHeading.setPosition(width * (PanelLeft + 0.025f), height * (PanelTop + 0.015f));
 	mHeading.setSize(width * 0.6f, height * 0.06f);
 	mNotice.setPosition(width * (PanelLeft + PanelWidth - 0.325f), height * (PanelTop + 0.015f));
 	mNotice.setSize(width * 0.3f, height * 0.06f);
-	mLock.setResize(height * 0.05f, height * 0.05f);
-	mPanel.setSize(width * PanelWidth + 2 * Bleed, height * PanelHeight + 2 * Bleed);
-	mCell.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
-	mCellSelected.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
-	mFrame.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
-	mFrameSelected.setSize(width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
+
+	mPanelRect = mPanelTheme.set ? mPanelTheme : Rect(width * PanelLeft - Bleed, height * PanelTop - Bleed,
+		width * PanelWidth + 2 * Bleed, height * PanelHeight + 2 * Bleed);
+	mCellRect = mCellTheme.set ? mCellTheme : Rect(width * CellsLeft - Bleed, height * CellsTop - Bleed,
+		width * CellWidth + 2 * Bleed, height * CellHeight + 2 * Bleed);
+	if(mNextTheme.set)
+		mCellStep = mNextTheme.x - mCellRect.x;
+	else if(mCellTheme.set)
+	{
+		const float margin = mCellRect.x - mPanelRect.x;
+		const float lastLeft = mPanelRect.x + mPanelRect.w - margin - mCellRect.w;
+		mCellStep = count > 1 ? (lastLeft - mCellRect.x) / (count - 1) : 0.0f;
+	}
+	else
+		mCellStep = width * (CellWidth + CellGap);
+
+	const Rect shot = mShotTheme.set ? mShotTheme : Rect(width * CellsLeft + Border, height * CellsTop + Border,
+		width * CellWidth - 2 * Border, height * ShotHeight);
+	const Rect label = mLabelTheme.set ? mLabelTheme : Rect(width * CellsLeft, height * (CellsTop + ShotHeight + 0.01f),
+		width * CellWidth, height * 0.07f);
+
+	mFrameRect = mFrameTheme.set ? mFrameTheme : mCellRect;
+	mFrameSelectedRect = mFrameSelectedTheme.set ? mFrameSelectedTheme : mFrameRect;
+	mLockRect = mLockTheme.set ? mLockTheme : Rect(mCellRect.x + mCellRect.w - Bleed - height * 0.06f,
+		mCellRect.y + Bleed + height * 0.01f, height * 0.05f, height * 0.05f);
+	mGaugeRect = mGaugeTheme.set ? mGaugeTheme : Rect(mCellRect.x + Bleed,
+		mCellRect.y + mCellRect.h - Bleed - Border * 2, mCellRect.w - 2 * Bleed, Border * 2);
+	mLock.setResize(mLockRect.w, mLockRect.h);
+
+	mPanel.setSize(mPanelRect.w, mPanelRect.h);
+	mCell.setSize(mCellRect.w, mCellRect.h);
+	mCellSelected.setSize(mCellRect.w, mCellRect.h);
+	mFrame.setSize(mFrameRect.w, mFrameRect.h);
+	mFrameSelected.setSize(mFrameSelectedRect.w, mFrameSelectedRect.h);
 
 	for(std::size_t index = 0; index < mShots.size(); ++index)
 	{
-		const float left = width * (CellsLeft + static_cast<float>(index) * (CellWidth + CellGap));
-		mShots[index]->setPosition(left + Border, height * CellsTop + Border);
-		mShots[index]->setResize(width * CellWidth - 2 * Border, height * ShotHeight);
-		mLabels[index]->setPosition(left, height * (CellsTop + ShotHeight + 0.01f));
-		mLabels[index]->setSize(width * CellWidth, height * 0.07f);
+		const float shift = static_cast<float>(index) * mCellStep;
+		mShots[index]->setPosition(shot.x + shift, shot.y);
+		mShots[index]->setResize(shot.w, shot.h);
+		mLabels[index]->setPosition(label.x + shift, label.y);
+		mLabels[index]->setSize(label.w, label.h);
 	}
 }
 
@@ -284,7 +384,7 @@ void GuiSuspendPoints::render(const Transform4x4f& parentTrans)
 	const Transform4x4f trans = parentTrans * getTransform();
 	Renderer::setMatrix(trans);
 	Transform4x4f panelTrans = trans;
-	panelTrans.translate(Vector3f(width * PanelLeft - Bleed, height * PanelTop - Bleed, 0.0f));
+	panelTrans.translate(Vector3f(mPanelRect.x, mPanelRect.y, 0.0f));
 	mPanel.render(panelTrans);
 
 	mHeading.render(trans);
@@ -292,30 +392,34 @@ void GuiSuspendPoints::render(const Transform4x4f& parentTrans)
 
 	for(std::size_t index = 0; index < mSlots.size(); ++index)
 	{
-		const float left = width * (CellsLeft + static_cast<float>(index) * (CellWidth + CellGap));
+		const float shift = static_cast<float>(index) * mCellStep;
 		const bool selected = static_cast<int>(index) + 1 == mSelected;
 
 		Transform4x4f cellTrans = trans;
-		cellTrans.translate(Vector3f(left - Bleed, height * CellsTop - Bleed, 0.0f));
+		cellTrans.translate(Vector3f(mCellRect.x + shift, mCellRect.y, 0.0f));
 		(selected ? mCellSelected : mCell).render(cellTrans);
 
 		if(mSlots[index].valid)
 			mShots[index]->render(trans);
-		(selected ? mFrameSelected : mFrame).render(cellTrans);
+
+		const Rect& frame = selected ? mFrameSelectedRect : mFrameRect;
+		Transform4x4f frameTrans = trans;
+		frameTrans.translate(Vector3f(frame.x + shift, frame.y, 0.0f));
+		(selected ? mFrameSelected : mFrame).render(frameTrans);
 		mLabels[index]->render(trans);
 
 		if(mSlots[index].locked)
 		{
 			Transform4x4f lockTrans = trans;
-			lockTrans.translate(Vector3f(left + width * CellWidth - height * 0.06f, height * CellsTop + height * 0.01f, 0.0f));
+			lockTrans.translate(Vector3f(mLockRect.x + shift, mLockRect.y, 0.0f));
 			mLock.render(lockTrans);
 		}
 
 		if(selected && mHolding)
 		{
 			Renderer::setMatrix(trans);
-			const float filled = width * CellWidth * static_cast<float>(mHeldMs) / static_cast<float>(HoldToOverwriteMs);
-			Renderer::drawRect(left, height * (CellsTop + CellHeight) - Border * 2, filled, Border * 2, GaugeColor, GaugeColor);
+			const float filled = mGaugeRect.w * static_cast<float>(mHeldMs) / static_cast<float>(HoldToOverwriteMs);
+			Renderer::drawRect(mGaugeRect.x + shift, mGaugeRect.y, filled, mGaugeRect.h, mGaugeColor, mGaugeColor);
 		}
 	}
 }

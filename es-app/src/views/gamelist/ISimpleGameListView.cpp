@@ -261,12 +261,14 @@ bool ISimpleGameListView::openSuspendPoints()
 	if(game == nullptr || game->getType() != GAME)
 		return false;
 
-	mWindow->pushGui(new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
+	auto* panel = new GuiSuspendPoints(mWindow, game->getName(), gameCode(game), mSuspendPoints, mPad,
 		[this, game](int slot) {
 			mPendingResume = slot;
 			launch(game);
 		},
-		[this] { refreshFloating(); }));
+		[this] { refreshFloating(); });
+	panel->loadTheme(getTheme(), getName());
+	mWindow->pushGui(panel);
 	return true;
 }
 

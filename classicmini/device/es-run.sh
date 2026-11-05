@@ -25,27 +25,17 @@ drawSplash(){
   decodepng "$es_dir/resources/$1.png" > /dev/fb0
 }
 
-watchPowerSwitch(){
-  exec 3< /dev/input/event2 || return
-  while ev=$(dd bs=16 count=1 <&3 2>/dev/null | od -A n -t x1 -w16); do
-    [ -n "$ev" ] || return
-    case $ev in
-      *" 01 00 74 00 00 00 00 00")
-        touch /tmp/es-stopping
-        killall emulationstation 2>/dev/null
-        usleep 300000
-        drawSplash shutdown
-        poweroff
-        return ;;
-    esac
-  done
+stopPowerWatch(){
+  [ -f /run/es-power.pid ] && kill -TERM -- "-$(cat /run/es-power.pid)" 2>/dev/null
+  rm -f /run/es-power.pid
 }
 
 restore_ui=1
-trap '[ -n "$power_pid" ] && [ ! -f /tmp/es-stopping ] && kill "$power_pid" 2>/dev/null; [ "$restore_ui" = 1 ] && [ ! -f /tmp/es-stopping ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
+trap '[ ! -f /tmp/es-stopping ] && stopPowerWatch; [ "$restore_ui" = 1 ] && [ ! -f /tmp/es-stopping ] && { type stockUistart >/dev/null 2>&1 && stockUistart || uistart; }' EXIT
 uistop
-watchPowerSwitch &
-power_pid=$!
+stopPowerWatch
+setsid sh "$es_dir/es-power-watch.sh" &
+echo $! > /run/es-power.pid
 library_stamp=$es_dir/library.stamp
 games_dir=$(findGameStorage)
 games_count=$(find "$games_dir" -name '*.desktop' | wc -l)

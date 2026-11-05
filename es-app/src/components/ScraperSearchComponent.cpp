@@ -14,6 +14,7 @@
 #include "FileData.h"
 #include "Log.h"
 #include "Window.h"
+#include <algorithm>
 
 ScraperSearchComponent::ScraperSearchComponent(Window* window, SearchType type) : GuiComponent(window),
 	mGrid(window, Vector2i(4, 3)), mBusyAnim(window),
@@ -131,7 +132,7 @@ void ScraperSearchComponent::resizeMetadata()
 	mMD_Grid->setSize(mGrid.getColWidth(2), mGrid.getRowHeight(1));
 	if(mMD_Grid->getSize().y() > mMD_Pairs.size())
 	{
-		const int fontHeight = (int)(mMD_Grid->getSize().y() / mMD_Pairs.size() * 0.8f);
+		const int fontHeight = std::min((int)FONT_SIZE_MENU, (int)(mMD_Grid->getSize().y() / mMD_Pairs.size() * 0.8f));
 		auto fontLbl = Font::get(fontHeight, FONT_PATH_REGULAR);
 		auto fontComp = Font::get(fontHeight, FONT_PATH_LIGHT);
 

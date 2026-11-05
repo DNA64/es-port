@@ -41,6 +41,7 @@ if [ -d "$theme_dst" ]; then
     (cd "$theme_dst" && md5sum -c "$theme_manifest" 2>/dev/null | sed -n 's/: OK$//p') | while read -r file; do
       rm -f "$theme_dst/$file"
     done
+    find "$theme_dst" -depth -mindepth 1 -type d -exec rmdir {} + 2>/dev/null
   fi
   (cd "$theme_src" && find . -type f) | while read -r file; do
     [ -e "$theme_dst/$file" ] && continue
@@ -53,6 +54,7 @@ fi
 (cd "$theme_src" && find . -type f -exec md5sum {} +) > "$theme_manifest"
 rm -rf "$theme_src"
 chmod 755 "$es_dir/emulationstation" "$es_dir/padstate" "$es_dir"/*.sh
+rm -rf "$es_dir/library" "$es_dir/library.stamp" "$es_dir/library.stamp.count"
 rm -f "$es_dir/boot_failures" "$es_dir/no_boot"
 [ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && rm -f "$es_dir/boot_default"
 rm -rf "$es_payload"

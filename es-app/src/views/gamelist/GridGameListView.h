@@ -76,6 +76,7 @@ private:
 	DateTimeComponent mLastPlayed;
 	TextComponent mPlayCount;
 	MarqueeTextComponent mName;
+	TextComponent mCode;
 
 	std::vector<TextComponent*> getMDLabels();
 	std::vector<GuiComponent*> getMDValues();

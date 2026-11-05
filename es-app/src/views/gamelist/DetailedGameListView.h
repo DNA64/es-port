@@ -41,6 +41,13 @@ private:
 	DateTimeComponent mLastPlayed;
 	TextComponent mPlayCount;
 	TextComponent mName;
+	TextComponent mCode;
+	TextComponent mInfo;
+	std::vector<std::string> mInfoFields;
+	std::string mInfoSeparator = " ";
+	std::string mPlayersOne = "player";
+	std::string mPlayersMany = "players";
+	std::string buildInfo(FileData* file) const;
 
 	std::vector<TextComponent*> getMDLabels();
 	std::vector<GuiComponent*> getMDValues();

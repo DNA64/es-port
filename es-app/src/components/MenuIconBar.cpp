@@ -78,6 +78,9 @@ void MenuIconBar::layout()
 
 void MenuIconBar::render(const Transform4x4f& parentTrans)
 {
+	if (!mThemed)
+		return;
+
 	if (mFrameVisible)
 		mFrame.render(parentTrans);
 	for (const auto& icon : mIcons)

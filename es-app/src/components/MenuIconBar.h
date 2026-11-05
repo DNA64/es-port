@@ -28,6 +28,7 @@ public:
 	int selected() const { return mSelected; }
 	void setSelected(int index);
 	void setFrameVisible(bool visible) { mFrameVisible = visible; }
+	bool shown() const { return mThemed; }
 	void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view);
 
 	void render(const Transform4x4f& parentTrans) override;

@@ -35,7 +35,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window), mIconBar(window)
+	mName(window), mCode(window), mIconBar(window)
 {
 	const float padding = 0.01f;
 
@@ -89,6 +89,14 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mName.setFont(Font::get(FONT_SIZE_MEDIUM));
 	mName.setHorizontalAlignment(ALIGN_CENTER);
 	addChild(&mName);
+
+	mCode.setFont(Font::get(FONT_SIZE_SMALL));
+	mCode.setColor(0x7B7D7FFF);
+	mCode.setHorizontalAlignment(ALIGN_RIGHT);
+	mCode.setPosition(mSize.x() * 0.5f, mSize.y() * 0.93f);
+	mCode.setSize(mSize.x() * 0.49f, 0.0f);
+	mCode.setDefaultZIndex(40);
+	addChild(&mCode);
 
 	mDescription.setPosition(mSize.x() * padding, mSize.y() * 0.65f);
 	mDescription.setSize(mSize.x() * (0.50f - 2*padding), mSize.y() - mDescription.getPosition().y());
@@ -294,6 +302,7 @@ void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 		values[i]->applyTheme(theme, getName(), valElements[i], ALL ^ ThemeFlags::TEXT);
 	}
 
+	mCode.applyTheme(theme, getName(), "md_code", ALL ^ TEXT);
 	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
 	mDivider.applyTheme(theme, getName(), "md_divider", ALL);
 	mDescription.clearIndicatorBox();
@@ -460,6 +469,7 @@ void GridGameListView::updateInfoPanel()
 		mGenre.setValue(file->metadata.get("genre"));
 		mPlayers.setValue(file->metadata.get("players"));
 		mName.setValue(file->metadata.get("name"));
+		mCode.setText(file->metadata.get("code"));
 
 		if(file->getType() == GAME)
 		{
@@ -474,6 +484,7 @@ void GridGameListView::updateInfoPanel()
 	comps.push_back(&mDescription);
 	comps.push_back(&mDivider);
 	comps.push_back(&mName);
+	comps.push_back(&mCode);
 	comps.push_back(&mMarquee);
 	comps.push_back(mVideo);
 	comps.push_back(&mImage);
@@ -652,7 +663,7 @@ void GridGameListView::onFocusLost() {
 
 void GridGameListView::setHeaderFocus(bool focus)
 {
-	mHeaderFocus = focus;
+	mHeaderFocus = focus && mIconBar.shown();
 	mIconBar.setFrameVisible(focus);
 	updateHelpPrompts();
 }

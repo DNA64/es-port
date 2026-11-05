@@ -141,7 +141,7 @@ void SystemView::goToSystem(SystemData* system, bool animate)
 
 void SystemView::setHeaderFocus(bool focus)
 {
-	mHeaderFocus = focus;
+	mHeaderFocus = focus && mIconBar.shown();
 	mIconBar.setFrameVisible(focus);
 	updateHelpPrompts();
 }

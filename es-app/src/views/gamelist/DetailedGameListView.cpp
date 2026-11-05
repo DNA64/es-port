@@ -2,6 +2,7 @@
 
 #include "animations/LambdaAnimation.h"
 #include "views/ViewController.h"
+#include <sstream>
 
 DetailedGameListView::DetailedGameListView(Window* window, FileData* root) :
 	BasicGameListView(window, root),
@@ -15,7 +16,7 @@ DetailedGameListView::DetailedGameListView(Window* window, FileData* root) :
 
 	mRating(window), mReleaseDate(window), mDeveloper(window), mPublisher(window),
 	mGenre(window), mPlayers(window), mLastPlayed(window), mPlayCount(window),
-	mName(window)
+	mName(window), mCode(window), mInfo(window)
 {
 	//mHeaderImage.setPosition(mSize.x() * 0.25f, 0);
 
@@ -50,6 +51,17 @@ DetailedGameListView::DetailedGameListView(Window* window, FileData* root) :
 	mMarquee.setDefaultZIndex(35);
 	mMarquee.setVisible(false);
 	addChild(&mMarquee);
+
+	mCode.setFont(Font::get(FONT_SIZE_SMALL));
+	mCode.setColor(0x5F6163FF);
+	mCode.setPosition(mSize.x() * 0.025f, mSize.y() * 0.885f);
+	mCode.setSize(mSize.x() * 0.48f, 0.0f);
+	mCode.setDefaultZIndex(40);
+	addChild(&mCode);
+
+	mInfo.setDefaultZIndex(40);
+	mInfo.setVisible(false);
+	addChild(&mInfo);
 
 	// metadata labels + values
 	mLblRating.setText("Rating: ");
@@ -136,6 +148,30 @@ void DetailedGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& them
 	for(unsigned int i = 0; i < values.size(); i++)
 	{
 		values[i]->applyTheme(theme, getName(), valElements[i], ALL ^ ThemeFlags::TEXT);
+	}
+
+	mCode.applyTheme(theme, getName(), "md_code", ALL ^ ThemeFlags::TEXT);
+
+	mInfoFields.clear();
+	const ThemeData::ThemeElement* info = theme->getElement(getName(), "md_info", "text");
+	mInfo.setVisible(info != nullptr);
+	if(info)
+	{
+		mInfo.applyTheme(theme, getName(), "md_info", ALL ^ ThemeFlags::TEXT);
+		if(info->has("fields"))
+		{
+			std::istringstream names(info->get<std::string>("fields"));
+			for(std::string name; names >> name;)
+				mInfoFields.push_back(name);
+		}
+		if(info->has("separator"))
+			mInfoSeparator = info->get<std::string>("separator");
+		if(info->has("playersOne"))
+			mPlayersOne = info->get<std::string>("playersOne");
+		if(info->has("playersMany"))
+			mPlayersMany = info->get<std::string>("playersMany");
+		if(mList.size() > 0)
+			mInfo.setText(buildInfo(mList.getSelected()));
 	}
 
 	mDescContainer.applyTheme(theme, getName(), "md_description", POSITION | ThemeFlags::SIZE | Z_INDEX | VISIBLE);
@@ -234,6 +270,8 @@ void DetailedGameListView::updateInfoPanel()
 		mGenre.setValue(file->metadata.get("genre"));
 		mPlayers.setValue(file->metadata.get("players"));
 		mName.setValue(file->metadata.get("name"));
+		mCode.setText(file->metadata.get("code"));
+		mInfo.setText(buildInfo(file));
 
 		if(file->getType() == GAME)
 		{
@@ -250,6 +288,8 @@ void DetailedGameListView::updateInfoPanel()
 	comps.push_back(&mImage);
 	comps.push_back(&mDescription);
 	comps.push_back(&mName);
+	comps.push_back(&mCode);
+	comps.push_back(&mInfo);
 	std::vector<TextComponent*> labels = getMDLabels();
 	comps.insert(comps.cend(), labels.cbegin(), labels.cend());
 
@@ -270,6 +310,25 @@ void DetailedGameListView::updateInfoPanel()
 			comp->setAnimation(new LambdaAnimation(func, 150), 0, nullptr, fadingOut);
 		}
 	}
+}
+
+std::string DetailedGameListView::buildInfo(FileData* file) const
+{
+	std::string out;
+	for(const std::string& field : mInfoFields)
+	{
+		std::string value = file->metadata.get(field);
+		if(field == "releasedate")
+			value = (value.size() >= 4 && value != "not-a-date-time") ? value.substr(0, 4) : "";
+		else if(field == "players")
+			value = (value.empty() || value == "0") ? "" : value + " " + (value == "1" ? mPlayersOne : mPlayersMany);
+		else if(value == "unknown")
+			value.clear();
+		if(value.empty())
+			continue;
+		out += (out.empty() ? "" : mInfoSeparator) + value;
+	}
+	return out;
 }
 
 void DetailedGameListView::launch(FileData* game)

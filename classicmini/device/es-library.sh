@@ -153,7 +153,7 @@ readGames() {
         walk(target, depth + 1)
         continue
       }
-      print menuOf[id] sep code[id] sep exe[id] sep ext[id] sep icon[id] sep esc(name[id]) sep esc(desc[id]) sep year[id] sep players[id] sep esc(info[id]) sep esc(cover[id])
+      print menuOf[id] sep code[id] sep exe[id] sep ext[id] sep icon[id] sep esc(name[id]) sep esc(desc[id]) sep year[id] sep players[id] sep esc(genre[id]) sep esc(cover[id])
     }
     delete onpath[menu]
   }
@@ -221,13 +221,7 @@ readGames() {
 
     y = rel; gsub(/-/, "", y)
     year[id] = y
-    first = rel; sub(/-.*/, "", first)
-    label = (pl == "") ? "" : (pl == "1" ? "1 Player" : pl " Players")
-    joined = ""
-    if (ge != "") joined = ge
-    if (first != "") joined = (joined == "" ? first : joined " • " first)
-    if (label != "") joined = (joined == "" ? label : joined " • " label)
-    info[id] = joined
+    genre[id] = ge
 
     cv = ""
     if (has) {
@@ -258,7 +252,7 @@ rm -rf "$out"
 mkdir -p "$out"
 seen=" "
 
-readGames | while IFS=$us read -r menu code exe ext icon name desc year players info cover; do
+readGames | while IFS=$us read -r menu code exe ext icon name desc year players genre cover; do
   game_dir=$store/$menu/$code
   system=other
   systemOf
@@ -285,8 +279,8 @@ readGames | while IFS=$us read -r menu code exe ext icon name desc year players 
     [ -n "$desc" ] && echo "    <desc>$desc</desc>"
     [ ${#year} -eq 8 ] && echo "    <releasedate>${year}T000000</releasedate>"
     [ -n "$players" ] && echo "    <players>$players</players>"
-    echo "    <genre>$info</genre>"
-    echo "    <developer>$code</developer>"
+    [ -n "$genre" ] && echo "    <genre>$genre</genre>"
+    echo "    <code>$code</code>"
     [ -n "$small" ] && echo "    <marquee>$(xmlPath "$small")</marquee>"
     echo "  </game>"
   } >> "$parts/$system.xml"

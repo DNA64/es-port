@@ -115,7 +115,6 @@ systemOf() {
     px68k*|sharp) system=x68000 ;;
     quasi88|d88) system=pc88 ;;
     x1|x1-millennium) system=x1 ;;
-    theodore) system=moto ;;
     tic80|tic) system=tic80 ;;
     openbor*) system=openbor ;;
     easyrpg|ldb|chai*|lutro|lua|prboom*|wad|nxengine|cavestory|ecwolf|tyrquake|pak|xrick|mrboom|jumpnbump|cannonball|reminiscence|flashback|2048|dinothawr|bk|eighty-one|81|emux*|ch8|uzem|uze|potator) system=ports ;;

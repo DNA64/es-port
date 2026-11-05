@@ -44,7 +44,7 @@ size_t Font::getMemUsage() const
 {
 	size_t memUsage = 0;
 	for(auto it = mTextures.cbegin(); it != mTextures.cend(); it++)
-		memUsage += it->textureSize.x() * it->textureSize.y() * 4;
+		memUsage += it->textureSize.x() * it->textureSize.y();
 
 	for(auto it = mFaceCache.cbegin(); it != mFaceCache.cend(); it++)
 		memUsage += it->second->data.length;
@@ -145,7 +145,7 @@ void Font::unloadTextures()
 Font::FontTexture::FontTexture()
 {
 	textureId = 0;
-	textureSize = Vector2i(2048, 512);
+	textureSize = Vector2i(1024, 256);
 	writePos = Vector2i::Zero();
 	rowHeight = 0;
 }

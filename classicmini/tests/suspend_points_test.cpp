@@ -35,6 +35,12 @@ namespace
 			std::cerr << "command failed: " << command << "\n";
 	}
 
+	bool isDirectory(const std::string& path)
+	{
+		struct stat info;
+		return ::stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode);
+	}
+
 	void makePoint(const std::string& dir, const std::string& playtime)
 	{
 		run("mkdir -p '" + dir + "/rollback'");
@@ -91,6 +97,19 @@ int main()
 	check(!points.get("CLV-A", 1).valid, "directory without state.png/state.time is invalid");
 
 	check(points.remove("CLV-A", 2) && !points.get("CLV-A", 2).valid, "remove slot");
+
+	makePoint(profile + "/CLV-A/suspendpoint3.old", "777");
+	run("rm -rf '" + profile + "/CLV-A/suspendpoint3'");
+	check(points.get("CLV-A", 3).valid && points.get("CLV-A", 3).playtime == 777, "interrupted replacement restores the previous point");
+	check(!isDirectory(profile + "/CLV-A/suspendpoint3.old"), "restored point no longer left as .old");
+
+	makePoint(profile + "/CLV-A/suspendpoint3.old", "1");
+	check(points.get("CLV-A", 3).playtime == 777, "a stale .old does not replace a present point");
+
+	makePoint(vol + "/CLV-A/suspendpoint0", "900");
+	check(points.save("CLV-A", 3, SuspendPoints::SaveMode::Overwrite) == SuspendPoints::SaveResult::Saved, "overwrite with a stale .old around");
+	check(points.get("CLV-A", 3).playtime == 900, "overwritten content after a stale .old");
+	check(!isDirectory(profile + "/CLV-A/suspendpoint3.old") && !isDirectory(profile + "/CLV-A/suspendpoint3.new"), "no .old or .new left after a save");
 
 	makePoint(vol + "/CLV-A/suspendpoint0", "1");
 	check(points.discardFloating() && !points.floating().valid, "discard floating");

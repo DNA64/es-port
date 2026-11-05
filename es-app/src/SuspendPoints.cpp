@@ -28,6 +28,7 @@ namespace
 	constexpr const char* LockedName = "es.locked";
 	constexpr const char* StagingSuffix = ".new";
 	constexpr const char* SwapSuffix = ".swap";
+	constexpr const char* PreviousSuffix = ".old";
 	constexpr mode_t DirectoryMode = 0755;
 
 	using DirHandle = std::unique_ptr<DIR, int (*)(DIR*)>;
@@ -148,6 +149,33 @@ namespace
 			&& isFile(dir + "/state.time");
 	}
 
+	bool replaceDirectory(const std::string& from, const std::string& target)
+	{
+		const std::string previous = target + PreviousSuffix;
+		if(!removeTree(previous))
+			return false;
+
+		const bool hadTarget = isDirectory(target);
+		if(hadTarget && ::rename(target.c_str(), previous.c_str()) != 0)
+			return false;
+
+		if(::rename(from.c_str(), target.c_str()) != 0)
+		{
+			if(hadTarget)
+				static_cast<void>(::rename(previous.c_str(), target.c_str()));
+			return false;
+		}
+		static_cast<void>(removeTree(previous));
+		return true;
+	}
+
+	void restoreInterrupted(const std::string& target)
+	{
+		const std::string previous = target + PreviousSuffix;
+		if(!isDirectory(target) && isDirectory(previous))
+			static_cast<void>(::rename(previous.c_str(), target.c_str()));
+	}
+
 	long readPlaytime(const std::string& dir)
 	{
 		std::ifstream in(dir + "/state.time");
@@ -221,6 +249,7 @@ SuspendPoint SuspendPoints::get(const std::string& code, int slot) const
 {
 	if(!validSlot(slot))
 		return SuspendPoint();
+	restoreInterrupted(slotDir(code, slot));
 	return describe(code, slot, slotDir(code, slot));
 }
 
@@ -255,7 +284,7 @@ SuspendPoints::SaveResult SuspendPoints::save(const std::string& code, int slot,
 	if(!makeDirectories(mProfileDir + "/" + code) || !removeTree(staging) || !moveTree(pending.dir, staging))
 		return SaveResult::Failed;
 
-	if(!removeTree(target) || ::rename(staging.c_str(), target.c_str()) != 0)
+	if(!replaceDirectory(staging, target))
 	{
 		static_cast<void>(removeTree(staging));
 		return SaveResult::Failed;

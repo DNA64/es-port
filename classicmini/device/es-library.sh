@@ -23,8 +23,37 @@ max_depth=8
 covers=/media/data/emulationstation/covers
 us=$(printf '\037')
 
+chdRead() {
+  dd if="$1" bs=1 skip="$2" count="$3" 2>/dev/null | od -An -tx1 | tr -d ' \n'
+}
+
+chdSystem() {
+  local file tag meta len track steps=0
+  for file in "$store/.storage/$code"/*.chd "$game_dir"/*.chd; do [ -f "$file" ] && break; done
+  [ -f "$file" ] || return 1
+  [ "$(chdRead "$file" 0 8)" = 4d436f6d70724844 ] || return 1
+  meta=$((0x$(chdRead "$file" 48 8)))
+  while [ "$meta" -gt 0 ] && [ "$steps" -lt 32 ]; do
+    tag=$(chdRead "$file" "$meta" 4)
+    case $tag in
+      44564420) system=psp; return 0 ;;
+      43485432|43485452)
+        len=$((0x$(chdRead "$file" $((meta + 5)) 3)))
+        track=$(dd if="$file" bs=1 skip=$((meta + 16)) count="$len" 2>/dev/null | tr -d '\000')
+        case $track in
+          *MODE2*) system=psx; return 0 ;;
+          *MODE1*) system=segacd; return 0 ;;
+        esac
+        ;;
+    esac
+    meta=$((0x$(chdRead "$file" $((meta + 8)) 8)))
+    steps=$((steps + 1))
+  done
+  return 1
+}
+
 systemOf() {
-  case $exe in
+  case ${exe#km_} in
     clover-canoe-shvc*|snes|snes05*|snes9x*|snes10*|mednafen-snes-faust-xtreme) system=snes ;;
     nestopia|quicknes|fceumm*|kachikachi*|clover-kachikachi*|nes)
       if [ "$ext" = fds ]; then system=fds; else system=nes; fi ;;
@@ -53,11 +82,11 @@ systemOf() {
     mednafen-ngp|ngp|ngc) system=ngp ;;
     mednafen-wswan|mednafen_wswan|ws|wsc) system=wonderswan ;;
     mednafen-vb|mednafen_vb|vb) system=virtualboy ;;
-    mednafen-psx|mednafen_psx|pcsx*|neon) system=psx ;;
+    mednafen-psx|mednafen_psx|pcsx*|psx|neon) system=psx ;;
     neocd|neo) system=neogeo ;;
     fbalpha*|fba*|fbneo*|cps1|cps2|cps3|mame*) system=arcade ;;
-    n64|glupen64*|mupen64*|parallel-n64*|ludicrousn64*) system=n64 ;;
-    ppsspp*) system=psp ;;
+    n64|z64|v64|glupen64*|mupen64*|parallel-n64*|ludicrousn64*) system=n64 ;;
+    ppsspp*|psp) system=psp ;;
     yabause*) system=saturn ;;
     morpheuscast*|vemulator|vmu) system=dreamcast ;;
     opera-xtreme) system=3do ;;
@@ -92,6 +121,7 @@ systemOf() {
     easyrpg|ldb|chai*|lutro|lua|prboom*|wad|nxengine|cavestory|ecwolf|tyrquake|pak|xrick|mrboom|jumpnbump|cannonball|reminiscence|flashback|2048|dinothawr|bk|eighty-one|81|emux*|ch8|uzem|uze|potator) system=ports ;;
     *) system=other ;;
   esac
+  if [ "$system" = other ] && [ "$ext" = chd ]; then chdSystem; fi
 }
 
 xmlPath() {
@@ -239,6 +269,7 @@ readGames | while IFS=$us read -r menu code exe ext icon name desc year players 
   esac
   cp "$game_dir/$code.desktop" "$out/$system/$code.desktop"
 
+  [ -n "$cover" ] && [ -f "${covers}_small/${cover##*/}" ] && cover=${covers}_small/${cover##*/}
   case $icon in /var/games/*) icon=$store/$menu/${icon#/var/games/} ;; esac
   [ -f "$icon" ] || icon=
   [ -n "$cover" ] && icon=$cover

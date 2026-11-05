@@ -83,6 +83,8 @@ A theme is an ordinary EmulationStation theme (see [`THEMES.md`](../THEMES.md)) 
   `suspend_frame_selected` (each an `image` stretched to its box, or a `ninepatch`), `suspend_shot`, `suspend_lock`,
   `suspend_gauge`, `suspend_cell_next` (where the second cell goes, which sets the spacing), and `suspend_title`,
   `suspend_label` and `suspend_notice` (position, text color, font and size).
+- The `favoriteIconVisible` theme variable: the game list shows a heart before the name of a favorite unless the theme
+  sets it to `false`.
 - `nandSpace`, `diskSpace` and their icons: the free space of the NAND and of the SD card.
 - A theme `ui/` folder overrides the built-in menu icons (`menu_*.svg`), the highlight (`menu_selected.png`) and the
   suspend point art.

@@ -130,6 +130,8 @@ private:
 
 	ImageComponent mSelectorImage;
 	ImageComponent mFavoriteIcon;
+	float mFavoriteIconScale = 0.60f;
+	Vector2f mFavoriteIconOffset = Vector2f(0.0f, 0.0f);
 	ImageComponent mMarkerIcon;
 	bool mFavoriteIconVisible;
 };
@@ -243,7 +245,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 
 		const bool showFavorite = mFavoriteIconVisible && mFavoriteIcon.hasImage() && (mFavoriteIndicatorCallback ? mFavoriteIndicatorCallback(entry.object) : false);
 		const bool showMarker = mMarkerIcon.hasImage() && (mMarkerCallback ? mMarkerCallback(entry.object) : false);
-		const float iconSize = entrySize * 0.60f;
+		const float iconSize = entrySize * mFavoriteIconScale;
 		const float iconSlot = iconSize + iconSize * 0.35f;
 		const float markerWidth = showMarker ? iconSlot : 0.0f;
 		const float leadingWidth = markerWidth + (showFavorite ? iconSlot : 0.0f);
@@ -270,15 +272,13 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 			break;
 		}
 
-		float rowScrollOffset = 0.0f;
-		if((mCursor == i) && (mMarqueeOffset > 0))
-			rowScrollOffset = (float)mMarqueeOffset;
+		const float iconY = font->getHeight(1.0f) * 0.5f + entryFont->getHeight(1.0f) * 0.25f - iconSize * 0.5f;
 
 		if(showMarker)
 		{
 			Transform4x4f markerTrans = trans;
-			markerTrans.translate(offset - Vector3f(rowScrollOffset, 0, 0));
-			mMarkerIcon.setPosition(0, (font->getHeight(1.0f) - iconSize) * 0.5f, 0);
+			markerTrans.translate(offset);
+			mMarkerIcon.setPosition(0, iconY, 0);
 			mMarkerIcon.setResize(iconSize, iconSize);
 			mMarkerIcon.render(markerTrans);
 		}
@@ -286,13 +286,21 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		if(showFavorite)
 		{
 			Transform4x4f iconTrans = trans;
-			iconTrans.translate(offset + Vector3f(markerWidth, 0, 0) - Vector3f(rowScrollOffset, 0, 0));
-			mFavoriteIcon.setPosition(0, (font->getHeight(1.0f) - iconSize) * 0.5f, 0);
+			iconTrans.translate(offset + Vector3f(markerWidth, 0, 0));
+			mFavoriteIcon.setPosition(mFavoriteIconOffset.x() * entrySize, iconY + mFavoriteIconOffset.y() * entrySize, 0);
 			mFavoriteIcon.setResize(iconSize, iconSize);
 			mFavoriteIcon.render(iconTrans);
 		}
 
 		Vector3f textOffset = offset + Vector3f(leadingWidth, (font->getHeight(1.0f) - entryFont->getHeight(1.0f)) * 0.5f, 0);
+
+		const bool clipText = leadingWidth > 0.0f && (mCursor == i) && (mMarqueeOffset > 0 || mMarqueeOffset2 < 0);
+		if(clipText)
+		{
+			const Vector3f textStart = trans * Vector3f(offset[0] + leadingWidth, y, 0);
+			const float textEnd = trans.translation().x() + mHorizontalMargin + (dim.x() - mHorizontalMargin * 2);
+			Renderer::pushClipRect(Vector2i((int)textStart.x(), (int)textStart.y()), Vector2i((int)(textEnd - textStart.x()), (int)dim.y()));
+		}
 
 		// render text
 		Transform4x4f drawTrans = trans;
@@ -310,25 +318,14 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		// marquee is scrolled far enough for it to repeat
 		if((mCursor == i) && (mMarqueeOffset2 < 0))
 		{
-			// also render the icons alongside the wrap-around copy of the text
-			if(showMarker)
-			{
-				Transform4x4f markerTrans2 = trans;
-				markerTrans2.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
-				mMarkerIcon.render(markerTrans2);
-			}
-			if(showFavorite)
-			{
-				Transform4x4f iconTrans2 = trans;
-				iconTrans2.translate(offset + Vector3f(markerWidth, 0, 0) - Vector3f((float)mMarqueeOffset2, 0, 0));
-				mFavoriteIcon.render(iconTrans2);
-			}
-
 			drawTrans = trans;
 			drawTrans.translate(textOffset - Vector3f((float)mMarqueeOffset2, 0, 0));
 			Renderer::setMatrix(drawTrans);
 			entryFont->renderTextCache(entry.data.textCache.get());
 		}
+
+		if(clipText)
+			Renderer::popClipRect();
 
 		y += entrySize;
 	}
@@ -575,6 +572,10 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 	else
 		mFavoriteIcon.setImage(":/heart_filled.svg");
 
+	mFavoriteIconScale = elem->has("favoriteIconSize") ? elem->get<float>("favoriteIconSize") : 0.60f;
+	mFavoriteIconOffset = Vector2f(elem->has("favoriteIconOffsetX") ? elem->get<float>("favoriteIconOffsetX") : 0.0f,
+		elem->has("favoriteIconOffsetY") ? elem->get<float>("favoriteIconOffsetY") : 0.0f);
+
 	if (elem->has("favoriteIconColor"))
 		mFavoriteIcon.setColorShift(elem->get<unsigned int>("favoriteIconColor"));
 	else
@@ -582,7 +583,7 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 
 	{
 		std::string var = theme->getVariable("favoriteIconVisible");
-		mFavoriteIconVisible = (var == "true");
+		mFavoriteIconVisible = (var != "false");
 	}
 }
 

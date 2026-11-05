@@ -13,6 +13,15 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+theme_dst=$mountpoint/media/data/emulationstation/themes/simple
+theme_manifest=/var/lib/hakchi/es/theme_simple.md5
+if [ -f "$theme_manifest" ] && [ -d "$theme_dst" ]; then
+  (cd "$theme_dst" && md5sum -c "$theme_manifest" 2>/dev/null | sed -n 's/: OK$//p') | while read -r file; do
+    rm -f "$theme_dst/$file"
+  done
+  find "$theme_dst" -depth -mindepth 1 -type d -exec rmdir {} + 2>/dev/null
+  rmdir "$theme_dst" 2>/dev/null
+fi
 rm -f /var/lib/clover/autotest /run/es-run.pid
 for item in /var/lib/hakchi/es/* /var/lib/hakchi/es/.[!.]*; do
   [ -e "$item" ] && [ "${item##*/}" != favorites.txt ] && rm -rf "$item"

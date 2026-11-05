@@ -14,7 +14,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 es_dir=/var/lib/hakchi/es
-es_payload=$rootfs/usr/share/emulationstation
+es_payload=$transferpath/usr/share/emulationstation
+sd_themes=$mountpoint/media/data/emulationstation/themes
+
+if ! grep -q "^/dev/\(mmcblk\|sd\)[^ ]* $mountpoint/media " /proc/mounts || [ ! -w "$mountpoint/media" ]; then
+  echo "EmulationStation needs an SD card or USB stick for its theme. Insert one and install again; nothing was installed."
+  return 1
+fi
+mkdir -p "$sd_themes" || { echo "Could not create $sd_themes; nothing was installed."; return 1; }
 
 mkdir -p "$es_dir/home/.emulationstation"
 for item in "$es_payload"/*; do
@@ -23,7 +30,30 @@ done
 for cfg in es_settings.cfg es_input.cfg; do
   [ -f "$es_dir/home/.emulationstation/$cfg" ] || cp "$es_payload/defaults/$cfg" "$es_dir/home/.emulationstation/"
 done
+theme_src=$temppath/es_theme_simple
+rm -rf "$theme_src"
+mkdir -p "$theme_src"
+tar -xf "$es_payload/defaults/theme_simple.tar" -C "$theme_src"
+theme_dst=$sd_themes/simple
+theme_manifest=$es_dir/theme_simple.md5
+if [ -d "$theme_dst" ]; then
+  if [ -f "$theme_manifest" ]; then
+    (cd "$theme_dst" && md5sum -c "$theme_manifest" 2>/dev/null | sed -n 's/: OK$//p') | while read -r file; do
+      rm -f "$theme_dst/$file"
+    done
+  fi
+  (cd "$theme_src" && find . -type f) | while read -r file; do
+    [ -e "$theme_dst/$file" ] && continue
+    mkdir -p "${theme_dst}/${file%/*}"
+    cp "$theme_src/$file" "$theme_dst/$file"
+  done
+else
+  cp -a "$theme_src" "$theme_dst"
+fi
+(cd "$theme_src" && find . -type f -exec md5sum {} +) > "$theme_manifest"
+rm -rf "$theme_src"
 chmod 755 "$es_dir/emulationstation" "$es_dir/padstate" "$es_dir"/*.sh
 rm -f "$es_dir/boot_failures" "$es_dir/no_boot"
 [ "$(cat "$es_dir/boot_default" 2>/dev/null)" = stock ] && rm -f "$es_dir/boot_default"
-return 1
+rm -rf "$es_payload"
+return 0

@@ -1,0 +1,14 @@
+	<view name="system">
+		<image name="logo">
+			<path>./art/favorites.svg</path>
+		</image>
+	</view>
+
+	<view name="basic, detailed">
+		<image name="logo">
+			<path>./art/favorites.svg</path>
+			<pos>0.025 0.0775</pos>
+			<maxSize>0.4 0.06</maxSize>
+			<origin>0 0.5</origin>
+		</image>
+	</view>

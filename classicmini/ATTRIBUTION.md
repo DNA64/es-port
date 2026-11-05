@@ -44,6 +44,18 @@ and reading `aliases.txt` once) comes from code shared by DNA64 (<https://github
 The power and restart icons on `device/resources/shutdown.png` and `device/resources/restart.png` are the `power` and
 `rotate-cw` icons from [Lucide](https://lucide.dev), licensed under the [ISC License](https://lucide.dev/license).
 
+## Default theme
+
+The hmod ships the [es-theme-simple](https://github.com/RetroPie/es-theme-simple) theme by Nils Bonenberger,
+licensed under [CC BY-NC-SA](https://creativecommons.org/licenses/by-nc-sa/4.0/). It is not stored in the
+repository: `hmod/stage.sh` downloads it at a pinned commit and the hmod installs it on the SD card or USB stick,
+in `/media/data/emulationstation/themes/simple`. The theme folders for systems and collections it lacks are
+generated from `device/collection_theme.xml`, a copy of its Super Nintendo layout.
+
+`device/favorites.svg` is the word "FAVORITES" converted to outlines from [Fredoka](https://github.com/hafontia/Fredoka-One),
+by The Fredoka Project Authors under the [SIL Open Font License 1.1](https://openfontlicense.org), with the "O"
+replaced by an eye from the DefKorns logo.
+
 ## Trademarks
 
 "Super Nintendo Entertainment System" and the logo are trademarks of Nintendo. This project is not affiliated with

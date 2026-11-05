@@ -36,6 +36,8 @@ GuiMetaDataEd::GuiMetaDataEd(Window* window, MetaDataList* md, const std::vector
 	mSavedCallback(saveCallback),
 	mDeleteFunc(deleteFunc)
 {
+	mBackground.setCenterColor(MenuColors::Panel);
+	mBackground.setEdgeColor(MenuColors::Panel);
 	addChild(&mBackground);
 	addChild(&mGrid);
 

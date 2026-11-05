@@ -15,6 +15,8 @@ GuiGameScraper::GuiGameScraper(Window* window, ScraperSearchParams params, std::
 	mClose(false)
 {
 	PowerSaver::pause();
+	mBox.setCenterColor(MenuColors::Panel);
+	mBox.setEdgeColor(MenuColors::Panel);
 	addChild(&mBox);
 	addChild(&mGrid);
 

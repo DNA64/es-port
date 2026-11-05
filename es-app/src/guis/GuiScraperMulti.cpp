@@ -18,6 +18,8 @@ GuiScraperMulti::GuiScraperMulti(Window* window, const std::queue<ScraperSearchP
 {
 	assert(mSearchQueue.size());
 
+	mBackground.setCenterColor(MenuColors::Panel);
+	mBackground.setEdgeColor(MenuColors::Panel);
 	addChild(&mBackground);
 	addChild(&mGrid);
 

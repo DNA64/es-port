@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [classicmini]
+    tags: ['v*']
     paths:
       - classicmini/**
       - es-app/**
@@ -22,6 +23,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Build EmulationStation
         run: sh classicmini/build.sh
@@ -39,3 +41,40 @@ jobs:
         with:
           name: emulationstation_classicmini
           path: classicmini/hmod/out/*.hmod
+
+  release:
+    needs: hmod
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: emulationstation_classicmini
+          path: out
+
+      - uses: actions/checkout@v7
+        with:
+          path: src
+
+      - name: Release notes
+        id: notes
+        working-directory: src
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          file="release-notes/$TAG.md"
+          if [ -f "$file" ]; then
+            echo "path=$PWD/$file" >> "$GITHUB_OUTPUT"
+          else
+            echo "No $file - using generated notes"
+          fi
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: ES-PORT ${{ github.ref_name }}
+          files: out/*.hmod
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -9,6 +9,7 @@
 #include "ThemeData.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <deque>
 #include <vector>
 
 class TextCache;
@@ -64,6 +65,8 @@ public:
 
 	inline static const char* getDefaultPath() { return FONT_PATH_REGULAR; }
 
+	static void releaseRecent();
+
 	static std::shared_ptr<Font> getFromTheme(const ThemeData::ThemeElement* elem, unsigned int properties, const std::shared_ptr<Font>& orig);
 
 	size_t getMemUsage() const; // returns an approximation of VRAM used by this font's texture (in bytes)
@@ -72,6 +75,8 @@ public:
 private:
 	static FT_Library sLibrary;
 	static std::map< std::pair<std::string, int>, std::weak_ptr<Font> > sFontMap;
+	static std::deque< std::shared_ptr<Font> > sRecent;
+	static void remember(const std::shared_ptr<Font>& font);
 
 	Font(int size, const std::string& path);
 

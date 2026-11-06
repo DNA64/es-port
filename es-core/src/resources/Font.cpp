@@ -4,6 +4,7 @@
 #include "utils/FileSystemUtil.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
+#include <algorithm>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -14,6 +15,27 @@ FT_Library Font::sLibrary = NULL;
 int Font::getSize() const { return mSize; }
 
 std::map< std::pair<std::string, int>, std::weak_ptr<Font> > Font::sFontMap;
+std::deque< std::shared_ptr<Font> > Font::sRecent;
+
+namespace
+{
+	constexpr std::size_t RecentFonts = 32;
+}
+
+void Font::remember(const std::shared_ptr<Font>& font)
+{
+	const auto found = std::find(sRecent.begin(), sRecent.end(), font);
+	if(found != sRecent.end())
+		sRecent.erase(found);
+	sRecent.push_back(font);
+	while(sRecent.size() > RecentFonts)
+		sRecent.pop_front();
+}
+
+void Font::releaseRecent()
+{
+	sRecent.clear();
+}
 
 Font::FontFace::FontFace(ResourceData&& d, int size) : data(d)
 {
@@ -125,12 +147,17 @@ std::shared_ptr<Font> Font::get(int size, const std::string& path)
 	if(foundFont != sFontMap.cend())
 	{
 		if(!foundFont->second.expired())
-			return foundFont->second.lock();
+		{
+			std::shared_ptr<Font> existing = foundFont->second.lock();
+			remember(existing);
+			return existing;
+		}
 	}
 
 	std::shared_ptr<Font> font = std::shared_ptr<Font>(new Font(def.second, def.first));
 	sFontMap[def] = std::weak_ptr<Font>(font);
 	ResourceManager::getInstance()->addReloadable(font);
+	remember(font);
 	return font;
 }
 

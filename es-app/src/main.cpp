@@ -4,6 +4,7 @@
 #include "guis/GuiDetectDevice.h"
 #include "AudioManager.h"
 #include "guis/GuiMsgBox.h"
+#include "resources/Font.h"
 #include "utils/FileSystemUtil.h"
 #include "utils/ProfilingUtil.h"
 #include "views/ViewController.h"
@@ -686,6 +687,7 @@ int main(int argc, char* argv[])
 		delete window.peekGui();
 
 	InputManager::getInstance()->deinit();
+	Font::releaseRecent();
 	window.deinit();
 
 	// Join the VLC cleanup worker and release the VLC instance. Must happen after

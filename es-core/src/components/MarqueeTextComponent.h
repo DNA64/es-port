@@ -37,6 +37,8 @@ private:
 
 	TextComponent mText;
 	Vector2f mBox;
+	float mClipLeft = -1.0f;
+	float mClipRight = -1.0f;
 	Phase mPhase = Phase::Waiting;
 	int mPhaseMs = 0;
 	float mOffset = 0.0f;

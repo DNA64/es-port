@@ -44,6 +44,14 @@ void MarqueeTextComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 	mText.applyTheme(theme, view, element, properties ^ (ThemeFlags::POSITION | ThemeFlags::SIZE | ThemeFlags::ORIGIN | ThemeFlags::ROTATION));
 
 	mBox = getSize();
+	mClipLeft = mClipRight = -1.0f;
+	if (const ThemeData::ThemeElement* elem = theme->getElement(view, element, "text"))
+	{
+		if (elem->has("clipLeft"))
+			mClipLeft = elem->get<float>("clipLeft");
+		if (elem->has("clipRight"))
+			mClipRight = elem->get<float>("clipRight");
+	}
 	mText.setSize(0.0f, 0.0f);
 	mText.setPosition(0.0f, 0.0f);
 	restart();
@@ -100,8 +108,14 @@ void MarqueeTextComponent::render(const Transform4x4f& parentTrans)
 
 	const float scaleX = trans.r0().x();
 	const float scaleY = trans.r1().y();
-	const Vector2i position(static_cast<int>(Math::round(trans.translation()[0])), static_cast<int>(Math::round(trans.translation()[1])));
-	const Vector2i size(static_cast<int>(Math::round(mBox.x() * scaleX)), static_cast<int>(Math::round(mBox.y() * scaleY)));
+	Vector2i position(static_cast<int>(Math::round(trans.translation()[0])), static_cast<int>(Math::round(trans.translation()[1])));
+	Vector2i size(static_cast<int>(Math::round(mBox.x() * scaleX)), static_cast<int>(Math::round(mBox.y() * scaleY)));
+
+	const float screenWidth = static_cast<float>(Renderer::getScreenWidth());
+	const int right = position.x() + size.x();
+	if (mClipLeft >= 0.0f)
+		position.x() = static_cast<int>(Math::round(mClipLeft * screenWidth));
+	size.x() = (mClipRight > 0.0f ? static_cast<int>(Math::round(mClipRight * screenWidth)) : right) - position.x();
 
 	Renderer::pushClipRect(position, size);
 	mText.render(textTrans);

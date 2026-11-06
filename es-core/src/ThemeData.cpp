@@ -74,6 +74,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "forceUppercase", BOOLEAN },
 		{ "lineSpacing", FLOAT },
 		{ "fitMinScale", FLOAT },
+		{ "clipLeft", FLOAT },
+		{ "clipRight", FLOAT },
 		{ "clipTop", FLOAT },
 		{ "clipBottom", FLOAT },
 		{ "suffix", STRING },
@@ -109,6 +111,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "fitMinScale", FLOAT },
 		{ "favoriteIconPath", PATH },
 		{ "favoriteIconColor", COLOR },
+		{ "favoriteIconSize", FLOAT },
+		{ "favoriteIconOffsetX", FLOAT },
+		{ "favoriteIconOffsetY", FLOAT },
 		{ "zIndex", FLOAT } } },
 	{ "container", {
 		{ "pos", RESOLUTION_PAIR },

@@ -87,12 +87,13 @@ private:
 
 	PagedTextComponent mDescription;
 	ImageComponent mDivider;
+	ImageComponent mFavorite;
 	ImageComponent mArrowLeft;
 	ImageComponent mArrowRight;
 	int mDescriptionLayout = -1;
 	std::vector<std::shared_ptr<Font>> mLayoutFonts;
 
-	void applyDescriptionLayout(bool hasDescription);
+	void applyDescriptionLayout(bool hasDescription, bool favorite);
 	void keepLayoutFonts(const std::shared_ptr<ThemeData>& theme);
 	void updateArrows();
 

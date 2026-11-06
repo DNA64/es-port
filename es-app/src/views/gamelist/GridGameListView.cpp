@@ -27,7 +27,7 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 	mVideo(nullptr),
 	mVideoPlaying(false),
 	mDescription(window),
-	mDivider(window),
+	mDivider(window), mFavorite(window),
 	mArrowLeft(window), mArrowRight(window),
 
 	mLblRating(window), mLblReleaseDate(window), mLblDeveloper(window), mLblPublisher(window),
@@ -110,6 +110,10 @@ GridGameListView::GridGameListView(Window* window, FileData* root) :
 
 	mDivider.setDefaultZIndex(40);
 	addChild(&mDivider);
+
+	mFavorite.setDefaultZIndex(41);
+	mFavorite.setVisible(false);
+	addChild(&mFavorite);
 
 	mArrowLeft.setDefaultZIndex(30);
 	mArrowRight.setDefaultZIndex(30);
@@ -319,6 +323,7 @@ void GridGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 	}
 	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (TEXT | ROTATION));
 	mDivider.applyTheme(theme, getName(), "md_divider", ALL);
+	mFavorite.applyTheme(theme, getName(), "md_favorite", ALL ^ VISIBLE);
 	mDescription.clearIndicatorBox();
 	if(const ThemeData::ThemeElement* bar = theme->getElement(getName(), "md_scrollbar", "image"))
 		if(bar->has("pos") && bar->has("size"))
@@ -425,9 +430,9 @@ void GridGameListView::keepLayoutFonts(const std::shared_ptr<ThemeData>& theme)
 	}
 }
 
-void GridGameListView::applyDescriptionLayout(bool hasDescription)
+void GridGameListView::applyDescriptionLayout(bool hasDescription, bool favorite)
 {
-	const int state = hasDescription ? 1 : 0;
+	const int state = (hasDescription ? 1 : 0) | (favorite ? 2 : 0);
 	const std::shared_ptr<ThemeData>& theme = getTheme();
 	if(state == mDescriptionLayout || !theme)
 		return;
@@ -436,13 +441,20 @@ void GridGameListView::applyDescriptionLayout(bool hasDescription)
 
 	const std::pair<GuiComponent*, const char*> elements[] = {
 		{ &mName, "md_name" }, { &mDeveloper, "md_developer" }, { &mGenre, "md_genre" },
-		{ &mCode, "md_code" }, { &mInfo, "md_info" } };
+		{ &mCode, "md_code" }, { &mInfo, "md_info" }, { &mFavorite, "md_favorite" } };
 	for(const auto& element : elements)
 	{
 		element.first->applyTheme(theme, getName(), element.second, ThemeFlags::ALL ^ ThemeFlags::TEXT);
-		const std::string alternate = std::string(element.second) + "_nodesc";
-		if(!hasDescription && theme->getElement(getName(), alternate, "text"))
-			element.first->applyTheme(theme, getName(), alternate, ThemeFlags::ALL ^ ThemeFlags::TEXT);
+		for(const char* suffix : { "_nodesc", "_nofav", "_nodesc_nofav" })
+		{
+			const std::string variant(suffix);
+			const bool applies = variant == "_nodesc" ? !hasDescription
+				: variant == "_nofav" ? !favorite && hasDescription
+				: !favorite && !hasDescription;
+			const std::string alternate = std::string(element.second) + variant;
+			if(applies && theme->getElement(getName(), alternate, ""))
+				element.first->applyTheme(theme, getName(), alternate, ThemeFlags::ALL ^ ThemeFlags::TEXT);
+		}
 	}
 }
 
@@ -475,7 +487,9 @@ void GridGameListView::updateInfoPanel()
 		mDescription.setText(file->metadata.get("desc"));
 		const bool hasDescription = !file->metadata.get("desc").empty();
 		mDivider.setVisible(hasDescription);
-		applyDescriptionLayout(hasDescription);
+		const bool favorite = file->getType() == GAME && file->metadata.get("favorite") == "true";
+		applyDescriptionLayout(hasDescription, favorite);
+		mFavorite.setVisible(favorite);
 
 		mRating.setValue(file->metadata.get("rating"));
 		mReleaseDate.setValue(file->metadata.get("releasedate"));
@@ -499,6 +513,7 @@ void GridGameListView::updateInfoPanel()
 	std::vector<GuiComponent*> comps = getMDValues();
 	comps.push_back(&mDescription);
 	comps.push_back(&mDivider);
+	comps.push_back(&mFavorite);
 	comps.push_back(&mName);
 	comps.push_back(&mCode);
 	comps.push_back(&mInfo);

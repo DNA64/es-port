@@ -26,6 +26,9 @@ jobs:
       - name: Build EmulationStation
         run: sh classicmini/build.sh
 
+      - name: Build the console tools
+        run: sh classicmini/build-tools.sh
+
       - name: Build the hmod
         working-directory: classicmini/hmod
         run: |
